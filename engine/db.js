@@ -149,6 +149,7 @@ const loadData = async () => {
         if (c.memorySummary === undefined) c.memorySummary = '';
         if (!c.keyEvents) c.keyEvents = [];
         if (c.summaryIndex === undefined) c.summaryIndex = 0;
+        if (c.aiImgGen === undefined) c.aiImgGen = false;
     });
     db.groups.forEach(g => {
         if (g.isPinned === undefined) g.isPinned = false;

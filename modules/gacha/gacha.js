@@ -29,7 +29,7 @@ Engine.register({
 
     AVATAR_POOL: [
         'https://i.postimg.cc/Y96LPskq/o-o-2.jpg',
-        'https://i.postimg.cc/GtbTnxhP/o-o-1.jpg',
+        'https://i.postimg.cc/Y96LPskq/o-o-2.jpg',
         'https://i.postimg.cc/fTLCngk1/image.jpg',
     ],
 
@@ -357,7 +357,7 @@ Engine.register({
                 realName: char.name, remarkName: char.name,
                 persona: char.persona, avatar: char.avatar,
                 myName: '我', myPersona: '',
-                myAvatar: 'https://i.postimg.cc/GtbTnxhP/o-o-1.jpg',
+                myAvatar: 'https://i.postimg.cc/Y96LPskq/o-o-2.jpg',
                 theme: 'white_pink', maxMemory: 10, chatBg: '',
                 history: [], isPinned: false, status: '在线',
                 worldBookIds: [], useCustomBubbleCss: false, customBubbleCss: ''

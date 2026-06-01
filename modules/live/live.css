@@ -199,3 +199,112 @@
     transition: transform 0.15s;
 }
 .live-reward-btn:active { transform: scale(0.95); }
+
+/* ─── 分页 Tab ─── */
+.live-tabs {
+    display: flex; background: rgba(255,255,255,0.6);
+    border-bottom: 1px solid #eee; flex-shrink: 0; border-radius: 12px 12px 0 0; overflow: hidden;
+}
+.live-tab {
+    flex: 1; padding: 12px 0; text-align: center; font-size: 14px;
+    font-weight: 600; color: #999; cursor: pointer;
+    border-bottom: 3px solid transparent; background: none;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.live-tab:hover { color: #666; background: rgba(255,255,255,0.3); }
+.live-tab.active {
+    color: var(--primary); border-bottom-color: var(--primary);
+    background: #fff;
+}
+.live-tab-body { padding: 20px 16px; overflow-y: auto; max-height: 60vh; }
+
+/* ─── 主播选择网格 ─── */
+.live-host-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+.live-host-card {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px 8px; background: #fff; border-radius: 14px; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.live-host-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+.live-host-card:active { transform: scale(0.96); }
+.live-host-avatar {
+    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+    margin-bottom: 6px; border: 2px solid #f0f0f0;
+}
+.live-host-name { font-size: 12px; font-weight: 600; color: var(--text-color); text-align: center; line-height: 1.3; }
+.live-host-ai-icon { font-size: 32px; margin-bottom: 6px; }
+.live-host-empty {
+    grid-column: 1 / -1; text-align: center; color: #999;
+    padding: 30px 0; font-size: 14px;
+}
+.live-host-back-btn {
+    margin-top: 16px; width: 100%; padding: 10px; border: none; border-radius: 12px;
+    background: #eee; color: #666; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+
+/* ─── 主播详情 ─── */
+.live-host-detail { text-align: center; }
+.live-host-detail-avatar {
+    width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+    margin-bottom: 12px; border: 3px solid #f0f0f0;
+}
+.live-host-detail-name { font-size: 20px; font-weight: 700; color: var(--text-color); margin-bottom: 8px; }
+.live-host-detail-persona {
+    font-size: 13px; color: #888; line-height: 1.6;
+    text-align: left; background: #f9f9f9; border-radius: 12px;
+    padding: 14px; margin-bottom: 20px;
+}
+.live-host-detail-btns { display: flex; gap: 10px; }
+.live-host-detail-btns button {
+    flex: 1; padding: 12px; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 0.15s;
+}
+.live-host-detail-btns button:active { transform: scale(0.95); }
+
+/* ─── 打赏弹窗 ─── */
+.live-tip-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); display: flex; align-items: center;
+    justify-content: center; z-index: 150; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+}
+.live-tip-overlay.visible { opacity: 1; pointer-events: auto; }
+.live-tip-box {
+    background: #fff; border-radius: 18px; padding: 24px;
+    width: 80%; max-width: 300px; text-align: center;
+}
+.live-tip-title { font-size: 18px; font-weight: 700; color: var(--text-color); margin-bottom: 16px; }
+.live-tip-amounts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.live-tip-amount {
+    padding: 14px; border: 2px solid #eee; border-radius: 12px;
+    background: #fff; font-size: 16px; font-weight: 700; color: #ff9800;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.live-tip-amount:hover { border-color: var(--primary-color); background: #fff0f5; }
+.live-tip-amount.selected { border-color: var(--primary-color); background: #fff0f5; }
+.live-tip-custom { margin-bottom: 12px; }
+.live-tip-custom input {
+    width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0;
+    border-radius: 8px; font-size: 14px; text-align: center; outline: none;
+    box-sizing: border-box;
+}
+.live-tip-balance { font-size: 13px; color: #999; margin-bottom: 14px; }
+.live-tip-btns { display: flex; gap: 10px; }
+.live-tip-btns button {
+    flex: 1; padding: 12px; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 0.15s;
+}
+.live-tip-btns button:active { transform: scale(0.95); }
+.live-tip-confirm { background: var(--primary-color); color: #fff; }
+.live-tip-cancel-btn { background: #eee; color: #666; }
+.live-tip-btn {
+    background: rgba(255,255,255,0.12); border: none; color: #fff;
+    width: 38px; height: 38px; border-radius: 50%; font-size: 16px;
+    cursor: pointer; flex-shrink: 0; transition: transform 0.15s, background 0.15s;
+    display: flex; align-items: center; justify-content: center;
+}
+.live-tip-btn:hover { background: rgba(255,255,255,0.25); }
+.live-tip-btn:active { transform: scale(0.9); }
