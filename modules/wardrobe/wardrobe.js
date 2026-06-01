@@ -1,6 +1,6 @@
 /* ========================================
    Module: Wardrobe (衣帽间)
-   独立换装系统模块
+   独立换装系统模块 - v2
    ======================================== */
 
 Engine.register({
@@ -9,6 +9,20 @@ Engine.register({
     icon: '👗',
     screen: 'wardrobe-screen',
     order: 7,
+
+    // 人偶画布尺寸（原始像素画 111x291，放大 1.5 倍）
+    DOLL_W: 166,
+    DOLL_H: 436,
+    SCALE: 1.5,
+
+    // 各类衣物默认定位偏移（基于原始 111x291 画布，乘以 SCALE）
+    // 格式: [left, top, width, height]（-1 表示自动）
+    CLOTHING_OFFSETS: {
+        'hair':     { left: 15, top: -20, width: 120, height: 160 },
+        'tops':     { left: 15, top: 80,  width: 120, height: 120 },
+        'bottoms':  { left: 20, top: 195, width: 110, height: 100 },
+        'fullbody': { left: 10, top: 75,  width: 130, height: 260 },
+    },
 
     init() {
         const screen = document.getElementById(this.screen);
@@ -19,63 +33,61 @@ Engine.register({
                     <div class="title-container"><h1 class="title">👗 衣帽间</h1></div>
                     <div class="wardrobe-tools">
                         <button class="wardrobe-tool-btn" id="wardrobe-upload-btn" title="导入服装">📥</button>
-                        <button class="wardrobe-tool-btn" id="wardrobe-download">💾</button>
-                        <button class="wardrobe-tool-btn" id="wardrobe-reset">🔄</button>
+                        <button class="wardrobe-tool-btn" id="wardrobe-download" title="下载人偶">💾</button>
+                        <button class="wardrobe-tool-btn" id="wardrobe-reset" title="重置">🔄</button>
                     </div>
                 </div>
 
                 <div class="wardrobe-body">
-                    <!-- 人偶展示区 -->
-                    <div class="wardrobe-doll-area" id="wardrobe-doll-area">
-                        <img id="wardrobe-skintone" class="wardrobe-clickable" src="modules/wardrobe/base/Skintone/full/European 01 by Lotte V.png" alt="European 01">
-                        <div id="wardrobe-avi-area"></div>
+                    <div class="wardrobe-doll-section">
+                        <div class="wardrobe-doll-area" id="wardrobe-doll-area">
+                            <img id="wardrobe-skintone" src="modules/wardrobe/base/Skintone/full/European 01 by Lotte V.png" alt="body">
+                            <div id="wardrobe-avi-area"></div>
+                        </div>
+                        <div class="wardrobe-doll-hint">💡 穿戴后可拖拽调整位置</div>
                     </div>
 
-                    <!-- 肤色选择 -->
                     <div class="wardrobe-skin-section">
                         <div class="wardrobe-section-title">🎨 肤色</div>
                         <div class="wardrobe-skin-grid" id="wardrobe-skin-grid"></div>
                     </div>
                 </div>
 
-                <!-- 衣物选择区 -->
                 <div class="wardrobe-pieces-area">
                     <div class="wardrobe-tabs" id="wardrobe-tabs">
-                        <button class="wardrobe-tab active" data-tab="tops">👕 上衣</button>
+                        <button class="wardrobe-tab active" data-tab="hair">💇 发型</button>
+                        <button class="wardrobe-tab" data-tab="tops">👕 上衣</button>
                         <button class="wardrobe-tab" data-tab="bottoms">👖 下装</button>
                         <button class="wardrobe-tab" data-tab="fullbody">👗 全身</button>
                     </div>
                     <div class="wardrobe-tab-panels" id="wardrobe-tab-panels">
-                        <div class="wardrobe-tab-panel active" data-panel="tops"></div>
+                        <div class="wardrobe-tab-panel active" data-panel="hair"></div>
+                        <div class="wardrobe-tab-panel" data-panel="tops"></div>
                         <div class="wardrobe-tab-panel" data-panel="bottoms"></div>
                         <div class="wardrobe-tab-panel" data-panel="fullbody"></div>
                     </div>
                 </div>
 
-                <!-- 使用提示 -->
-                <div class="wardrobe-hint">💡 拖拽衣物到人偶身上换装 · 点击缩略图切换肤色 · 📥 导入自己的服装</div>
+                <div class="wardrobe-hint">拖拽衣物到人偶 · 点击缩略图换肤色 · 📥 导入自己的服装</div>
 
                 <!-- 上传弹窗 -->
                 <div id="wardrobe-upload-modal" class="wardrobe-modal-overlay">
                     <div class="wardrobe-modal">
                         <div class="wardrobe-modal-title">📥 导入服装</div>
                         <div class="wardrobe-modal-body">
-                            <div id="wardrobe-upload-preview" class="wardrobe-upload-preview">
-                                <span>点击下方选择图片</span>
-                            </div>
+                            <div id="wardrobe-upload-preview" class="wardrobe-upload-preview"><span>点击下方选择图片</span></div>
                             <input type="file" id="wardrobe-file-input" accept="image/png,image/jpeg,image/webp" style="display:none;" multiple>
                             <button class="wardrobe-modal-btn wardrobe-modal-btn-secondary" id="wardrobe-choose-file">选择图片文件</button>
                             <div class="wardrobe-upload-category">
                                 <div class="wardrobe-upload-cat-label">选择分类：</div>
                                 <div class="wardrobe-upload-cat-btns">
+                                    <button class="wardrobe-cat-btn" data-cat="hair">💇 发型</button>
                                     <button class="wardrobe-cat-btn active" data-cat="tops">👕 上衣</button>
                                     <button class="wardrobe-cat-btn" data-cat="bottoms">👖 下装</button>
                                     <button class="wardrobe-cat-btn" data-cat="fullbody">👗 全身</button>
                                 </div>
                             </div>
-                            <div class="wardrobe-upload-name-row">
-                                <input type="text" id="wardrobe-upload-name" class="wardrobe-upload-name-input" placeholder="服装名称（选填）">
-                            </div>
+                            <input type="text" id="wardrobe-upload-name" class="wardrobe-upload-name-input" placeholder="服装名称（选填）">
                         </div>
                         <div class="wardrobe-modal-footer">
                             <button class="wardrobe-modal-btn wardrobe-modal-btn-neutral" id="wardrobe-upload-cancel">取消</button>
@@ -88,6 +100,8 @@ Engine.register({
         this._customItems = [];
         this._uploadCategory = 'tops';
         this._uploadFiles = [];
+        this._placedItems = []; // 已穿戴的衣物
+
         this._loadCustomItems().then(() => {
             this._buildSkinGrid();
             this._buildClothingPanels();
@@ -99,7 +113,10 @@ Engine.register({
         switchScreen(this.screen);
     },
 
-    /* ── 构建肤色网格 ── */
+    /* ══════════════════════════════════════
+       构建 UI
+       ══════════════════════════════════════ */
+
     _buildSkinGrid() {
         const grid = document.getElementById('wardrobe-skin-grid');
         const skins = [
@@ -117,110 +134,14 @@ Engine.register({
         ).join('');
     },
 
-    /* ── IndexedDB 存取自定义衣物 ── */
-    _getDb() {
-        return new Dexie('wardrobe-custom');
-    },
-
-    async _loadCustomItems() {
-        try {
-            const db = this._getDb();
-            db.version(1).stores({ items: 'id,category,name' });
-            this._customItems = await db.items.toArray();
-        } catch (e) {
-            console.warn('[Wardrobe] Failed to load custom items:', e);
-            this._customItems = [];
-        }
-    },
-
-    async _saveCustomItem(item) {
-        try {
-            const db = this._getDb();
-            db.version(1).stores({ items: 'id,category,name' });
-            await db.items.put(item);
-            this._customItems.push(item);
-        } catch (e) {
-            console.error('[Wardrobe] Failed to save item:', e);
-        }
-    },
-
-    async _removeCustomItem(id) {
-        try {
-            const db = this._getDb();
-            db.version(1).stores({ items: 'id,category,name' });
-            await db.items.delete(id);
-            this._customItems = this._customItems.filter(i => i.id !== id);
-            this._buildClothingPanels();
-            this._rebindDrag();
-            showToast('已删除');
-        } catch (e) {
-            console.error('[Wardrobe] Failed to remove item:', e);
-        }
-    },
-
-    /* ── 处理上传 ── */
-    async _handleUpload() {
-        const files = this._uploadFiles;
-        const category = this._uploadCategory;
-        if (!files.length) return;
-
-        const confirmBtn = document.getElementById('wardrobe-upload-confirm');
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = '处理中...';
-
-        let count = 0;
-        for (const file of files) {
-            try {
-                const dataUrl = await this._fileToDataUrl(file);
-                const nameInput = document.getElementById('wardrobe-upload-name');
-                const name = (files.length === 1 && nameInput.value.trim())
-                    ? nameInput.value.trim()
-                    : file.name.replace(/\.(png|jpg|jpeg|webp)$/i, '');
-
-                const item = {
-                    id: 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-                    category: category,
-                    name: name,
-                    dataUrl: dataUrl,
-                    timestamp: Date.now()
-                };
-
-                await this._saveCustomItem(item);
-                count++;
-            } catch (e) {
-                console.warn('[Wardrobe] Failed to process file:', file.name, e);
-            }
-        }
-
-        // 刷新面板
-        this._buildClothingPanels();
-        this._rebindDrag();
-
-        // 关闭弹窗
-        document.getElementById('wardrobe-upload-modal').classList.remove('visible');
-        showToast(`已添加 ${count} 件服装！`);
-        confirmBtn.textContent = '添加';
-    },
-
-    _fileToDataUrl(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    },
-
-    /* ── 重新绑定拖拽（面板刷新后调用） ── */
-    _rebindDrag() {
-        // 清理旧的事件监听会比较复杂，由于面板重建后 DOM 已更新
-        // click 事件委托在 panels 上所以不需要重新绑定
-        // 拖拽也使用事件委托，所以自动生效
-    },
-
-    /* ── 构建衣物面板（含自定义衣物） ── */
     _buildClothingPanels() {
         const categories = {
+            hair: [
+                'Long 001 (Black) by Lotte V', 'Long 001 (Blonde, light) by Lotte V',
+                'Long 001 (Brown) by Lotte V', 'Long 001 (Indigo) by Lotte V',
+                'Long 001 (Pink) by Lotte V', 'Long 001 (Red) by Lotte V',
+                'Moon guardian buns 001 by Lotte V'
+            ],
             tops: [
                 'Bra 001 (Black) by Lotte V', 'Bra 001 (Indigo) by Lotte V', 'Bra 001 (Pink) by Lotte V', 'Bra 001 (White) by Lotte V',
                 'Crop Top 001 (Black)', 'Crop Top 001 (Blue)', 'Crop Top 001 (Green)', 'Crop Top 001 (Orange)',
@@ -257,33 +178,33 @@ Engine.register({
             ]
         };
 
-        const folderMap = { tops: 'Tops', bottoms: 'Bottoms', fullbody: 'Full-body' };
+        const folderMap = { hair: 'Hair', tops: 'Tops', bottoms: 'Bottoms', fullbody: 'Full-body' };
 
         for (const [key, items] of Object.entries(categories)) {
             const panel = document.querySelector(`[data-panel="${key}"]`);
-            // 内置衣物
             let html = items.map(name => {
                 const folder = folderMap[key];
-                const displayName = name.replace(/ by Lotte V$/, '');
+                const displayName = name.replace(/ by Lotte V$/, '').replace(/ by Lotte V$/i, '');
                 return `<img src="modules/wardrobe/images/${folder}/${name}.png"
                              alt="${displayName}" title="${displayName}"
-                             class="wardrobe-piece">`;
+                             class="wardrobe-piece" data-category="${key}">`;
             }).join('');
-            // 自定义衣物
+
             const custom = this._customItems.filter(i => i.category === key);
             if (custom.length) {
                 html += custom.map(item =>
-                    `<img src="${item.dataUrl}"
-                         alt="${item.name}" title="${item.name}（自定义 · 长按删除）"
-                         class="wardrobe-piece wardrobe-piece-custom"
-                         data-custom-id="${item.id}">`
+                    `<img src="${item.dataUrl}" alt="${item.name}" title="${item.name}（自定义·右键删除）"
+                          class="wardrobe-piece wardrobe-piece-custom" data-category="${key}" data-custom-id="${item.id}">`
                 ).join('');
             }
             panel.innerHTML = html;
         }
     },
 
-    /* ── 事件绑定 ── */
+    /* ══════════════════════════════════════
+       事件绑定
+       ══════════════════════════════════════ */
+
     _bindEvents() {
         const self = this;
 
@@ -293,9 +214,7 @@ Engine.register({
             if (!thumb) return;
             e.preventDefault();
             const skin = thumb.dataset.skin;
-            const skintone = document.getElementById('wardrobe-skintone');
-            skintone.src = `modules/wardrobe/base/Skintone/full/${skin} by Lotte V.png`;
-            skintone.alt = skin;
+            document.getElementById('wardrobe-skintone').src = `modules/wardrobe/base/Skintone/full/${skin} by Lotte V.png`;
         });
 
         // 标签切换
@@ -308,64 +227,59 @@ Engine.register({
             document.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.add('active');
         });
 
-        // 拖拽衣物
+        // 拖拽衣物到人偶
         this._initDragDrop();
 
-        // 下载按钮
+        // 工具按钮
         document.getElementById('wardrobe-download').addEventListener('click', () => self._downloadDoll());
+        document.getElementById('wardrobe-reset').addEventListener('click', () => self._resetDoll());
 
-        // 重置按钮
-        document.getElementById('wardrobe-reset').addEventListener('click', () => {
-            document.querySelectorAll('#wardrobe-doll-area .wardrobe-piece-clone').forEach(el => el.remove());
-            document.getElementById('wardrobe-skintone').src = 'modules/wardrobe/base/Skintone/full/European 01 by Lotte V.png';
+        // 上传
+        this._bindUploadEvents();
+
+        // 右键删除自定义
+        document.getElementById('wardrobe-tab-panels').addEventListener('contextmenu', (e) => {
+            const img = e.target.closest('.wardrobe-piece-custom');
+            if (!img) return;
+            e.preventDefault();
+            if (confirm(`删除「${img.alt}」？`)) self._removeCustomItem(img.dataset.customId);
         });
+    },
 
-        // ── 上传相关 ──
-        const uploadModal = document.getElementById('wardrobe-upload-modal');
+    _bindUploadEvents() {
+        const self = this;
+        const modal = document.getElementById('wardrobe-upload-modal');
         const fileInput = document.getElementById('wardrobe-file-input');
         const preview = document.getElementById('wardrobe-upload-preview');
         const nameInput = document.getElementById('wardrobe-upload-name');
         const confirmBtn = document.getElementById('wardrobe-upload-confirm');
 
-        // 打开上传弹窗
         document.getElementById('wardrobe-upload-btn').addEventListener('click', () => {
             self._uploadFiles = [];
             fileInput.value = '';
             nameInput.value = '';
             preview.innerHTML = '<span>点击下方选择图片</span>';
             confirmBtn.disabled = true;
-            uploadModal.classList.add('visible');
+            modal.classList.add('visible');
         });
 
-        // 取消
-        document.getElementById('wardrobe-upload-cancel').addEventListener('click', () => {
-            uploadModal.classList.remove('visible');
-        });
+        document.getElementById('wardrobe-upload-cancel').addEventListener('click', () => modal.classList.remove('visible'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('visible'); });
 
-        // 点击遮罩关闭
-        uploadModal.addEventListener('click', (e) => {
-            if (e.target === uploadModal) uploadModal.classList.remove('visible');
-        });
-
-        // 选择文件
         document.getElementById('wardrobe-choose-file').addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
             if (!files.length) return;
             self._uploadFiles = files;
-            // 预览第一张
             const reader = new FileReader();
             reader.onload = (ev) => {
                 preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%;max-height:100%;image-rendering:pixelated;">`;
-                if (files.length > 1) {
-                    preview.innerHTML += `<div style="position:absolute;bottom:4px;right:6px;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;padding:2px 6px;border-radius:4px;">+${files.length - 1} 张</div>`;
-                }
+                if (files.length > 1) preview.innerHTML += `<div style="position:absolute;bottom:4px;right:6px;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;padding:2px 6px;border-radius:4px;">+${files.length - 1}</div>`;
             };
             reader.readAsDataURL(files[0]);
             confirmBtn.disabled = false;
         });
 
-        // 分类选择
         document.querySelectorAll('.wardrobe-cat-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.wardrobe-cat-btn').forEach(b => b.classList.remove('active'));
@@ -374,150 +288,283 @@ Engine.register({
             });
         });
 
-        // 确认上传
         confirmBtn.addEventListener('click', () => self._handleUpload());
-
-        // 长按删除自定义衣物
-        document.getElementById('wardrobe-tab-panels').addEventListener('contextmenu', (e) => {
-            const img = e.target.closest('.wardrobe-piece');
-            if (!img || !img.dataset.customId) return;
-            e.preventDefault();
-            if (confirm(`删除「${img.alt}」？`)) {
-                self._removeCustomItem(img.dataset.customId);
-            }
-        });
     },
 
-    _dragClone: null,
-    _dragSrc: null,
+    /* ══════════════════════════════════════
+       拖拽系统（核心改进）
+       ══════════════════════════════════════ */
 
-    /* ── 初始化拖拽（纯 JS 实现，无外部依赖） ── */
     _initDragDrop() {
         const self = this;
         const panels = document.getElementById('wardrobe-tab-panels');
+        const dollArea = document.getElementById('wardrobe-doll-area');
 
-        // 触摸/鼠标开始拖拽
-        const onPointerDown = (e) => {
-            const img = e.target.closest('.wardrobe-piece');
-            if (!img) return;
-            self._dragSrc = img;
-            self._dragClone = img.cloneNode(true);
-            self._dragClone.style.cssText = `
-                position:fixed;z-index:9999;pointer-events:none;opacity:0.8;
-                width:48px;height:48px;image-rendering:pixelated;
-                border:2px solid rgba(100,180,255,0.8);border-radius:8px;
-                box-shadow:0 4px 16px rgba(0,0,0,0.4);
-            `;
-            document.body.appendChild(self._dragClone);
-            const pos = self._getPointerPos(e);
-            self._dragClone.style.left = (pos.x - 24) + 'px';
-            self._dragClone.style.top = (pos.y - 24) + 'px';
+        let dragClone = null, dragSrc = null, dragCategory = null;
+
+        const getPos = (e) => {
+            if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+            return { x: e.clientX, y: e.clientY };
         };
 
-        // 移动
-        const onPointerMove = (e) => {
-            if (!self._dragClone) return;
+        // 从衣物列表拖出
+        const onStart = (e) => {
+            const img = e.target.closest('.wardrobe-piece');
+            if (!img) return;
+            dragSrc = img;
+            dragCategory = img.dataset.category || 'tops';
+
+            dragClone = document.createElement('img');
+            dragClone.src = img.src;
+            dragClone.style.cssText = `position:fixed;z-index:9999;pointer-events:none;opacity:0.85;width:56px;height:56px;object-fit:contain;image-rendering:pixelated;border:2px solid rgba(100,180,255,0.8);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.4);`;
+            document.body.appendChild(dragClone);
+
+            const p = getPos(e);
+            dragClone.style.left = (p.x - 28) + 'px';
+            dragClone.style.top = (p.y - 28) + 'px';
+        };
+
+        const onMove = (e) => {
+            if (!dragClone) return;
             e.preventDefault();
-            const pos = self._getPointerPos(e);
-            self._dragClone.style.left = (pos.x - 24) + 'px';
-            self._dragClone.style.top = (pos.y - 24) + 'px';
+            const p = getPos(e);
+            dragClone.style.left = (p.x - 28) + 'px';
+            dragClone.style.top = (p.y - 28) + 'px';
         };
 
-        // 释放
-        const onPointerUp = (e) => {
-            if (!self._dragClone || !self._dragSrc) { self._cleanupDrag(); return; }
-            const pos = self._getPointerPos(e);
-            const dollArea = document.getElementById('wardrobe-doll-area');
+        const onEnd = (e) => {
+            if (!dragClone || !dragSrc) { cleanup(); return; }
+            const p = getPos(e);
             const rect = dollArea.getBoundingClientRect();
-            if (pos.x >= rect.left && pos.x <= rect.right && pos.y >= rect.top && pos.y <= rect.bottom) {
-                self._addToDoll(self._dragSrc.src, self._dragSrc.alt);
+            if (p.x >= rect.left && p.x <= rect.right && p.y >= rect.top && p.y <= rect.bottom) {
+                self._placeItem(dragSrc.src, dragSrc.alt, dragCategory, p, rect);
             }
-            self._cleanupDrag();
+            cleanup();
         };
 
-        // 点击（短按 = 穿脱切换）
-        const onClick = (e) => {
+        const cleanup = () => {
+            if (dragClone) { dragClone.remove(); dragClone = null; }
+            dragSrc = null;
+        };
+
+        // 点击穿戴
+        panels.addEventListener('click', (e) => {
             const img = e.target.closest('.wardrobe-piece');
             if (!img) return;
-            self._addToDoll(img.src, img.alt);
-        };
+            const cat = img.dataset.category || 'tops';
+            const rect = dollArea.getBoundingClientRect();
+            const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 3 };
+            self._placeItem(img.src, img.alt, cat, center, rect);
+        });
 
-        panels.addEventListener('touchstart', onPointerDown, { passive: true });
-        document.addEventListener('touchmove', onPointerMove, { passive: false });
-        document.addEventListener('touchend', onPointerUp);
-        panels.addEventListener('mousedown', onPointerDown);
-        document.addEventListener('mousemove', onPointerMove);
-        document.addEventListener('mouseup', onPointerUp);
-        panels.addEventListener('click', onClick);
-
-        this._cleanupDragFns = () => {
-            document.removeEventListener('touchmove', onPointerMove);
-            document.removeEventListener('touchend', onPointerUp);
-            document.removeEventListener('mousemove', onPointerMove);
-            document.removeEventListener('mouseup', onPointerUp);
-        };
+        panels.addEventListener('touchstart', onStart, { passive: true });
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+        panels.addEventListener('mousedown', onStart);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
     },
 
-    _getPointerPos(e) {
-        if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-        return { x: e.clientX, y: e.clientY };
-    },
-
-    _cleanupDrag() {
-        if (this._dragClone) { this._dragClone.remove(); this._dragClone = null; }
-        this._dragSrc = null;
-    },
-
-    /* ── 添加衣物到人偶 ── */
-    _addToDoll(src, alt) {
+    /* ── 放置衣物到人偶上 ── */
+    _placeItem(src, alt, category, pointerPos, dollRect) {
         const dollArea = document.getElementById('wardrobe-doll-area');
 
-        // 如果已有同类衣物，先移除（同名的替换，不同名的叠加）
-        const existing = dollArea.querySelector(`.wardrobe-piece-clone[alt="${alt}"]`);
-        if (existing) {
-            existing.remove();
-            return; // 再点一次则移除（切换效果）
-        }
-
-        const clone = document.createElement('img');
-        clone.src = src;
-        clone.alt = alt;
-        clone.title = alt;
-        clone.className = 'wardrobe-piece-clone';
-        clone.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:5;';
-        dollArea.appendChild(clone);
-    },
-
-    /* ── 下载人偶为 PNG ── */
-    _downloadDoll() {
-        const dollArea = document.getElementById('wardrobe-doll-area');
-        if (typeof html2canvas === 'undefined') {
-            showToast('html2canvas 未加载，无法导出');
+        // 同类衣物替换（同 category 只保留一个，同名则移除）
+        const existingSameName = dollArea.querySelector(`.wardrobe-placed[data-alt="${alt}"]`);
+        if (existingSameName) {
+            existingSameName.remove();
+            this._placedItems = this._placedItems.filter(i => i.alt !== alt);
             return;
         }
+
+        // 获取该类别的默认偏移
+        const offset = this.CLOTHING_OFFSETS[category] || this.CLOTHING_OFFSETS['tops'];
+
+        // 计算相对于 dollArea 的位置
+        const relX = pointerPos.x - dollRect.left - offset.width / 2;
+        const relY = pointerPos.y - dollRect.top - offset.height / 2;
+
+        // 限制在区域内
+        const finalLeft = Math.max(0, Math.min(relX, dollRect.width - offset.width));
+        const finalTop = Math.max(0, Math.min(relY, dollRect.height - offset.height));
+
+        const el = document.createElement('img');
+        el.src = src;
+        el.alt = alt;
+        el.className = 'wardrobe-placed';
+        el.style.cssText = `
+            position: absolute;
+            left: ${finalLeft}px;
+            top: ${finalTop}px;
+            width: ${offset.width}px;
+            height: ${offset.height}px;
+            object-fit: contain;
+            image-rendering: pixelated;
+            z-index: ${10 + this._placedItems.length};
+            cursor: move;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        `;
+        dollArea.appendChild(el);
+        this._placedItems.push({ el, alt, category });
+
+        // 使已放置的衣物可拖拽调整位置
+        this._makeDraggable(el);
+    },
+
+    /* ── 已放置衣物的拖拽调整 ── */
+    _makeDraggable(el) {
+        let startX, startY, origLeft, origTop, isDragging = false;
+
+        const getPos = (e) => {
+            if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            return { x: e.clientX, y: e.clientY };
+        };
+
+        const onStart = (e) => {
+            e.stopPropagation(); // 不触发底层事件
+            isDragging = true;
+            el.style.cursor = 'grabbing';
+            el.style.outline = '2px solid rgba(100,180,255,0.8)';
+            el.style.outlineOffset = '-1px';
+            const p = getPos(e);
+            startX = p.x;
+            startY = p.y;
+            origLeft = parseInt(el.style.left) || 0;
+            origTop = parseInt(el.style.top) || 0;
+        };
+
+        const onMove = (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const p = getPos(e);
+            const dx = p.x - startX;
+            const dy = p.y - startY;
+            el.style.left = Math.max(0, Math.min(origLeft + dx, el.parentElement.offsetWidth - el.offsetWidth)) + 'px';
+            el.style.top = Math.max(0, Math.min(origTop + dy, el.parentElement.offsetHeight - el.offsetHeight)) + 'px';
+        };
+
+        const onEnd = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            el.style.cursor = 'move';
+            el.style.outline = 'none';
+        };
+
+        // 双击移除
+        el.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            el.remove();
+            this._placedItems = this._placedItems.filter(i => i.el !== el);
+        });
+
+        el.addEventListener('touchstart', onStart, { passive: false });
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+        el.addEventListener('mousedown', onStart);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+    },
+
+    /* ── 重置 ── */
+    _resetDoll() {
+        document.getElementById('wardrobe-doll-area').querySelectorAll('.wardrobe-placed').forEach(el => el.remove());
+        this._placedItems = [];
+        document.getElementById('wardrobe-skintone').src = 'modules/wardrobe/base/Skintone/full/European 01 by Lotte V.png';
+    },
+
+    /* ══════════════════════════════════════
+       IndexedDB 自定义衣物
+       ══════════════════════════════════════ */
+
+    _getDb() { return new Dexie('wardrobe-custom'); },
+
+    async _loadCustomItems() {
+        try {
+            const db = this._getDb();
+            db.version(1).stores({ items: 'id,category,name' });
+            this._customItems = await db.items.toArray();
+        } catch (e) {
+            this._customItems = [];
+        }
+    },
+
+    async _saveCustomItem(item) {
+        try {
+            const db = this._getDb();
+            db.version(1).stores({ items: 'id,category,name' });
+            await db.items.put(item);
+            this._customItems.push(item);
+        } catch (e) { console.error('[Wardrobe] save failed:', e); }
+    },
+
+    async _removeCustomItem(id) {
+        try {
+            const db = this._getDb();
+            db.version(1).stores({ items: 'id,category,name' });
+            await db.items.delete(id);
+            this._customItems = this._customItems.filter(i => i.id !== id);
+            this._buildClothingPanels();
+            showToast('已删除');
+        } catch (e) { console.error('[Wardrobe] remove failed:', e); }
+    },
+
+    async _handleUpload() {
+        const files = this._uploadFiles;
+        const category = this._uploadCategory;
+        if (!files.length) return;
+        const btn = document.getElementById('wardrobe-upload-confirm');
+        btn.disabled = true;
+        btn.textContent = '处理中...';
+        let count = 0;
+        for (const file of files) {
+            try {
+                const dataUrl = await new Promise((res, rej) => {
+                    const r = new FileReader();
+                    r.onload = () => res(r.result);
+                    r.onerror = rej;
+                    r.readAsDataURL(file);
+                });
+                const nameInput = document.getElementById('wardrobe-upload-name');
+                const name = (files.length === 1 && nameInput.value.trim()) ? nameInput.value.trim() : file.name.replace(/\.(png|jpg|jpeg|webp)$/i, '');
+                await this._saveCustomItem({ id: 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), category, name, dataUrl, timestamp: Date.now() });
+                count++;
+            } catch (e) { console.warn('upload fail:', file.name, e); }
+        }
+        this._buildClothingPanels();
+        document.getElementById('wardrobe-upload-modal').classList.remove('visible');
+        showToast(`已添加 ${count} 件服装！`);
+        btn.textContent = '添加';
+    },
+
+    /* ══════════════════════════════════════
+       导出
+       ══════════════════════════════════════ */
+
+    _downloadDoll() {
+        const dollArea = document.getElementById('wardrobe-doll-area');
+        if (typeof html2canvas === 'undefined') { showToast('html2canvas 未加载'); return; }
+
+        // 临时隐藏拖拽边框
+        dollArea.querySelectorAll('.wardrobe-placed').forEach(el => { el.style.outline = 'none'; });
+
         html2canvas(dollArea, {
-            backgroundColor: null,
-            allowTaint: true,
-            useCORS: true,
-            scale: 2,
-            imageSmoothingEnabled: false,
+            backgroundColor: null, allowTaint: true, useCORS: true,
+            scale: 2, imageSmoothingEnabled: false,
         }).then(canvas => {
             canvas.toBlob(blob => {
                 try {
-                    const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.href = url;
+                    a.href = URL.createObjectURL(blob);
                     a.download = 'my_doll.png';
                     a.click();
-                    URL.revokeObjectURL(url);
-                    showToast('已保存人偶图片！');
-                } catch (e) {
-                    showToast('导出失败: ' + e.message);
-                }
+                    URL.revokeObjectURL(a.href);
+                    showToast('已保存！');
+                } catch (e) { showToast('导出失败'); }
             });
-        }).catch(e => {
-            showToast('截图失败: ' + e.message);
-        });
+        }).catch(e => showToast('截图失败'));
     }
 });

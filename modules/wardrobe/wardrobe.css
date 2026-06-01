@@ -1,5 +1,5 @@
 /* ========================================
-   Module: Wardrobe (衣帽间) - Styles
+   Module: Wardrobe (衣帽间) - Styles v2
    ======================================== */
 
 .wardrobe-container {
@@ -10,6 +10,7 @@
     overflow: hidden;
 }
 
+/* ── 顶部栏 ── */
 .wardrobe-header {
     display: flex;
     align-items: center;
@@ -30,23 +31,10 @@
     line-height: 1;
 }
 
-.wardrobe-header .title-container {
-    flex: 1;
-    text-align: center;
-}
+.wardrobe-header .title-container { flex: 1; text-align: center; }
+.wardrobe-header .title { color: #fff; font-size: 18px; font-weight: 600; margin: 0; }
 
-.wardrobe-header .title {
-    color: #fff;
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-}
-
-.wardrobe-tools {
-    display: flex;
-    gap: 6px;
-}
-
+.wardrobe-tools { display: flex; gap: 6px; }
 .wardrobe-tool-btn {
     background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.2);
@@ -57,66 +45,78 @@
     cursor: pointer;
     transition: 0.2s;
 }
+.wardrobe-tool-btn:hover { background: rgba(255,255,255,0.25); }
 
-.wardrobe-tool-btn:hover {
-    background: rgba(255,255,255,0.25);
-}
-
-/* ── 主体区域 ── */
+/* ── 主体 ── */
 .wardrobe-body {
     display: flex;
-    gap: 10px;
-    padding: 10px;
+    gap: 12px;
+    padding: 10px 12px;
     flex-shrink: 0;
 }
 
-/* ── 人偶展示区 ── */
+/* ── 人偶区 ── */
+.wardrobe-doll-section {
+    flex-shrink: 0;
+}
+
 .wardrobe-doll-area {
     position: relative;
-    width: 180px;
-    height: 300px;
-    background: rgba(255,255,255,0.08);
+    width: 166px;
+    height: 436px;
+    background: rgba(255,255,255,0.06);
     border: 2px solid rgba(255,255,255,0.15);
     border-radius: 12px;
-    flex-shrink: 0;
     overflow: hidden;
 }
 
 .wardrobe-doll-area img {
     image-rendering: pixelated;
+    -webkit-user-drag: none;
 }
 
-.wardrobe-doll-area .wardrobe-clickable {
-    margin: 40px 0 0 0;
-    position: relative;
+#wardrobe-skintone {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
     z-index: 1;
-    width: 100%;
-    height: auto;
 }
 
 #wardrobe-avi-area {
-    width: 80px;
-    height: 80px;
-    top: 25px;
-    left: 0;
-    right: 0;
-    margin: auto;
+    width: 80px; height: 80px;
+    top: 25px; left: 0; right: 0; margin: auto;
     position: absolute;
     visibility: hidden;
 }
 
-/* ── 肤色选择 ── */
-.wardrobe-skin-section {
-    flex: 1;
-    min-width: 0;
+.wardrobe-doll-hint {
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+    font-size: 10px;
+    margin-top: 4px;
 }
+
+/* ── 已放置的衣物（可拖拽） ── */
+.wardrobe-placed {
+    pointer-events: auto;
+    transition: outline 0.15s;
+}
+.wardrobe-placed:hover {
+    outline: 1px dashed rgba(100,180,255,0.5);
+    outline-offset: -1px;
+}
+
+/* ── 肤色选择 ── */
+.wardrobe-skin-section { flex: 1; min-width: 0; }
 
 .wardrobe-section-title {
     color: rgba(255,255,255,0.7);
     font-size: 12px;
     font-weight: 600;
     margin-bottom: 6px;
-    padding-left: 2px;
 }
 
 .wardrobe-skin-grid {
@@ -127,24 +127,20 @@
 
 .wardrobe-skin-thumb {
     display: block;
-    width: 24px;
-    height: 24px;
+    width: 24px; height: 24px;
     border: 2px solid rgba(255,255,255,0.15);
     border-radius: 6px;
     overflow: hidden;
     transition: 0.2s;
     cursor: pointer;
 }
-
 .wardrobe-skin-thumb:hover,
 .wardrobe-skin-thumb:active {
     border-color: rgba(255,255,255,0.6);
     transform: scale(1.15);
 }
-
 .wardrobe-skin-thumb img {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     object-fit: cover;
     image-rendering: pixelated;
 }
@@ -155,42 +151,39 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
-    padding: 0 10px 10px;
+    padding: 0 12px 8px;
 }
 
 .wardrobe-tabs {
     display: flex;
-    gap: 4px;
-    padding-bottom: 8px;
+    gap: 3px;
+    padding-bottom: 6px;
     flex-shrink: 0;
 }
 
 .wardrobe-tab {
     flex: 1;
-    padding: 8px 4px;
+    padding: 7px 2px;
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 8px 8px 0 0;
     color: rgba(255,255,255,0.6);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
     text-align: center;
 }
-
 .wardrobe-tab.active {
     background: rgba(255,255,255,0.15);
     color: #fff;
     border-bottom-color: rgba(100,180,255,0.6);
 }
-
 .wardrobe-tab:hover:not(.active) {
     background: rgba(255,255,255,0.12);
     color: rgba(255,255,255,0.8);
 }
 
-/* ── 衣物面板 ── */
 .wardrobe-tab-panels {
     flex: 1;
     overflow-y: auto;
@@ -207,16 +200,12 @@
     flex-wrap: wrap;
     gap: 6px;
 }
-
-.wardrobe-tab-panel.active {
-    display: flex;
-}
+.wardrobe-tab-panel.active { display: flex; }
 
 /* ── 衣物缩略图 ── */
 .wardrobe-piece {
     position: relative;
-    width: 48px;
-    height: 48px;
+    width: 48px; height: 48px;
     object-fit: contain;
     image-rendering: pixelated;
     cursor: grab;
@@ -225,67 +214,41 @@
     padding: 4px;
     background: rgba(255,255,255,0.06);
     transition: 0.15s;
+    -webkit-user-drag: none;
 }
-
 .wardrobe-piece:hover {
     border-color: rgba(100,180,255,0.5);
     background: rgba(100,180,255,0.12);
     transform: scale(1.1);
 }
-
 .wardrobe-piece:active {
     cursor: grabbing;
     transform: scale(0.95);
 }
 
-/* ── 穿戴在人偶上的衣物 ── */
-.wardrobe-piece-clone {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    pointer-events: none;
-    image-rendering: pixelated;
-    z-index: 5;
-}
+.wardrobe-piece-custom { border-color: rgba(255,200,50,0.4); }
 
 /* ── 底部提示 ── */
 .wardrobe-hint {
     text-align: center;
-    color: rgba(255,255,255,0.35);
+    color: rgba(255,255,255,0.3);
     font-size: 11px;
     padding: 6px;
     flex-shrink: 0;
 }
 
 /* ── 响应式 ── */
-@media (max-width: 380px) {
+@media (max-width: 420px) {
     .wardrobe-body {
         flex-direction: column;
         align-items: center;
+        padding: 8px;
     }
     .wardrobe-doll-area {
-        width: 150px;
-        height: 250px;
+        width: 140px;
+        height: 370px;
     }
-    .wardrobe-skin-section {
-        width: 100%;
-    }
-}
-
-/* ── 自定义衣物标记 ── */
-.wardrobe-piece-custom {
-    border-color: rgba(255,200,50,0.4);
-}
-
-.wardrobe-piece-custom::after {
-    content: '⭐';
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    font-size: 8px;
+    .wardrobe-skin-section { width: 100%; }
 }
 
 /* ── 上传弹窗 ── */
@@ -300,10 +263,7 @@
     justify-content: center;
     align-items: center;
 }
-
-.wardrobe-modal-overlay.visible {
-    display: flex;
-}
+.wardrobe-modal-overlay.visible { display: flex; }
 
 .wardrobe-modal {
     background: #1e2a3a;
@@ -315,75 +275,45 @@
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
 }
-
 .wardrobe-modal-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: #fff;
-    text-align: center;
-    padding: 16px 16px 8px;
+    font-size: 17px; font-weight: 700; color: #fff;
+    text-align: center; padding: 16px 16px 8px;
 }
-
-.wardrobe-modal-body {
-    padding: 8px 16px;
-}
+.wardrobe-modal-body { padding: 8px 16px; }
 
 .wardrobe-upload-preview {
-    width: 100%;
-    height: 120px;
+    width: 100%; height: 120px;
     background: rgba(255,255,255,0.06);
     border: 2px dashed rgba(255,255,255,0.2);
     border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     color: rgba(255,255,255,0.4);
-    font-size: 13px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    position: relative;
+    font-size: 13px; margin-bottom: 12px;
+    overflow: hidden; position: relative;
 }
-
 .wardrobe-upload-preview img {
     image-rendering: pixelated;
 }
 
-.wardrobe-upload-category {
-    margin: 12px 0;
-}
-
+.wardrobe-upload-category { margin: 12px 0; }
 .wardrobe-upload-cat-label {
     color: rgba(255,255,255,0.6);
-    font-size: 12px;
-    margin-bottom: 6px;
+    font-size: 12px; margin-bottom: 6px;
 }
-
-.wardrobe-upload-cat-btns {
-    display: flex;
-    gap: 6px;
-}
-
+.wardrobe-upload-cat-btns { display: flex; gap: 6px; }
 .wardrobe-cat-btn {
-    flex: 1;
-    padding: 8px 4px;
+    flex: 1; padding: 8px 4px;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 8px;
     color: rgba(255,255,255,0.6);
-    font-size: 12px;
-    cursor: pointer;
-    transition: 0.2s;
-    text-align: center;
+    font-size: 11px; cursor: pointer;
+    transition: 0.2s; text-align: center;
 }
-
 .wardrobe-cat-btn.active {
     background: rgba(100,180,255,0.2);
     border-color: rgba(100,180,255,0.5);
     color: #fff;
-}
-
-.wardrobe-upload-name-row {
-    margin-bottom: 8px;
 }
 
 .wardrobe-upload-name-input {
@@ -392,59 +322,28 @@
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 8px;
-    color: #fff;
-    font-size: 14px;
-    outline: none;
-    box-sizing: border-box;
+    color: #fff; font-size: 14px;
+    outline: none; box-sizing: border-box;
 }
+.wardrobe-upload-name-input::placeholder { color: rgba(255,255,255,0.3); }
+.wardrobe-upload-name-input:focus { border-color: rgba(100,180,255,0.5); }
 
-.wardrobe-upload-name-input::placeholder {
-    color: rgba(255,255,255,0.3);
-}
-
-.wardrobe-upload-name-input:focus {
-    border-color: rgba(100,180,255,0.5);
-}
-
-.wardrobe-modal-footer {
-    display: flex;
-    gap: 8px;
-    padding: 8px 16px 16px;
-}
-
+.wardrobe-modal-footer { display: flex; gap: 8px; padding: 8px 16px 16px; }
 .wardrobe-modal-btn {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
+    flex: 1; padding: 10px;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: 0.2s;
 }
-
-.wardrobe-modal-btn-primary {
-    background: #4a90d9;
-    color: #fff;
-}
-
-.wardrobe-modal-btn-primary:hover:not(:disabled) {
-    background: #5aa0e9;
-}
-
-.wardrobe-modal-btn-primary:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
+.wardrobe-modal-btn-primary { background: #4a90d9; color: #fff; }
+.wardrobe-modal-btn-primary:hover:not(:disabled) { background: #5aa0e9; }
+.wardrobe-modal-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 .wardrobe-modal-btn-secondary {
     background: rgba(100,180,255,0.15);
     color: #88ccff;
     border: 1px solid rgba(100,180,255,0.3);
-    margin-bottom: 8px;
-    width: 100%;
+    margin-bottom: 8px; width: 100%;
 }
-
 .wardrobe-modal-btn-neutral {
     background: rgba(255,255,255,0.1);
     color: rgba(255,255,255,0.7);
