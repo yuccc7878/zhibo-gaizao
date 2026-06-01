@@ -1,0 +1,138 @@
+/* ========================================
+   Module: Album (相册) - CSS
+   ======================================== */
+
+/* 主页模块网格 - 相册大图标 (2×2) */
+.right-page-grid .album-module-btn {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+.album-icon-img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 15px !important;
+    aspect-ratio: 1;
+}
+
+.album-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 20px; background-color: rgba(255,255,255,0.8);
+    backdrop-filter: blur(10px); border-bottom: 1px solid #eee; flex-shrink: 0;
+}
+.album-header .title { font-size: 18px; font-weight: 600; color: var(--text-color); }
+.album-add-btn {
+    background: var(--primary-color); color: #fff; border: none;
+    width: 36px; height: 36px; border-radius: 50%; font-size: 22px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s;
+}
+.album-add-btn:active { transform: scale(0.9); }
+
+/* 空状态 */
+.album-empty {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; color: #ccc;
+}
+.album-empty-icon { font-size: 64px; margin-bottom: 16px; }
+.album-empty-text { font-size: 15px; color: #999; }
+.album-empty-hint { font-size: 12px; color: #ccc; margin-top: 8px; }
+
+/* 相册网格 */
+.album-content { flex: 1; overflow-y: auto; padding: 8px; }
+.album-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 4px;
+}
+.album-item {
+    position: relative; aspect-ratio: 1; overflow: hidden;
+    border-radius: 4px; cursor: pointer;
+}
+.album-item img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.2s;
+}
+.album-item:active img { transform: scale(1.05); }
+
+/* 封面标记 */
+.album-item.cover::before {
+    content: '⭐ 封面'; position: absolute; top: 6px; left: 6px;
+    background: rgba(255,128,171,0.9); color: #fff;
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 6px; z-index: 2;
+}
+
+/* 图片操作 */
+.album-item-actions {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+    padding: 24px 8px 6px; display: flex; justify-content: flex-end; gap: 6px;
+    opacity: 0; transition: opacity 0.2s;
+}
+.album-item:hover .album-item-actions,
+.album-item:active .album-item-actions { opacity: 1; }
+.album-item-btn {
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    width: 28px; height: 28px; border-radius: 50%; font-size: 12px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+/* 图片查看器 */
+.album-viewer {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.95); z-index: 80; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+}
+.album-viewer.active { display: flex; }
+.album-viewer-close {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(255,255,255,0.15); border: none; color: #fff;
+    padding: 8px 16px; border-radius: 8px; font-size: 14px;
+    font-weight: 600; cursor: pointer; z-index: 2;
+}
+.album-viewer img {
+    max-width: 90%; max-height: 80%; object-fit: contain;
+    border-radius: 8px;
+}
+.album-viewer-info {
+    color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 12px;
+}
+.album-viewer-actions {
+    display: flex; gap: 12px; margin-top: 20px;
+}
+.album-viewer-actions button {
+    padding: 10px 20px; border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.album-viewer-actions .set-cover-btn { background: var(--primary-color); color: #fff; }
+.album-viewer-actions .delete-btn { background: rgba(255,255,255,0.15); color: #ff6b6b; }
+
+/* 添加弹窗 */
+.album-add-modal {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); z-index: 90; display: none;
+    align-items: center; justify-content: center;
+}
+.album-add-modal.visible { display: flex; }
+.album-add-box {
+    background: #fff; border-radius: 18px; padding: 24px;
+    width: 85%; max-width: 320px; text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.album-add-box h3 { margin: 0 0 20px; color: var(--primary-color); }
+.album-add-box .form-group { margin-bottom: 16px; text-align: left; }
+.album-add-box .form-group label { font-size: 13px; font-weight: 600; color: #666; margin-bottom: 6px; display: block; }
+.album-add-box .form-group input { width: 100%; padding: 10px; border: 2px solid #eee; border-radius: 10px; font-size: 14px; box-sizing: border-box; }
+.album-add-box .form-group input:focus { outline: none; border-color: var(--primary-color); }
+.album-add-preview {
+    width: 100%; height: 120px; border: 2px dashed #ddd; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: #ccc; font-size: 13px; margin-bottom: 16px; overflow: hidden;
+    background: #fafafa;
+}
+.album-add-preview img { width: 100%; height: 100%; object-fit: cover; }
+.album-add-btns { display: flex; gap: 10px; }
+.album-add-btns button {
+    flex: 1; padding: 12px; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.album-add-btns .confirm-btn { background: var(--primary-color); color: #fff; }
+.album-add-btns .cancel-btn { background: #eee; color: #666; }

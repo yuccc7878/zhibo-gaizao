@@ -1,0 +1,82 @@
+/* ========================================
+   Module: Shop (商店) - CSS
+   ======================================== */
+
+.shop-money-display {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 18px; font-weight: 700; color: #ff9800;
+}
+.shop-money-display .coin { font-size: 20px; }
+
+/* 分类标签栏 */
+.shop-tabs {
+    display: flex; background: rgba(255,255,255,0.6);
+    border-bottom: 1px solid #eee; flex-shrink: 0;
+}
+.shop-tab {
+    flex: 1; padding: 12px 0; text-align: center; font-size: 14px;
+    font-weight: 600; color: #999; cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    background: none; border-top: none; border-left: none; border-right: none;
+}
+.shop-tab:hover { color: #666; }
+.shop-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+/* 内容区 */
+.shop-content { flex: 1; overflow-y: auto; padding: 16px; }
+.shop-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+
+.shop-item {
+    background: #fff; border-radius: 14px; padding: 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s; position: relative;
+}
+.shop-item:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+.shop-item:active { transform: scale(0.96); }
+.shop-item.owned { opacity: 0.5; pointer-events: none; }
+.shop-item.owned::after {
+    content: '已拥有'; position: absolute; top: 8px; right: 8px;
+    font-size: 10px; background: var(--primary-color); color: #fff;
+    padding: 2px 6px; border-radius: 6px;
+}
+.shop-item-icon { font-size: 32px; }
+.shop-item-label { font-size: 13px; font-weight: 600; color: var(--text-color); text-align: center; }
+.shop-item-cost { font-size: 14px; font-weight: 700; color: #ff9800; }
+.shop-item-cost::before { content: '💰 '; }
+
+/* 购买确认弹窗 */
+.shop-confirm-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4); display: flex; align-items: center;
+    justify-content: center; z-index: 100; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+}
+.shop-confirm-overlay.visible { opacity: 1; pointer-events: auto; }
+.shop-confirm-box {
+    background: #fff; border-radius: 18px; padding: 24px;
+    width: 80%; max-width: 300px; text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.shop-confirm-box .item-icon { font-size: 48px; margin-bottom: 8px; }
+.shop-confirm-box .item-name { font-size: 18px; font-weight: 700; color: var(--text-color); margin-bottom: 4px; }
+.shop-confirm-box .item-price { font-size: 16px; color: #ff9800; margin-bottom: 16px; }
+.shop-confirm-btns { display: flex; gap: 10px; }
+.shop-confirm-btns button {
+    flex: 1; padding: 10px; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 0.15s;
+}
+.shop-confirm-btns button:active { transform: scale(0.95); }
+.shop-confirm-btns .buy-btn { background: var(--primary-color); color: #fff; }
+.shop-confirm-btns .cancel-btn { background: #eee; color: #666; }
+.shop-toast {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    background: rgba(0,0,0,0.75); color: #fff; padding: 12px 24px;
+    border-radius: 12px; font-size: 15px; font-weight: 600;
+    z-index: 200; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.shop-toast.show { opacity: 1; }

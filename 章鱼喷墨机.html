@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>章鱼喷墨机</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/nzP9sgxr/chan-125.png">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- 依赖 -->
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/lottev1991/html2canvas@1.6.5-custom/dist/html2canvas.min.js"></script>
+
+    <!-- 引擎层 -->
+    <link rel="stylesheet" href="engine/styles.css">
+    <link rel="stylesheet" href="modules/shop/shop.css">
+    <link rel="stylesheet" href="modules/live/live.css">
+    <link rel="stylesheet" href="modules/bilibili/bilibili.css">
+    <link rel="stylesheet" href="modules/games/games.css">
+    <link rel="stylesheet" href="modules/album/album.css">
+    <link rel="stylesheet" href="modules/gacha/gacha.css">
+    <link rel="stylesheet" href="modules/wardrobe/wardrobe.css">
+</head>
+
+<body>
+<div class="phone-screen">
+    <!-- 主页（双屏滑动） -->
+    <div id="home-screen" class="screen active">
+        <div class="page-swipe-container" id="page-swipe-container">
+            <div class="swipe-page" id="home-page-main"></div>
+            <div class="swipe-page right-page" id="home-page-right"></div>
+        </div>
+        <div class="page-indicators" id="page-indicators">
+            <div class="dot active" data-page="0"></div>
+            <div class="dot" data-page="1"></div>
+        </div>
+    </div>
+
+    <!-- 聊天列表 -->
+    <div id="chat-list-screen" class="screen">
+        <header class="app-header">
+            <button class="back-btn" data-target="home-screen">‹</button>
+            <div class="title-container"><h1 class="title">聊天</h1></div>
+            <div class="action-btn-group">
+                <button class="action-btn" id="create-group-btn">群聊</button>
+                <button class="action-btn" id="add-chat-btn">+</button>
+            </div>
+        </header>
+        <main class="content">
+            <ul class="list-container" id="chat-list-container"></ul>
+            <div class="placeholder-text" id="no-chats-placeholder" style="display:none;">
+                <p>还没有聊天对象哦~</p><p>点击右上角的"+"创建一个吧！</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 聊天室 -->
+    <div id="chat-room-screen" class="screen">
+        <header class="app-header" id="chat-room-header-default">
+            <button class="back-btn" data-target="chat-list-screen">‹</button>
+            <div class="title-container">
+                <h1 class="title" id="chat-room-title">...</h1>
+                <div class="subtitle" id="chat-room-subtitle"><div class="online-indicator"></div><span id="chat-room-status-text">在线</span></div>
+            </div>
+            <button class="action-btn" id="chat-settings-btn"><img src="https://i.postimg.cc/nhwP4pQy/chan-73.png" alt="设置"></button>
+        </header>
+        <header class="app-header" id="chat-room-header-select" style="display:none;">
+            <button class="action-btn" id="cancel-multi-select-btn">取消</button>
+            <div class="title-container"><h1 class="title" id="multi-select-title">选择消息</h1></div>
+            <div class="placeholder"></div>
+        </header>
+        <main class="content">
+            <div class="message-area" id="message-area"></div>
+            <div class="typing-indicator" id="typing-indicator"></div>
+        </main>
+        <div class="chat-input-wrapper">
+            <div id="sticker-bar">
+                <button class="sticker-bar-btn" id="sticker-toggle-btn"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>
+                <button class="sticker-bar-btn" id="photo-video-btn"><svg viewBox="0 0 24 24"><path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/></svg></button>
+                <button class="sticker-bar-btn" id="image-recognition-btn"><svg viewBox="0 0 24 24"><path d="M21.58,16.09L19.66,18L18.24,16.58L21,13.83C21.39,13.44 22,13.44 22.39,13.83L23.17,14.61C23.56,15 23.56,15.64 23.17,16.03L21.58,17.62M20.13,12.25L18.71,13.66L20.41,15.36L21.83,13.94L20.13,12.25M5.93,19H5C3.9,19 3,18.1 3,17V5C3,3.9 3.9,3 5,3H19C20.1,3 21,3.9 21,5V11.08L19,13.08V5H5V17H5.93L13.5,9.43L16.29,12.21L12.08,16.42L5.93,19Z"/></svg></button>
+                <button class="sticker-bar-btn" id="voice-message-btn"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg></button>
+                <button class="sticker-bar-btn" id="wallet-btn"><svg viewBox="0 0 24 24"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 18H4V8H20V18ZM4 6H20V6H4Z"/></svg></button>
+                <button class="sticker-bar-btn" id="gift-btn"><svg viewBox="0 0 24 24"><path d="M20,8L12,13L4,8V6H20M20,4H4A2,2 0 0,0 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6A2,2 0 0,0 20,4M12.5,18C12.5,17.29 12.17,16.65 11.64,16.27C12.17,15.89 12.5,15.26 12.5,14.55C12.5,13.6 11.83,12.79 11,12.58V12H13V10H11V8H13V6H11V5C11,4.45 10.55,4 10,4H8C7.45,4 7,4.45 7,5V6H9V8H7V10H9V12H7V12.58C6.17,12.79 5.5,13.6 5.5,14.55C5.5,15.26 5.83,15.89 6.36,16.27C5.83,16.65 5.5,17.29 5.5,18H12.5Z"/></svg></button>
+                <button class="sticker-bar-btn" id="time-skip-btn"><svg viewBox="0 0 24 24"><path d="M4 5v14l7-7-7-7zm9 0v14l7-7-7-7z"></path></svg></button>
+            </div>
+            <div class="message-input-area" id="message-input-default">
+                <input type="text" id="message-input" placeholder="输入消息...">
+                <button id="send-message-btn" class="icon-btn send-btn">➤</button>
+                <button id="get-reply-btn" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 1,1 20,12A8,8 0 0,1 12,20M16.24,7.76C15.07,6.58 13.53,6 12,6V12L7.76,16.24C10.1,18.58 13.9,18.58 16.24,16.24C18.58,13.9 18.58,10.1 16.24,7.76Z"/></svg></button>
+            </div>
+            <div class="message-input-area" id="message-edit-bar" style="display:none;">
+                <input type="text" id="message-edit-input">
+                <button id="save-edit-btn" class="icon-btn send-btn">✓</button>
+                <button id="cancel-edit-btn" class="icon-btn" style="background-color:#aaa;">✗</button>
+            </div>
+        </div>
+        <div id="multi-select-bar"><span id="select-count">已选择 0 项</span><button class="btn btn-danger" id="delete-selected-btn" style="width:auto;padding:8px 16px;">删除已选</button></div>
+        <div id="sticker-modal">
+            <div class="header"><span>我的表情</span><button class="btn btn-primary btn-small" id="add-new-sticker-btn">添加新表情</button></div>
+            <div class="sticker-grid" id="sticker-grid-container"></div>
+        </div>
+    </div>
+
+    <!-- 世界书 -->
+    <div id="world-book-screen" class="screen">
+        <header class="app-header">
+            <button class="back-btn" data-target="home-screen">‹</button>
+            <div class="title-container"><h1 class="title">世界书</h1></div>
+            <button class="action-btn" id="add-world-book-btn">+</button>
+        </header>
+        <main class="content">
+            <ul class="list-container" id="world-book-list-container"></ul>
+            <div class="placeholder-text" id="no-world-books-placeholder" style="display:none;">
+                <p>你的世界一片混沌...</p><p>点击右上角的"+"创造第一个设定吧！</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑世界书 -->
+    <div id="edit-world-book-screen" class="screen">
+        <header class="app-header">
+            <button class="back-btn" data-target="world-book-screen">‹</button>
+            <div class="title-container"><h1 class="title" id="edit-world-book-title">创建/编辑条目</h1></div>
+            <div class="placeholder"></div>
+        </header>
+        <main class="content">
+            <form id="edit-world-book-form">
+                <input type="hidden" id="world-book-id">
+                <div class="form-group"><label for="world-book-name">条目名称</label><input type="text" id="world-book-name" placeholder="例如：世界观背景、魔法体系" required></div>
+                <div class="form-group"><label for="world-book-content">条目内容</label><textarea id="world-book-content" rows="8" placeholder="详细描述此项设定..." required></textarea></div>
+                <div class="form-group"><label>注入位置</label><div class="form-group radio-group"><label><input type="radio" name="world-book-position" value="before" checked> 前</label><label><input type="radio" name="world-book-position" value="after"> 后</label></div></div>
+                <button type="submit" class="btn btn-primary">保存条目</button>
+            </form>
+        </main>
+    </div>
+
+    <!-- 动态注入屏幕占位 -->
+    <div id="api-settings-screen" class="screen"></div>
+    <div id="api-edit-screen" class="screen"></div>
+    <div id="img-gen-edit-screen" class="screen"></div>
+    <div id="wallpaper-screen" class="screen"></div>
+    <div id="font-settings-screen" class="screen"></div>
+    <div id="customize-screen" class="screen"></div>
+    <div id="tutorial-screen" class="screen"></div>
+    <div id="shop-screen" class="screen"></div>
+    <div id="live-screen" class="screen"></div>
+    <div id="bilibili-screen" class="screen"></div>
+    <div id="games-screen" class="screen"></div>
+    <div id="album-screen" class="screen"></div>
+    <div id="gacha-screen" class="screen"></div>
+    <div id="wardrobe-screen" class="screen"></div>
+
+    <div id="toast-notification" class="toast"></div>
+    <input type="file" id="image-upload-input" accept="image/*" style="display:none;">
+
+    <!-- 创建角色弹窗 -->
+    <div id="add-char-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>创建新角色</h3>
+            <form id="add-char-form">
+                <div class="form-group"><label for="char-real-name">角色姓名</label><input type="text" id="char-real-name" placeholder="角色的真实姓名" required></div>
+                <div class="form-group"><label for="char-remark-name">角色备注 (昵称)</label><input type="text" id="char-remark-name" placeholder="你对Ta的称呼" required></div>
+                <div class="form-group"><label for="my-name-for-char">我的姓名</label><input type="text" id="my-name-for-char" placeholder="你希望Ta如何称呼你" required></div>
+                <button type="submit" class="btn btn-primary">创建</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 表情包弹窗 -->
+    <div id="add-sticker-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3 id="add-sticker-modal-title">添加新表情</h3>
+            <form id="add-sticker-form">
+                <input type="hidden" id="sticker-edit-id">
+                <div id="sticker-preview"><span>预览</span></div>
+                <div class="form-group"><label for="sticker-name">表情名称</label><input type="text" id="sticker-name" placeholder="如：开心" required></div>
+                <div class="form-group"><label for="sticker-url-input">表情URL</label><input type="url" id="sticker-url-input" placeholder="粘贴图片URL"></div>
+                <p style="text-align:center;color:#888;margin:-10px 0 15px;">或</p>
+                <input type="file" id="sticker-file-upload" accept="image/*" style="display:none;">
+                <label for="sticker-file-upload" class="btn btn-secondary" style="width:100%;margin-bottom:20px;">从本地上传</label>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
+    <div id="sticker-actionsheet" class="action-sheet-overlay">
+        <div class="action-sheet">
+            <button class="action-sheet-button" id="edit-sticker-btn">编辑</button>
+            <button class="action-sheet-button danger" id="delete-sticker-btn">删除</button>
+        </div>
+    </div>
+
+    <!-- 语音弹窗 -->
+    <div id="send-voice-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>发送语音消息</h3>
+            <form id="send-voice-form">
+                <div class="form-group"><label for="voice-text-input">输入语音文字</label><textarea id="voice-text-input" placeholder="在这里输入你想说的话..." required rows="4"></textarea></div>
+                <div class="form-group" style="text-align:center;color:#888;font-size:14px;">预计时长: <span id="voice-duration-preview">0"</span></div>
+                <button type="submit" class="btn btn-primary">发送</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 照片/视频弹窗 -->
+    <div id="send-pv-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>分享照片/视频</h3>
+            <form id="send-pv-form">
+                <div class="form-group"><label for="pv-text-input">输入描述</label><textarea id="pv-text-input" placeholder="在这里描述你的照片或视频内容..." required rows="4"></textarea></div>
+                <button type="submit" class="btn btn-primary">发送</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 转账弹窗 -->
+    <div id="send-transfer-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>转账</h3>
+            <div style="text-align:center;font-size:13px;color:#888;margin:-8px 0 12px;">🪙 当前余额: <span id="transfer-balance">0</span> 金币</div>
+            <form id="send-transfer-form">
+                <div class="form-group"><label for="transfer-amount-input">金额 (元)</label><input type="number" id="transfer-amount-input" placeholder="0.00" required step="0.01" min="0.01"></div>
+                <div class="form-group"><label for="transfer-remark-input">备注</label><input type="text" id="transfer-remark-input" placeholder="（选填）"></div>
+                <button type="submit" class="btn btn-primary">发送</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 礼物弹窗 -->
+    <div id="send-gift-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>送出礼物</h3>
+            <div id="gift-item-list" style="max-height:50vh;overflow-y:auto;margin-bottom:12px;"></div>
+            <div id="gift-empty-hint" style="display:none;text-align:center;padding:20px 0;color:#999;font-size:13px;">还没有已购买的物品<br>去商店购买后再来赠送吧～</div>
+        </div>
+    </div>
+
+    <!-- 时间跳跃弹窗 -->
+    <div id="time-skip-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>记录今天发生的事</h3>
+            <form id="time-skip-form">
+                <div class="form-group"><label for="time-skip-input">事件描述 (该消息AI可见，会作为上下文)</label><textarea id="time-skip-input" placeholder="例如：我们一起去山顶看了日落，然后吃了烧烤。" required rows="4"></textarea></div>
+                <button type="submit" class="btn btn-primary">发送</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 群聊收件人选择 -->
+    <div id="group-recipient-selection-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3 id="group-recipient-selection-title">选择收件人</h3>
+            <ul id="group-recipient-selection-list"></ul>
+            <button class="btn btn-primary" id="confirm-group-recipient-btn" style="margin-top:20px;">确认</button>
+        </div>
+    </div>
+
+    <!-- 转账操作 -->
+    <div id="receive-transfer-actionsheet" class="action-sheet-overlay">
+        <div class="action-sheet">
+            <button class="action-sheet-button" id="accept-transfer-btn">接收</button>
+            <button class="action-sheet-button danger" id="return-transfer-btn">退回</button>
+        </div>
+    </div>
+
+    <!-- 私聊设置侧边栏 -->
+    <div id="chat-settings-sidebar" class="settings-sidebar">
+        <div class="header">聊天设置</div>
+        <div class="content">
+            <form id="chat-settings-form">
+                <div class="avatar-setting"><img src="" alt="角色头像" id="setting-char-avatar-preview" class="avatar-preview"><input type="file" id="setting-char-avatar-upload" accept="image/*" style="display:none;"><label for="setting-char-avatar-upload" class="btn btn-primary" style="flex-grow:1;">更换角色头像</label></div>
+                <div class="form-group"><label for="setting-char-remark">角色备注 (昵称)</label><input type="text" id="setting-char-remark"></div>
+                <div class="form-group"><label for="setting-char-persona">角色人设</label><textarea id="setting-char-persona" placeholder="详细描述角色的性格、背景、说话风格等。"></textarea></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="avatar-setting"><img src="" alt="我的头像" id="setting-my-avatar-preview" class="avatar-preview"><input type="file" id="setting-my-avatar-upload" accept="image/*" style="display:none;"><label for="setting-my-avatar-upload" class="btn btn-secondary" style="flex-grow:1;">更换我的头像</label></div>
+                <div class="form-group"><label for="setting-my-name">我的姓名</label><input type="text" id="setting-my-name"></div>
+                <div class="form-group"><label for="setting-my-persona">我的人设</label><textarea id="setting-my-persona" placeholder="描述你希望在对话中扮演的形象。"></textarea></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="form-group"><button type="button" class="btn btn-secondary" id="link-world-book-btn">关联世界书</button></div>
+                <div class="form-group"><label for="setting-theme-color">主题颜色 (对方/我方)</label><select id="setting-theme-color"></select></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><label for="setting-use-custom-css" style="margin-bottom:0;">自定义气泡样式</label><input type="checkbox" id="setting-use-custom-css" style="width:auto;"></div>
+                    <div id="private-bubble-css-preview" style="background:#fff;border:1px solid #eee;border-radius:10px;padding:15px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px;"></div>
+                    <textarea id="setting-custom-bubble-css" rows="6" placeholder="在此输入CSS代码..." disabled></textarea>
+                    <button type="button" class="btn btn-neutral" id="reset-custom-bubble-css-btn" style="margin-top:10px;width:auto;padding:5px 15px;font-size:14px;">恢复默认</button>
+                </div>
+                <div class="form-group"><label for="setting-max-memory">最大记忆轮数</label><input type="number" id="setting-max-memory" value="100" min="1" max="500"></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <span style="font-weight:600;font-size:14px;">📝 对话记忆</span>
+                        <div style="display:flex;gap:6px;">
+                            <button type="button" class="btn btn-secondary" id="btn-gen-summary" style="padding:4px 12px;font-size:12px;width:auto;">生成摘要</button>
+                            <button type="button" class="btn btn-neutral" id="btn-clear-summary" style="padding:4px 12px;font-size:12px;width:auto;">清空</button>
+                        </div>
+                    </div>
+                    <textarea id="setting-memory-summary" rows="3" style="width:100%;padding:8px;border:1px solid #eee;border-radius:8px;font-size:12px;resize:vertical;box-sizing:border-box;" placeholder="还没有记忆摘要，点击「生成摘要」由 AI 自动总结对话历史"></textarea>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <span style="font-weight:600;font-size:14px;">⭐ 关键事件</span>
+                        <button type="button" class="btn btn-neutral" id="btn-clear-keyevents" style="padding:4px 12px;font-size:12px;width:auto;">清空全部</button>
+                    </div>
+                    <div id="setting-key-events-list" style="font-size:12px;color:#666;max-height:120px;overflow-y:auto;"></div>
+                </div>
+                <div class="form-group"><label for="setting-chat-bg-upload" class="btn btn-primary">更换聊天背景</label><input type="file" id="setting-chat-bg-upload" accept="image/*" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary">保存设置</button>
+            </form>
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+            <button type="button" class="btn btn-danger" id="clear-chat-history-btn">清空聊天记录</button>
+        </div>
+    </div>
+
+    <!-- 世界书选择弹窗 -->
+    <div id="world-book-selection-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>选择要关联的世界书</h3>
+            <ul id="world-book-selection-list"></ul>
+            <button class="btn btn-primary" id="save-world-book-selection-btn" style="margin-top:20px;">确认</button>
+        </div>
+    </div>
+
+    <!-- 创建群聊弹窗 -->
+    <div id="create-group-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>创建群聊</h3>
+            <form id="create-group-form">
+                <div class="form-group"><label>选择群成员</label><ul id="member-selection-list" class="member-selection-list"></ul></div>
+                <div class="form-group"><label for="group-name-input">群聊名称</label><input type="text" id="group-name-input" placeholder="给你的群聊起个名字吧" required></div>
+                <button type="submit" class="btn btn-primary">创建群聊</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 群聊设置侧边栏 -->
+    <div id="group-settings-sidebar" class="settings-sidebar">
+        <div class="header">群聊设置</div>
+        <div class="content">
+            <form id="group-settings-form">
+                <div class="group-avatar-setting"><img src="" alt="群头像" id="setting-group-avatar-preview" class="group-avatar-preview"><input type="file" id="setting-group-avatar-upload" accept="image/*" style="display:none;"><label for="setting-group-avatar-upload" class="btn btn-primary" style="flex-grow:1;">更换群头像</label></div>
+                <div class="form-group"><label for="setting-group-name">群名 (AI也可见)</label><input type="text" id="setting-group-name"></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="avatar-setting"><img src="" alt="我的头像" id="setting-group-my-avatar-preview" class="avatar-preview"><input type="file" id="setting-group-my-avatar-upload" accept="image/*" style="display:none;"><label for="setting-group-my-avatar-upload" class="btn btn-secondary" style="flex-grow:1;">更换我的头像</label></div>
+                <div class="form-group"><label for="setting-group-my-nickname">我的群昵称</label><input type="text" id="setting-group-my-nickname"></div>
+                <div class="form-group"><label for="setting-group-my-persona">我的人设</label><textarea id="setting-group-my-persona" placeholder="描述你希望在此群聊中扮演的形象。"></textarea></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="form-group"><label>群成员</label><div class="group-members-list" id="group-members-list-container"></div></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="form-group"><button type="button" class="btn btn-secondary" id="link-group-world-book-btn">关联世界书</button></div>
+                <div class="form-group"><label for="setting-group-theme-color">主题颜色 (对方/我方)</label><select id="setting-group-theme-color"></select></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><label for="setting-group-use-custom-css" style="margin-bottom:0;">自定义气泡样式</label><input type="checkbox" id="setting-group-use-custom-css" style="width:auto;"></div>
+                    <div id="group-bubble-css-preview" style="background:#fff;border:1px solid #eee;border-radius:10px;padding:15px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px;"></div>
+                    <textarea id="setting-group-custom-bubble-css" rows="6" placeholder="在此输入CSS代码..." disabled></textarea>
+                    <button type="button" class="btn btn-neutral" id="reset-group-custom-bubble-css-btn" style="margin-top:10px;width:auto;padding:5px 15px;font-size:14px;">恢复默认</button>
+                </div>
+                <div class="form-group"><label for="setting-group-max-memory">最大记忆轮数</label><input type="number" id="setting-group-max-memory" value="100" min="1" max="500"></div>
+                <div class="form-group"><label for="setting-group-chat-bg-upload" class="btn btn-primary">更换聊天背景</label><input type="file" id="setting-group-chat-bg-upload" accept="image/*" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary">保存设置</button>
+            </form>
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+            <button type="button" class="btn btn-danger" id="clear-group-chat-history-btn">清空聊天记录</button>
+        </div>
+    </div>
+
+    <!-- 群成员编辑弹窗 -->
+    <div id="edit-group-member-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3 id="edit-group-member-title">编辑群成员</h3>
+            <form id="edit-group-member-form">
+                <input type="hidden" id="editing-member-id">
+                <div class="avatar-setting" style="justify-content:center;"><img src="" alt="成员头像" id="edit-member-avatar-preview" class="avatar-preview" style="cursor:pointer;"><input type="file" id="edit-member-avatar-upload" accept="image/*" style="display:none;"></div>
+                <div class="form-group"><label for="edit-member-group-nickname">群昵称</label><input type="text" id="edit-member-group-nickname" required></div>
+                <div class="form-group"><label for="edit-member-real-name">真名</label><input type="text" id="edit-member-real-name" required></div>
+                <div class="form-group"><label for="edit-member-persona">人设</label><textarea id="edit-member-persona" placeholder="详细描述角色的性格、背景等。"></textarea></div>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加成员操作面板 -->
+    <div id="add-member-actionsheet" class="action-sheet-overlay">
+        <div class="action-sheet">
+            <button class="action-sheet-button" id="invite-existing-member-btn">邀请现有角色</button>
+            <button class="action-sheet-button" id="create-new-member-btn">创建新角色入群</button>
+        </div>
+    </div>
+
+    <!-- 邀请成员弹窗 -->
+    <div id="invite-member-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>邀请成员加入群聊</h3>
+            <ul id="invite-member-selection-list"></ul>
+            <button class="btn btn-primary" id="confirm-invite-btn" style="margin-top:20px;">确认邀请</button>
+        </div>
+    </div>
+
+    <!-- 创建新成员弹窗 -->
+    <div id="create-member-for-group-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>创建新角色并加入群聊</h3>
+            <form id="create-member-for-group-form">
+                <div class="avatar-setting" style="justify-content:center;"><img src="https://i.postimg.cc/Y96LPskq/o-o-2.jpg" alt="新成员头像" id="create-group-member-avatar-preview" class="avatar-preview" style="cursor:pointer;"><input type="file" id="create-group-member-avatar-upload" accept="image/*" style="display:none;"></div>
+                <div class="form-group"><label for="create-group-member-nickname">群昵称</label><input type="text" id="create-group-member-nickname" required></div>
+                <div class="form-group"><label for="create-group-member-realname">真名</label><input type="text" id="create-group-member-realname" required></div>
+                <div class="form-group"><label for="create-group-member-persona">人设</label><textarea id="create-group-member-persona" placeholder="详细描述角色的性格、背景等。"></textarea></div>
+                <button type="submit" class="btn btn-primary">创建并加入</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="import-data-input" accept=".ee" style="display:none;">
+
+<!-- 引擎层 JS -->
+<script src="engine/db.js"></script>
+<script src="engine/ui.js"></script>
+<script src="engine/core.js"></script>
+
+<!-- 模块 JS（新增模块只需在此添加一行） -->
+<script src="modules/shop/shop.js"></script>
+<script src="modules/live/live.js"></script>
+<script src="modules/bilibili/bilibili.js"></script>
+<script src="modules/games/games.js"></script>
+<script src="modules/album/album.js"></script>
+<script src="modules/gacha/gacha.js"></script>
+<script src="modules/wardrobe/wardrobe.js"></script>
+
+<!-- 主应用逻辑 -->
+<script src="app.js"></script>
+
+<!-- 启动 -->
+<script>
+    document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
