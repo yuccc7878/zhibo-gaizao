@@ -348,3 +348,96 @@
     background: rgba(255,255,255,0.1);
     color: rgba(255,255,255,0.7);
 }
+
+/* ── 缩放滑块弹出面板 ── */
+.wardrobe-resize-popup {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: rgba(20, 30, 50, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(100, 180, 255, 0.3);
+    border-radius: 12px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 180px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    display: none;
+}
+
+.wardrobe-resize-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wardrobe-resize-label {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.wardrobe-resize-slider {
+    flex: 1;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.wardrobe-resize-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #4a90d9;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    cursor: pointer;
+}
+
+.wardrobe-resize-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #4a90d9;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    cursor: pointer;
+}
+
+.wardrobe-resize-val {
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+    min-width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.wardrobe-resize-btn {
+    flex: 1;
+    padding: 4px 6px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+    cursor: pointer;
+    transition: 0.15s;
+    text-align: center;
+}
+
+.wardrobe-resize-btn:hover {
+    background: rgba(100, 180, 255, 0.2);
+    border-color: rgba(100, 180, 255, 0.4);
+    color: #fff;
+}
+
+.wardrobe-resize-btn:active {
+    background: rgba(100, 180, 255, 0.35);
+}

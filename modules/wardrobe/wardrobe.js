@@ -414,59 +414,214 @@ Engine.register({
         this._makeDraggable(el);
     },
 
-    /* ── 已放置衣物的拖拽调整 ── */
+    /* ── 已放置衣物：拖拽移动 + 缩放 + 选中 ── */
     _makeDraggable(el) {
+        const self = this;
         let startX, startY, origLeft, origTop, isDragging = false;
+        let selected = false;
+        let pinchStartDist = 0, pinchStartW = 0, pinchStartH = 0;
 
         const getPos = (e) => {
             if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
             return { x: e.clientX, y: e.clientY };
         };
 
-        const onStart = (e) => {
-            e.stopPropagation(); // 不触发底层事件
+        const getTouchDist = (e) => {
+            if (!e.touches || e.touches.length < 2) return 0;
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        const selectItem = () => {
+            // 取消其他选中
+            document.querySelectorAll('.wardrobe-placed.selected').forEach(e => {
+                e.classList.remove('selected');
+                e.style.outline = 'none';
+            });
+            selected = true;
+            el.classList.add('selected');
+            el.style.outline = '2px solid rgba(100,180,255,0.9)';
+            el.style.outlineOffset = '-1px';
+            self._showResizeSlider(el);
+        };
+
+        const deselectItem = () => {
+            selected = false;
+            el.classList.remove('selected');
+            el.style.outline = 'none';
+            self._hideResizeSlider();
+        };
+
+        // ── 触摸事件 ──
+        el.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            if (e.touches.length === 2) {
+                // 双指 = 缩放
+                isDragging = false;
+                pinchStartDist = getTouchDist(e);
+                pinchStartW = el.offsetWidth;
+                pinchStartH = el.offsetHeight;
+                return;
+            }
             isDragging = true;
             el.style.cursor = 'grabbing';
-            el.style.outline = '2px solid rgba(100,180,255,0.8)';
-            el.style.outlineOffset = '-1px';
             const p = getPos(e);
-            startX = p.x;
-            startY = p.y;
+            startX = p.x; startY = p.y;
             origLeft = parseInt(el.style.left) || 0;
             origTop = parseInt(el.style.top) || 0;
-        };
+        }, { passive: false });
 
-        const onMove = (e) => {
+        document.addEventListener('touchmove', (e) => {
+            // 双指缩放
+            if (pinchStartDist > 0 && e.touches.length === 2) {
+                e.preventDefault();
+                const dist = getTouchDist(e);
+                const scale = dist / pinchStartDist;
+                const newW = Math.max(30, Math.min(pinchStartW * scale, 300));
+                const newH = Math.max(30, Math.min(pinchStartH * scale, 400));
+                el.style.width = newW + 'px';
+                el.style.height = newH + 'px';
+                self._updateResizeSliderValue(el);
+                return;
+            }
             if (!isDragging) return;
             e.preventDefault();
-            e.stopPropagation();
             const p = getPos(e);
-            const dx = p.x - startX;
-            const dy = p.y - startY;
-            el.style.left = Math.max(0, Math.min(origLeft + dx, el.parentElement.offsetWidth - el.offsetWidth)) + 'px';
-            el.style.top = Math.max(0, Math.min(origTop + dy, el.parentElement.offsetHeight - el.offsetHeight)) + 'px';
-        };
+            const dx = p.x - startX, dy = p.y - startY;
+            const parent = el.parentElement;
+            el.style.left = Math.max(0, Math.min(origLeft + dx, parent.offsetWidth - el.offsetWidth)) + 'px';
+            el.style.top = Math.max(0, Math.min(origTop + dy, parent.offsetHeight - el.offsetHeight)) + 'px';
+        }, { passive: false });
 
-        const onEnd = (e) => {
+        document.addEventListener('touchend', (e) => {
+            if (pinchStartDist > 0 && e.touches.length < 2) {
+                pinchStartDist = 0;
+                selectItem();
+                return;
+            }
             if (!isDragging) return;
             isDragging = false;
             el.style.cursor = 'move';
-            el.style.outline = 'none';
+            selectItem();
+        });
+
+        // ── 鼠标事件 ──
+        el.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            isDragging = true;
+            el.style.cursor = 'grabbing';
+            startX = e.clientX; startY = e.clientY;
+            origLeft = parseInt(el.style.left) || 0;
+            origTop = parseInt(el.style.top) || 0;
+        });
+
+        const onMouseMove = (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const dx = e.clientX - startX, dy = e.clientY - startY;
+            const parent = el.parentElement;
+            el.style.left = Math.max(0, Math.min(origLeft + dx, parent.offsetWidth - el.offsetWidth)) + 'px';
+            el.style.top = Math.max(0, Math.min(origTop + dy, parent.offsetHeight - el.offsetHeight)) + 'px';
         };
+
+        const onMouseUp = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            el.style.cursor = 'move';
+            selectItem();
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+
+        // 点击空白处取消选中
+        document.getElementById('wardrobe-doll-area').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('wardrobe-doll-area') ||
+                e.target === document.getElementById('wardrobe-skintone')) {
+                deselectItem();
+            }
+        });
 
         // 双击移除
         el.addEventListener('dblclick', (e) => {
             e.stopPropagation();
+            deselectItem();
             el.remove();
-            this._placedItems = this._placedItems.filter(i => i.el !== el);
+            self._placedItems = self._placedItems.filter(i => i.el !== el);
         });
+    },
 
-        el.addEventListener('touchstart', onStart, { passive: false });
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('touchend', onEnd);
-        el.addEventListener('mousedown', onStart);
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onEnd);
+    /* ── 缩放滑块 UI ── */
+    _resizeSliderEl: null,
+
+    _showResizeSlider(targetEl) {
+        const self = this;
+        if (!this._resizeSliderEl) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'wardrobe-resize-popup';
+            wrapper.innerHTML = `
+                <div class="wardrobe-resize-row">
+                    <span class="wardrobe-resize-label">🔍</span>
+                    <input type="range" class="wardrobe-resize-slider" min="30" max="300" value="100" step="5">
+                    <span class="wardrobe-resize-val">100%</span>
+                </div>
+                <div class="wardrobe-resize-row">
+                    <button class="wardrobe-resize-btn" data-scale="0.5">小</button>
+                    <button class="wardrobe-resize-btn" data-scale="1">中</button>
+                    <button class="wardrobe-resize-btn" data-scale="1.5">大</button>
+                    <button class="wardrobe-resize-btn" data-scale="2.5">特大</button>
+                </div>`;
+            document.getElementById('wardrobe-doll-area').appendChild(wrapper);
+            this._resizeSliderEl = wrapper;
+
+            // 滑块事件
+            const slider = wrapper.querySelector('.wardrobe-resize-slider');
+            slider.addEventListener('input', () => {
+                self._applyResize(targetEl, parseInt(slider.value));
+            });
+
+            // 预设按钮
+            wrapper.querySelectorAll('.wardrobe-resize-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const scale = parseFloat(btn.dataset.scale);
+                    self._applyResize(targetEl, scale * 100);
+                    slider.value = scale * 100;
+                });
+            });
+        }
+
+        // 更新当前值
+        this._resizeSliderEl._targetEl = targetEl;
+        this._updateResizeSliderValue(targetEl);
+        this._resizeSliderEl.style.display = 'flex';
+    },
+
+    _hideResizeSlider() {
+        if (this._resizeSliderEl) {
+            this._resizeSliderEl.style.display = 'none';
+        }
+    },
+
+    _updateResizeSliderValue(el) {
+        if (!this._resizeSliderEl) return;
+        const w = el.offsetWidth;
+        const cat = this._placedItems.find(i => i.el === el)?.category || 'tops';
+        const baseW = (this.CLOTHING_OFFSETS[cat] || this.CLOTHING_OFFSETS['tops']).width;
+        const pct = Math.round((w / baseW) * 100);
+        this._resizeSliderEl.querySelector('.wardrobe-resize-slider').value = pct;
+        this._resizeSliderEl.querySelector('.wardrobe-resize-val').textContent = pct + '%';
+    },
+
+    _applyResize(el, pct) {
+        const cat = this._placedItems.find(i => i.el === el)?.category || 'tops';
+        const base = this.CLOTHING_OFFSETS[cat] || this.CLOTHING_OFFSETS['tops'];
+        const scale = pct / 100;
+        el.style.width = Math.round(base.width * scale) + 'px';
+        el.style.height = Math.round(base.height * scale) + 'px';
+        if (this._resizeSliderEl) {
+            this._resizeSliderEl.querySelector('.wardrobe-resize-val').textContent = Math.round(pct) + '%';
+        }
     },
 
     /* ── 重置 ── */
