@@ -60,12 +60,14 @@ Engine.register({
         const screen = document.getElementById(this.screen);
         screen.innerHTML = `
             <div class="live-step-overlay" id="live-step-overlay">
-                <div class="live-step-box" id="live-step-box">
+                <div class="live-step-container">
                     <div class="live-tabs">
                         <span class="live-tab active" data-tab="self">🙋 自己开播</span>
                         <span class="live-tab" data-tab="hosts">🎤 主播选择</span>
                     </div>
-                    <div class="live-tab-body" id="live-tab-body"></div>
+                    <div class="live-step-box" id="live-step-box">
+                        <div class="live-tab-body" id="live-tab-body"></div>
+                    </div>
                 </div>
             </div>
             <div class="live-stream-page" id="live-stream-page">
@@ -445,9 +447,9 @@ Engine.register({
 
     showStep1() {
         this.state.step = 1;
-        const box = document.getElementById('live-step-box');
+        const body = document.getElementById('live-tab-body');
         const overlay = document.getElementById('live-step-overlay');
-        box.innerHTML = `
+        body.innerHTML = `
             <div class="live-step-title">选择直播等级</div>
             <div class="live-option-list">
                 ${this.LEVELS.map(lv => {
@@ -458,7 +460,7 @@ Engine.register({
             <div class="live-step-btns"><button class="live-back-btn" id="live-step1-cancel">取消</button></div>`;
         overlay.classList.add('visible');
         document.getElementById('live-step1-cancel').addEventListener('click', () => switchScreen('home-screen'));
-        box.querySelectorAll('.live-option:not(.disabled)').forEach(opt => {
+        body.querySelectorAll('.live-option:not(.disabled)').forEach(opt => {
             opt.addEventListener('click', () => {
                 this.state.level = this.LEVELS.find(l => l.id === parseInt(opt.dataset.id));
                 this.showStep2();
@@ -468,15 +470,15 @@ Engine.register({
 
     showStep2() {
         this.state.step = 2;
-        const box = document.getElementById('live-step-box');
-        box.innerHTML = `
+        const body = document.getElementById('live-tab-body');
+        body.innerHTML = `
             <div class="live-step-title">选择直播场景</div>
             <div class="live-option-list">
                 ${this.SCENES.map(sc => `<div class="live-option" data-id="${sc.id}"><span>${sc.label}</span><div class="live-option-desc">${sc.desc}</div></div>`).join('')}
             </div>
             <div class="live-step-btns"><button class="live-back-btn" id="live-step2-back">上一步</button></div>`;
         document.getElementById('live-step2-back').addEventListener('click', () => this.showStep1());
-        box.querySelectorAll('.live-option').forEach(opt => {
+        body.querySelectorAll('.live-option').forEach(opt => {
             opt.addEventListener('click', () => {
                 this.state.scene = this.SCENES.find(s => s.id === opt.dataset.id);
                 this.showStep3();
@@ -486,12 +488,12 @@ Engine.register({
 
     showStep3() {
         this.state.step = 3;
-        const box = document.getElementById('live-step-box');
+        const body = document.getElementById('live-tab-body');
         const shop = Engine.getModule('shop');
         const availableProps = shop ? shop.getOwnedProps() : [];
 
         if (availableProps.length === 0) {
-            box.innerHTML = `
+            body.innerHTML = `
                 <div class="live-step-title">选择直播道具</div>
                 <div style="text-align:center;color:#999;padding:20px 0;font-size:14px;">还没有道具哦~<br>先去商店购买吧！</div>
                 <div class="live-step-btns">
@@ -504,7 +506,7 @@ Engine.register({
         }
 
         this.state.props = [];
-        box.innerHTML = `
+        body.innerHTML = `
             <div class="live-step-title">选择直播道具（可多选）</div>
             <div class="live-props-grid">
                 ${availableProps.map(item => {
@@ -520,7 +522,7 @@ Engine.register({
             </div>`;
         document.getElementById('live-step3-back').addEventListener('click', () => this.showStep2());
         document.getElementById('live-step3-start').addEventListener('click', () => this.startStream());
-        box.querySelectorAll('.live-prop').forEach(el => {
+        body.querySelectorAll('.live-prop').forEach(el => {
             el.addEventListener('click', () => {
                 el.classList.toggle('selected');
                 const id = el.dataset.id;
@@ -908,7 +910,7 @@ Engine.register({
         const overlay = document.getElementById('live-reward-overlay');
         const box = document.getElementById('live-reward-box');
 
-        box.innerHTML = `
+        body.innerHTML = `
             <div class="live-reward-title">📺 直播结算</div>
             <div class="live-reward-subtitle">${this.state.level.label} · ${this.state.scene.label}</div>
             <div class="live-reward-coin">${reward.totalReward}</div>
