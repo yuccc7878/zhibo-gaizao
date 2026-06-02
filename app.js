@@ -1264,10 +1264,22 @@ async function maybeSendAiImage(chat, prompt) {
         if (imgUrl.includes('pollinations')) {
             const encoded = encodeURIComponent(prompt + ', anime style, high quality');
             imageUrl = imgUrl.replace(/\/+$/, '') + '/' + encoded + '?width=768&height=1024&nologo=true';
-            // 用 fetch 预检查，超时 15 秒，失败也不阻塞
+            // 用 fetch 验证图片是否生成成功
             try {
-                await fetch(imageUrl, { method: 'HEAD', mode: 'no-cors', signal: AbortSignal.timeout(15000) });
-            } catch (_) { /* 忽略预检失败，直接用 URL */ }
+                const resp = await fetch(imageUrl, { method: 'GET', signal: AbortSignal.timeout(30000) });
+                if (!resp.ok) {
+                    const text = await resp.text().catch(() => '');
+                    let msg = '生图失败 (' + resp.status + ')';
+                    try { const j = JSON.parse(text); if (j.error) msg += ': ' + j.error; } catch(_) {}
+                    throw new Error(msg);
+                }
+                // 确认返回的是图片
+                const ct = resp.headers.get('content-type') || '';
+                if (!ct.includes('image/')) throw new Error('接口未返回图片 (content-type: ' + ct + ')');
+            } catch (_) {
+                if (_.message && _.message.includes('生图失败')) throw _;
+                /* 网络预检失败，尝试直接发送 */
+            }
         } else {
             const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + imgKey };
             const resp = await fetch(imgUrl, {
