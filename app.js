@@ -1158,14 +1158,20 @@ async function getAiReply() {
             const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
             await processGeminiStream(response, chat);
-            // AI 自主配图（带冷却：有生图配置即自动触发）
+            // AI 自主配图（带冷却）
+            console.log('[AiImg] 检查配图条件: url=', db.imgGenSettings?.url, '助理消息数=', chat.history.filter(m => m.role === 'assistant').length);
             if (db.imgGenSettings?.url) {
                 const lastImgIdx = chat._lastAutoImgIdx || -1;
                 const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
                 if (assistantMsgs - lastImgIdx >= 2) {
+                    console.log('[AiImg] 条件满足，开始生成');
                     await maybeSendAiImage(chat);
                     chat._lastAutoImgIdx = assistantMsgs;
+                } else {
+                    console.log('[AiImg] 冷却中，跳过 (lastImgIdx=' + lastImgIdx + ', now=' + assistantMsgs + ')');
                 }
+            } else {
+                console.log('[AiImg] 未配置生图URL，跳过');
             }
         } else {
             const endpoint = `${apiUrl}/v1/chat/completions`;
@@ -1175,14 +1181,20 @@ async function getAiReply() {
             const fullResponse = json.choices?.[0]?.message?.content || '';
             if (!fullResponse) throw new Error('AI 返回内容为空');
             await handleAiResponse(fullResponse, chat);
-            // AI 自主配图（带冷却：有生图配置即自动触发）
+            // AI 自主配图（带冷却）
+            console.log('[AiImg] 检查配图条件: url=', db.imgGenSettings?.url, '助理消息数=', chat.history.filter(m => m.role === 'assistant').length);
             if (db.imgGenSettings?.url) {
                 const lastImgIdx = chat._lastAutoImgIdx || -1;
                 const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
                 if (assistantMsgs - lastImgIdx >= 2) {
+                    console.log('[AiImg] 条件满足，开始生成');
                     await maybeSendAiImage(chat);
                     chat._lastAutoImgIdx = assistantMsgs;
+                } else {
+                    console.log('[AiImg] 冷却中，跳过 (lastImgIdx=' + lastImgIdx + ', now=' + assistantMsgs + ')');
                 }
+            } else {
+                console.log('[AiImg] 未配置生图URL，跳过');
             }
         }
     } catch (error) {
@@ -1294,6 +1306,7 @@ async function handleAiResponse(fullResponse, chat) {
 
 /** AI 生图：使用指定的 prompt 生成配图并发送到聊天 */
 async function maybeSendAiImage(chat, prompt) {
+    console.log('[AiImg] maybeSendAiImage called, prompt:', prompt ? prompt.substring(0, 30) : '(auto)', 'imgUrl:', (db.imgGenSettings?.url || '未配置').substring(0, 50));
     if (!prompt) {
         // 向后兼容：未传 prompt 时从最后一条助手消息提取
         const lastMsgs = chat.history.filter(m => m.role === 'assistant');
