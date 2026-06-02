@@ -647,12 +647,15 @@ function createMessageBubbleElement(message) {
         else if (transferStatus === 'returned') { statusText = '已退回'; bubbleElement.classList.add('returned'); }
         if ((transferStatus !== 'pending' && currentChatType === 'private') || currentChatType === 'group') bubbleElement.style.cursor = 'default';
         bubbleElement.innerHTML = `<div class="overlay"></div><div class="transfer-content"><p class="transfer-title">${titleText}</p><p class="transfer-amount">¥${amount}</p>${remarkText ? `<p class="transfer-remark">${remarkText}</p>` : ''}<p class="transfer-status">${statusText}</p></div>`;
+    } else if (message.type === 'ai_image') {
+        bubbleElement = document.createElement('div'); bubbleElement.className = 'image-bubble';
+        const imgSrc = message.imageUrl || (message.parts && message.parts.find(p => p.type === 'image')?.data) || content;
+        bubbleElement.innerHTML = `<img src="${imgSrc}" alt="AI图片" style="max-width:100%;max-height:300px;width:auto;height:auto;" onerror="console.log('[Bubble] 图片加载失败:', this.src.substring(0,80));">`;
+        console.log('[Bubble] ai_image:', imgSrc.substring(0, 80));
     } else if ((message.parts && message.parts.some(p => p.type === 'image')) || imageRecogMatch || /^(https?:\/\/[^\s]+\/(?:prompt\/|generate|upload)?[^?\s]*|data:image\/[a-z]+;base64,)/i.test(content) || /\.(jpg|jpeg|png|gif|webp|bmp|svg)(?:\?|$)/i.test(content)) {
         bubbleElement = document.createElement('div'); bubbleElement.className = 'image-bubble';
-        // 优先使用 parts 中的图片地址，兼容 content 直接为 URL
         const imgSrc = (message.parts && message.parts.find(p => p.type === 'image')?.data) || content;
-        bubbleElement.innerHTML = `<img src="${imgSrc}" alt="图片消息" style="max-width:100%;max-height:300px;width:auto;height:auto;">`;
-        console.log('[Bubble] image-bubble created:', imgSrc.substring(0, 80));
+        bubbleElement.innerHTML = `<img src="${imgSrc}" alt="图片消息" style="max-width:100%;max-height:300px;width:auto;height:auto;" onerror="console.log('[Bubble] 备选图片加载失败:', this.src.substring(0,80));">`;
     } else if (textMatch) {
         bubbleElement = document.createElement('div'); bubbleElement.className = `message-bubble ${isSent ? 'sent' : 'received'}`;
         bubbleElement.textContent = textMatch[1].trim();
@@ -1311,9 +1314,10 @@ async function maybeSendAiImage(chat, prompt) {
         // 向后兼容：未传 prompt 时从最后一条助手消息提取
         const lastMsgs = chat.history.filter(m => m.role === 'assistant');
         const lastMsg = lastMsgs[lastMsgs.length - 1];
-        if (!lastMsg) return;
+        if (!lastMsg) { console.log('[AiImg] ⚠️ 无assistant消息'); return; }
         prompt = lastMsg.content.replace(/\[.*?\]/g, '').trim();
-        if (!prompt || prompt.length < 3) return;
+        console.log('[AiImg] 自动提取prompt:', '«' + prompt + '»', '长度=', prompt.length);
+        if (!prompt || prompt.length < 3) { console.log('[AiImg] ⚠️ prompt太短，跳过'); return; }
     }
 
     const imgSettings = db.imgGenSettings || {};
@@ -1379,12 +1383,14 @@ async function maybeSendAiImage(chat, prompt) {
             if (!imageUrl) throw new Error('未返回图片地址');
         }
 
-        // 发送图片消息
+        // 发送图片消息（采用 ephone 方式：type + imageUrl 分离）
         console.log('[AiImg] 生图成功, URL:', imageUrl.substring(0, 100));
         const msg = {
             id: 'msg_' + Date.now() + '_' + Math.random(),
             role: 'assistant',
-            content: imageUrl,
+            type: 'ai_image',
+            content: 'AI生成的图片',
+            imageUrl: imageUrl,
             parts: [{ type: 'text', text: 'AI生成的图片' }, { type: 'image', data: imageUrl }],
             timestamp: Date.now()
         };
