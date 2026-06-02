@@ -1164,8 +1164,8 @@ async function getAiReply() {
                 const lastImgIdx = chat._lastAutoImgIdx || -1;
                 const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
                 if (assistantMsgs - lastImgIdx >= 2) {
-                    console.log('[AiImg] 条件满足，开始生成');
-                    await maybeSendAiImage(chat);
+                    console.log('[AiImg] 条件满足，后台生成中...');
+                    maybeSendAiImage(chat).catch(e => console.error('[AiImg] 后台生图失败:', e));
                     chat._lastAutoImgIdx = assistantMsgs;
                 } else {
                     console.log('[AiImg] 冷却中，跳过 (lastImgIdx=' + lastImgIdx + ', now=' + assistantMsgs + ')');
@@ -1187,8 +1187,8 @@ async function getAiReply() {
                 const lastImgIdx = chat._lastAutoImgIdx || -1;
                 const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
                 if (assistantMsgs - lastImgIdx >= 2) {
-                    console.log('[AiImg] 条件满足，开始生成');
-                    await maybeSendAiImage(chat);
+                    console.log('[AiImg] 条件满足，后台生成中...');
+                    maybeSendAiImage(chat).catch(e => console.error('[AiImg] 后台生图失败:', e));
                     chat._lastAutoImgIdx = assistantMsgs;
                 } else {
                     console.log('[AiImg] 冷却中，跳过 (lastImgIdx=' + lastImgIdx + ', now=' + assistantMsgs + ')');
@@ -1259,7 +1259,7 @@ async function handleAiResponse(fullResponse, chat) {
         for (const marker of imgMarkers) {
             const match = marker.match(/\[(?:生成配图|配图|生成图片)[：:]\s*([^\]]+)\]/);
             if (match) {
-                await maybeSendAiImage(chat, match[1].trim());
+                maybeSendAiImage(chat, match[1].trim()).catch(e => console.error('[AiImg] 标记配图失败:', e));
             }
         }
     }
