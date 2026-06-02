@@ -1161,21 +1161,6 @@ async function getAiReply() {
             const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
             await processGeminiStream(response, chat);
-            // AI 自主配图（带冷却）
-            console.log('[AiImg] 检查配图条件: url=', db.imgGenSettings?.url, '助理消息数=', chat.history.filter(m => m.role === 'assistant').length);
-            if (db.imgGenSettings?.url) {
-                const lastImgIdx = chat._lastAutoImgIdx || -1;
-                const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
-                if (assistantMsgs - lastImgIdx >= 2) {
-                    console.log('[AiImg] 条件满足，后台生成中...');
-                    maybeSendAiImage(chat).catch(e => console.error('[AiImg] 后台生图失败:', e));
-                    chat._lastAutoImgIdx = assistantMsgs;
-                } else {
-                    console.log('[AiImg] 冷却中，跳过 (lastImgIdx=' + lastImgIdx + ', now=' + assistantMsgs + ')');
-                }
-            } else {
-                console.log('[AiImg] 未配置生图URL，跳过');
-            }
         } else {
             const endpoint = `${apiUrl}/v1/chat/completions`;
             const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(requestBody) });
@@ -1184,21 +1169,6 @@ async function getAiReply() {
             const fullResponse = json.choices?.[0]?.message?.content || '';
             if (!fullResponse) throw new Error('AI 返回内容为空');
             await handleAiResponse(fullResponse, chat);
-            // AI 自主配图（带冷却）
-            console.log('[AiImg] 检查配图条件: url=', db.imgGenSettings?.url, '助理消息数=', chat.history.filter(m => m.role === 'assistant').length);
-            if (db.imgGenSettings?.url) {
-                const lastImgIdx = chat._lastAutoImgIdx || -1;
-                const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
-                if (assistantMsgs - lastImgIdx >= 2) {
-                    console.log('[AiImg] 条件满足，后台生成中...');
-                    maybeSendAiImage(chat).catch(e => console.error('[AiImg] 后台生图失败:', e));
-                    chat._lastAutoImgIdx = assistantMsgs;
-                } else {
-                    console.log('[AiImg] 冷却中，跳过 (lastImgIdx=' + lastImgIdx + ', now=' + assistantMsgs + ')');
-                }
-            } else {
-                console.log('[AiImg] 未配置生图URL，跳过');
-            }
         }
     } catch (error) {
         console.error('AI回复失败:', error); showToast(`AI回复失败: ${error.message}`);
@@ -1317,7 +1287,7 @@ async function maybeSendAiImage(chat, prompt) {
         if (!lastMsg) { console.log('[AiImg] ⚠️ 无assistant消息'); return; }
         prompt = lastMsg.content.replace(/\[.*?\]/g, '').trim();
         console.log('[AiImg] 自动提取prompt:', '«' + prompt + '»', '长度=', prompt.length);
-        if (!prompt || prompt.length < 3) { console.log('[AiImg] ⚠️ prompt太短，跳过'); return; }
+        if (!prompt) { console.log('[AiImg] ⚠️ prompt为空，跳过'); return; }
     }
 
     const imgSettings = db.imgGenSettings || {};
