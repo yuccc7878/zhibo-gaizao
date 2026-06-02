@@ -666,6 +666,34 @@ function createMessageBubbleElement(message) {
     const nicknameHTML = (currentChatType === 'group' && !isSent && senderNickname) ? `<div class="group-nickname">${senderNickname}</div>` : '';
     bubbleRow.innerHTML = `<div class="message-info">${nicknameHTML}<img src="${avatarUrl}" class="message-avatar"><span class="message-time">${timeString}</span></div>`;
     if (bubbleElement) bubbleRow.appendChild(bubbleElement);
+
+    // TTS 朗读按钮（仅接收文本消息）
+    if (!isSent && bubbleElement && !bubbleElement.classList.contains('image-bubble') && !transferStatus && !giftStatus && message.role !== 'system') {
+        const ttsBtn = document.createElement('button');
+        ttsBtn.textContent = '🔊';
+        ttsBtn.title = '朗读';
+        ttsBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:13px;padding:2px 6px;opacity:0.4;transition:opacity 0.2s;vertical-align:middle;';
+        ttsBtn.onmouseenter = () => ttsBtn.style.opacity = '1';
+        ttsBtn.onmouseleave = () => ttsBtn.style.opacity = '0.4';
+        ttsBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (window.speechSynthesis && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                ttsBtn.textContent = '🔊';
+            } else {
+                const text = (bubbleElement.textContent || bubbleElement.innerText || '').replace(/\[.*?\]/g, '').trim();
+                if (text) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'zh-CN';
+                    utterance.onend = () => { ttsBtn.textContent = '🔊'; };
+                    window.speechSynthesis.speak(utterance);
+                    ttsBtn.textContent = '🔇';
+                }
+            }
+        };
+        bubbleRow.appendChild(ttsBtn);
+    }
+
     wrapper.prepend(bubbleRow);
     return wrapper;
 }
@@ -1127,6 +1155,15 @@ async function getAiReply() {
             const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
             await processGeminiStream(response, chat);
+            // AI 自主配图（带冷却）
+            if (chat.aiImgGen) {
+                const lastImgIdx = chat._lastAutoImgIdx || -1;
+                const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
+                if (assistantMsgs - lastImgIdx >= 2) {
+                    await maybeSendAiImage(chat);
+                    chat._lastAutoImgIdx = assistantMsgs;
+                }
+            }
         } else {
             const endpoint = `${apiUrl}/v1/chat/completions`;
             const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(requestBody) });
@@ -1135,6 +1172,15 @@ async function getAiReply() {
             const fullResponse = json.choices?.[0]?.message?.content || '';
             if (!fullResponse) throw new Error('AI 返回内容为空');
             await handleAiResponse(fullResponse, chat);
+            // AI 自主配图（带冷却：每 2 条消息最多 1 次）
+            if (chat.aiImgGen) {
+                const lastImgIdx = chat._lastAutoImgIdx || -1;
+                const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
+                if (assistantMsgs - lastImgIdx >= 2) {
+                    await maybeSendAiImage(chat);
+                    chat._lastAutoImgIdx = assistantMsgs;
+                }
+            }
         }
     } catch (error) {
         console.error('AI回复失败:', error); showToast(`AI回复失败: ${error.message}`);
