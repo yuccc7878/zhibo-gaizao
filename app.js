@@ -647,9 +647,12 @@ function createMessageBubbleElement(message) {
         else if (transferStatus === 'returned') { statusText = '已退回'; bubbleElement.classList.add('returned'); }
         if ((transferStatus !== 'pending' && currentChatType === 'private') || currentChatType === 'group') bubbleElement.style.cursor = 'default';
         bubbleElement.innerHTML = `<div class="overlay"></div><div class="transfer-content"><p class="transfer-title">${titleText}</p><p class="transfer-amount">¥${amount}</p>${remarkText ? `<p class="transfer-remark">${remarkText}</p>` : ''}<p class="transfer-status">${statusText}</p></div>`;
-    } else if ((message.parts && message.parts.some(p => p.type === 'image')) || imageRecogMatch || /^(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|bmp|svg)|data:image\/[a-z]+;base64,)/i.test(content)) {
+    } else if ((message.parts && message.parts.some(p => p.type === 'image')) || imageRecogMatch || /^(https?:\/\/[^\s]+\/(?:prompt\/|generate|upload)?[^?\s]*|data:image\/[a-z]+;base64,)/i.test(content) || /\.(jpg|jpeg|png|gif|webp|bmp|svg)(?:\?|$)/i.test(content)) {
         bubbleElement = document.createElement('div'); bubbleElement.className = 'image-bubble';
-        bubbleElement.innerHTML = `<img src="${content}" alt="图片消息">`;
+        // 优先使用 parts 中的图片地址，兼容 content 直接为 URL
+        const imgSrc = (message.parts && message.parts.find(p => p.type === 'image')?.data) || content;
+        bubbleElement.innerHTML = `<img src="${imgSrc}" alt="图片消息" style="max-width:100%;max-height:300px;width:auto;height:auto;">`;
+        console.log('[Bubble] image-bubble created:', imgSrc.substring(0, 80));
     } else if (textMatch) {
         bubbleElement = document.createElement('div'); bubbleElement.className = `message-bubble ${isSent ? 'sent' : 'received'}`;
         bubbleElement.textContent = textMatch[1].trim();
@@ -1344,6 +1347,7 @@ async function maybeSendAiImage(chat, prompt) {
         }
 
         // 发送图片消息
+        console.log('[AiImg] 生图成功, URL:', imageUrl.substring(0, 100));
         const msg = {
             id: 'msg_' + Date.now() + '_' + Math.random(),
             role: 'assistant',

@@ -372,7 +372,7 @@ body {
     font-size: 12px; padding: 4px 10px; border-radius: 10px; text-align: center;
 }
 .image-bubble {
-    max-width: 120px; border-radius: var(--border-radius); margin: 0 8px; padding: 4px;
+    max-width: 280px; border-radius: var(--border-radius); margin: 0 8px; padding: 4px;
     background-color: rgba(255,255,255,0.5); backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer;
 }
