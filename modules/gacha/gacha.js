@@ -360,7 +360,8 @@ Engine.register({
                 myAvatar: 'https://i.postimg.cc/Y96LPskq/o-o-2.jpg',
                 theme: 'white_pink', maxMemory: 10, chatBg: '',
                 history: [], isPinned: false, status: '在线',
-                worldBookIds: [], useCustomBubbleCss: false, customBubbleCss: ''
+                worldBookIds: [], useCustomBubbleCss: false, customBubbleCss: '',
+                aiImgGen: false
             });
             await saveData();
             this.results.splice(idx, 1);

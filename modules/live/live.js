@@ -433,7 +433,8 @@ Engine.register({
                 status: '在线',
                 worldBookIds: [],
                 useCustomBubbleCss: false,
-                customBubbleCss: ''
+                customBubbleCss: '',
+                aiImgGen: false
             });
             await saveData();
             if (typeof renderChatList === 'function') renderChatList();
