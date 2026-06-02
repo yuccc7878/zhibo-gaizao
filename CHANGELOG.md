@@ -1,5 +1,29 @@
 # 更新日志
 
+## v0.7.4 - ES6 模块化重构 + TTS 朗读 (2026-06-03)
+
+### 🏗️ 架构重构
+
+- 将原 2018 行 app.js 拆分为 **26 个 ES6 模块**（4093 行）
+- **核心层** `js/core/`（5 文件）：state、dom、utils、dataService、aiService
+- **UI 模块** `js/ui/`（9 文件）：chatRoom、chatList、homeScreen、settings、promptBuilder 等
+- **子系统** `js/systems/`（11 文件）：group、apiSettings、worldBook、stickers、wallet 等
+- 适配器模式 AI 服务层：OpenAI/Gemini 双适配器，流式/非流式统一接口
+- 依赖注入解耦：所有模块导出 `init(dom, ...deps)`，无全局变量依赖
+- 原 `app.js` 中的 HTML 注入、全局事件委托、Engine.initAll 已在入口集成
+
+### 🔊 TTS 朗读
+
+- 新增 `ttsService.js`：Web Speech API 调用手机系统 TTS
+- 聊天气泡收到文本消息显示 🔊 按钮，点击朗读/停止
+- 自动清除文本中的特殊标记和 URL
+
+### 🔧 修复
+
+- `worldBook.js` 使用全局 `switchScreen` 而非模块导入
+- `tutorial.js` 缺少导入数据的文件变更监听
+- 新建角色默认 `aiImgGen: false`，生图配置可独立开关
+
 ## v0.7.3 - 直播分页 + 主播选择 + 打赏 + AI 自主配图 (2026-06-02)
 
 ### 📺 直播大改版
