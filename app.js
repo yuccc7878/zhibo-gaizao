@@ -1158,8 +1158,8 @@ async function getAiReply() {
             const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
             await processGeminiStream(response, chat);
-            // AI 自主配图（带冷却）
-            if (chat.aiImgGen) {
+            // AI 自主配图（带冷却：有生图配置即自动触发）
+            if (db.imgGenSettings?.url) {
                 const lastImgIdx = chat._lastAutoImgIdx || -1;
                 const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
                 if (assistantMsgs - lastImgIdx >= 2) {
@@ -1175,8 +1175,8 @@ async function getAiReply() {
             const fullResponse = json.choices?.[0]?.message?.content || '';
             if (!fullResponse) throw new Error('AI 返回内容为空');
             await handleAiResponse(fullResponse, chat);
-            // AI 自主配图（带冷却：每 2 条消息最多 1 次）
-            if (chat.aiImgGen) {
+            // AI 自主配图（带冷却：有生图配置即自动触发）
+            if (db.imgGenSettings?.url) {
                 const lastImgIdx = chat._lastAutoImgIdx || -1;
                 const assistantMsgs = chat.history.filter(m => m.role === 'assistant').length;
                 if (assistantMsgs - lastImgIdx >= 2) {
@@ -1243,7 +1243,7 @@ async function handleAiResponse(fullResponse, chat) {
     const imgRegexGlobal = /\[(?:生成配图|配图|生成图片)[：:]\s*([^\]]+)\]/g;
     const imgMarkers = fullResponse.match(imgRegexGlobal);
     let cleanedResponse = fullResponse.replace(imgRegexGlobal, '').trim();
-    if (chat.aiImgGen && imgMarkers) {
+    if (db.imgGenSettings?.url && imgMarkers) {
         for (const marker of imgMarkers) {
             const match = marker.match(/\[(?:生成配图|配图|生成图片)[：:]\s*([^\]]+)\]/);
             if (match) {
