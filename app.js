@@ -1344,16 +1344,36 @@ async function maybeSendAiImage(chat, prompt) {
             }
         } else {
             const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + imgKey };
+            console.log('[AiImg] 调用自定义API:', imgUrl, 'model:', imgModel);
             const resp = await fetch(imgUrl, {
                 method: 'POST', headers,
-                body: JSON.stringify({ model: imgModel, prompt: prompt, image_size: '768x1024', batch_size: 1 })
+                body: JSON.stringify({ model: imgModel, prompt: prompt, image_size: '768x1024', batch_size: 1 }),
+                signal: AbortSignal.timeout(60000)
             });
-            if (!resp.ok) throw new Error('生图失败: ' + resp.status);
-            const json = await resp.json();
-            if (json.data && json.data[0]) {
-                imageUrl = json.data[0].url || json.data[0].b64_json || '';
-                if (json.data[0].b64_json && imageUrl.indexOf('http') !== 0 && imageUrl.indexOf('data:') !== 0) {
-                    imageUrl = 'data:image/png;base64,' + imageUrl;
+            console.log('[AiImg] API响应状态:', resp.status, resp.statusText);
+            if (!resp.ok) {
+                const text = await resp.text().catch(() => '');
+                console.log('[AiImg] API错误体:', text.substring(0, 200));
+                throw new Error('生图失败: ' + resp.status + ' ' + text.substring(0, 100));
+            }
+            const contentType = resp.headers.get('content-type') || '';
+            console.log('[AiImg] API content-type:', contentType);
+            if (contentType.includes('image/')) {
+                // 直接返回图片二进制，转为 blob URL
+                const blob = await resp.blob();
+                imageUrl = URL.createObjectURL(blob);
+                console.log('[AiImg] 二进制图片 blob URL:', imageUrl.substring(0, 50));
+            } else {
+                const json = await resp.json();
+                console.log('[AiImg] API返回JSON keys:', Object.keys(json));
+                if (json.data && json.data[0]) {
+                    imageUrl = json.data[0].url || json.data[0].b64_json || '';
+                    console.log('[AiImg] 取到URL:', imageUrl ? imageUrl.substring(0, 80) : '空');
+                    if (json.data[0].b64_json && imageUrl.indexOf('http') !== 0 && imageUrl.indexOf('data:') !== 0) {
+                        imageUrl = 'data:image/png;base64,' + imageUrl;
+                    }
+                } else {
+                    console.log('[AiImg] 未识别的响应格式:', JSON.stringify(json).substring(0, 200));
                 }
             }
             if (!imageUrl) throw new Error('未返回图片地址');
