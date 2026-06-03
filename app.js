@@ -1641,7 +1641,19 @@ function setupWorldBookApp() {
     aiWbBtn.className = 'action-btn';
     aiWbBtn.textContent = '🎲';
     aiWbBtn.title = 'AI 生成世界书';
-    document.querySelector('#world-book-screen .app-header')?.appendChild(aiWbBtn);
+    // 将 🎲 按钮插入到 + 按钮旁边（没有 action-btn-group 则创建一个）
+    const header = document.querySelector('#world-book-screen .app-header');
+    if (header) {
+        let group = header.querySelector('.action-btn-group');
+        if (!group) {
+            group = document.createElement('div');
+            group.className = 'action-btn-group';
+            const addBtn = header.querySelector('#add-world-book-btn');
+            if (addBtn) { addBtn.replaceWith(group); group.appendChild(addBtn); }
+            else { header.appendChild(group); }
+        }
+        group.appendChild(aiWbBtn);
+    }
     aiWbBtn.addEventListener('click', () => {
         document.getElementById('ai-wb-keywords').value = '';
         document.getElementById('ai-wb-r18').checked = false;
