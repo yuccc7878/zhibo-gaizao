@@ -102,6 +102,9 @@ Engine.register({
         this._uploadFiles = [];
         this._placedItems = []; // 已穿戴的衣物
 
+        // 清理旧版自定义衣物（全量替换素材后无需保留旧数据）
+        try { Dexie.delete('wardrobe-custom'); } catch (_) {}
+
         this._loadCustomItems().then(() => {
             this._buildSkinGrid();
             this._buildClothingPanels();
@@ -136,46 +139,15 @@ Engine.register({
 
     _buildClothingPanels() {
         const categories = {
-            hair: [
-                'Long 001 (Black) by Lotte V', 'Long 001 (Blonde, light) by Lotte V',
-                'Long 001 (Brown) by Lotte V', 'Long 001 (Indigo) by Lotte V',
-                'Long 001 (Pink) by Lotte V', 'Long 001 (Red) by Lotte V',
-                'Moon guardian buns 001 by Lotte V'
-            ],
-            tops: [
-                'Bra 001 (Black) by Lotte V', 'Bra 001 (Indigo) by Lotte V', 'Bra 001 (Pink) by Lotte V', 'Bra 001 (White) by Lotte V',
-                'Crop Top 001 (Black)', 'Crop Top 001 (Blue)', 'Crop Top 001 (Green)', 'Crop Top 001 (Orange)',
-                'Crop Top 001 (Pink)', 'Crop Top 001 (Purple)', 'Crop Top 001 (Red)', 'Crop Top 001 (White)', 'Crop Top 001 (Yellow)',
-                'T-Shirt 001 (Black) by Lotte V', 'T-Shirt 001 (Indigo) by Lotte V', 'T-Shirt 001 (Pink) by Lotte V',
-                'T-Shirt 001 (White) by Lotte V', 'T-Shirt 001 (Yellow) by Lotte V',
-                'Tank Top 001 (Black)', 'Tank Top 001 (Blue)', 'Tank Top 001 (Green)', 'Tank Top 001 (Orange)',
-                'Tank Top 001 (Pink)', 'Tank Top 001 (Purple)', 'Tank Top 001 (Red)', 'Tank Top 001 (White)', 'Tank Top 001 (Yellow)',
-                'Long Sleeve 001 (Black)', 'Long Sleeve 001 (Blue)', 'Long Sleeve 001 (Green)', 'Long Sleeve 001 (Orange)',
-                'Long Sleeve 001 (Pink)', 'Long Sleeve 001 (Purple)', 'Long Sleeve 001 (Red)', 'Long Sleeve 001 (White)', 'Long Sleeve 001 (Yellow)',
-                'Hoodie 001 (Black)', 'Hoodie 001 (Blue)', 'Hoodie 001 (Green)', 'Hoodie 001 (Orange)',
-                'Hoodie 001 (Pink)', 'Hoodie 001 (Purple)', 'Hoodie 001 (Red)', 'Hoodie 001 (White)', 'Hoodie 001 (Yellow)'
-            ],
-            bottoms: [
-                'Panties (Black) by Lotte V', 'Panties (Indigo) by Lotte V', 'Panties (Pink) by Lotte V', 'Panties (White) by Lotte V',
-                'Skirt 001 (Black) by Lotte V', 'Skirt 001 (Indigo) by Lotte V', 'Skirt 001 (Pink) by Lotte V',
-                'Skirt 001 (White) by Lotte V', 'Skirt 001 (Yellow) by Lotte V',
-                'Shorts 001 (Black)', 'Shorts 001 (Blue)', 'Shorts 001 (Green)', 'Shorts 001 (Orange)',
-                'Shorts 001 (Pink)', 'Shorts 001 (Purple)', 'Shorts 001 (Red)', 'Shorts 001 (White)', 'Shorts 001 (Yellow)',
-                'Pants 001 (Black)', 'Pants 001 (Blue)', 'Pants 001 (Green)', 'Pants 001 (Orange)',
-                'Pants 001 (Pink)', 'Pants 001 (Purple)', 'Pants 001 (Red)', 'Pants 001 (White)', 'Pants 001 (Yellow)',
-                'Pencil Skirt 001 (Black)', 'Pencil Skirt 001 (Blue)', 'Pencil Skirt 001 (Green)', 'Pencil Skirt 001 (Orange)',
-                'Pencil Skirt 001 (Pink)', 'Pencil Skirt 001 (Purple)', 'Pencil Skirt 001 (Red)', 'Pencil Skirt 001 (White)', 'Pencil Skirt 001 (Yellow)'
-            ],
-            fullbody: [
-                'Dress 001 (Black) by Lotte V', 'Dress 001 (Indigo) by Lotte V', 'Dress 001 (Pink) by Lotte V',
-                'Dress 001 (Red) by Lotte V', 'Dress 001 (White) by Lotte V', 'Dress 001 (Yellow) by Lotte V',
-                'Jacket 001 (Black)', 'Jacket 001 (Blue)', 'Jacket 001 (Green)', 'Jacket 001 (Orange)',
-                'Jacket 001 (Pink)', 'Jacket 001 (Purple)', 'Jacket 001 (Red)', 'Jacket 001 (White)', 'Jacket 001 (Yellow)',
-                'Coat 001 (Black)', 'Coat 001 (Blue)', 'Coat 001 (Green)', 'Coat 001 (Orange)',
-                'Coat 001 (Pink)', 'Coat 001 (Purple)', 'Coat 001 (Red)', 'Coat 001 (White)', 'Coat 001 (Yellow)',
-                'Kimono 001 (Black)', 'Kimono 001 (Blue)', 'Kimono 001 (Green)', 'Kimono 001 (Orange)',
-                'Kimono 001 (Pink)', 'Kimono 001 (Purple)', 'Kimono 001 (Red)', 'Kimono 001 (White)', 'Kimono 001 (Yellow)'
-            ]
+            hair: ['棕短发', '棕马尾', '橙卷发', '橙短发', '浅金卷', '红棕卷', '红马尾', '金星发'],
+            tops: ['牛仔外套', '红帽衫', '条纹衫', '格子衫', '牛仔衣', '运动衫',
+                   '条纹短袖', '橙色外套', '深蓝夹克', '红格衬衫', '红色连帽',
+                   '绿色夹克', '花朵外套', '蓝色卫衣'],
+            bottoms: ['工装长裤', '条纹长裤', '格纹短裙', '牛仔短裤', '牛仔长裤',
+                      '百褶短裙', '碎花短裙', '运动短裤'],
+            fullbody: ['彩点裙', '波点裙', '工装服', '运动服',
+                       '星空裙', '月光裙', '枫糖裙', '樱花裙',
+                       '浅海裙', '甜心裙', '草莓裙', '薄荷裙']
         };
 
         const folderMap = { hair: 'Hair', tops: 'Tops', bottoms: 'Bottoms', fullbody: 'Full-body' };
@@ -184,7 +156,7 @@ Engine.register({
             const panel = document.querySelector(`[data-panel="${key}"]`);
             let html = items.map(name => {
                 const folder = folderMap[key];
-                const displayName = name.replace(/ by Lotte V$/, '').replace(/ by Lotte V$/i, '');
+                const displayName = name;
                 return `<img src="modules/wardrobe/images/${folder}/${name}.png"
                              alt="${displayName}" title="${displayName}"
                              class="wardrobe-piece" data-category="${key}">`;
