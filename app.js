@@ -1073,7 +1073,7 @@ function generatePrivateSystemPrompt(character) {
     p += `【文本消息（最常用）】\n`;
     p += `  [${character.realName}的消息：{你说的话}]\n\n`;
     p += `【特殊消息（偶尔使用）】\n`;
-    p += `  表情包: [${character.realName}发送的表情包：{图片路径}]（路径不含https://i.postimg.cc/）\n`;
+    p += `  表情包: [${character.realName}发送的表情包：[生成配图：对画面的详细描述]]\n`;
     p += `  语音: [${character.realName}的语音：{语音内容}]\n`;
     p += `  照片/视频: [${character.realName}发来的照片/视频：{描述}]\n`;
     p += `  送礼物: [${character.realName}送来的礼物：{礼物描述}]\n`;
@@ -1125,7 +1125,7 @@ function generateGroupSystemPrompt(group) {
     p += `# Part 3: 输出格式\n`;
     p += `每条消息占一行，用成员的**真名**填充：\n`;
     p += `- 普通消息: [{成员真名}的消息：{内容}]\n`;
-    p += `- 表情包: [{成员真名}发送的表情包：{路径}]\n`;
+    p += `- 表情包: [{成员真名}发送的表情包：[生成配图：对画面的详细描述]]\n`;
     p += `- 语音: [{成员真名}的语音：{内容}]\n`;
     p += `- 照片/视频: [{成员真名}发来的照片/视频：{描述}]\n\n`;
 
