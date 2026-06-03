@@ -121,7 +121,7 @@ const loadData = async () => {
     if (!db.characters) db.characters = [];
     if (!db.groups) db.groups = [];
     if (!db.myStickers) db.myStickers = [];
-    if (!db.homeScreenMode) db.homeScreenMode = 'night';
+    // 移除：日间/夜间切换已删除
     if (!db.worldBooks) db.worldBooks = [];
     if (!db.fontUrl) db.fontUrl = '';
     if (!db.customIcons) db.customIcons = {};

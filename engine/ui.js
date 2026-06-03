@@ -172,8 +172,6 @@ const defaultIcons = {
     'customize-screen':   { name: '自定义', url: 'assets/icons/拨号.png' },
     'font-settings-screen':{ name: '字体',  url: 'assets/icons/文件管理.png' },
     'tutorial-screen':    { name: '教程',   url: 'assets/icons/浏览器.png' },
-    'day-mode-btn':       { name: '',       url: 'assets/icons/白天开关.png' },
-    'night-mode-btn':     { name: '',       url: 'assets/icons/夜间开关.png' }
 };
 
 // --- 全局字体 ---

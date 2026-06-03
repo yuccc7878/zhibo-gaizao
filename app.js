@@ -138,13 +138,6 @@ function applyWallpaper(url) {
     homeScreen.style.backgroundImage = `url(${url})`;
 }
 
-async function applyHomeScreenMode(mode) {
-    if (mode === 'day') homeScreen.classList.add('day-mode');
-    else homeScreen.classList.remove('day-mode');
-    db.homeScreenMode = mode;
-    await saveData();
-}
-
 // --- 滑动导航 ---
 function setupSwipeNavigation() {
     const container = $('page-swipe-container');
@@ -206,16 +199,16 @@ function setupHomeScreen() {
             <a href="#" class="app-icon" data-target="tutorial-screen"><img src="${getIcon('tutorial-screen')}" alt="Tutorial" class="icon-img"><span class="app-name">${defaultIcons['tutorial-screen'].name}</span></a>
         </div>
         <div class="dock">
-            <a href="#" class="app-icon" id="day-mode-btn"><img src="${getIcon('day-mode-btn')}" alt="日间" class="icon-img"></a>
-            <a href="#" class="app-icon" id="night-mode-btn"><img src="${getIcon('night-mode-btn')}" alt="夜间" class="icon-img"></a>
             <a href="#" class="app-icon" data-target="font-settings-screen"><img src="${getIcon('font-settings-screen')}" alt="字体" class="icon-img"></a>
-            <a href="#" class="app-icon" id="active-world-dock-btn" style="font-size:24px;">🌍</a>
+            <a href="#" class="app-icon" id="active-world-dock-btn"><img src="assets/icons/浏览器.png" alt="激活世界" class="icon-img"></a>
         </div>`;
 
     const MODULE_ICON_MAP = {
         shop: 'assets/icons/商店.png',
         live: 'assets/icons/直播.png',
         gacha: 'assets/icons/摇一摇.png',
+        bilibili: 'assets/icons/白天开关.png',
+        games: 'assets/icons/夜间开关.png',
     };
     const modules = Engine.getAllModules();
     homePageRight.innerHTML = `
@@ -252,9 +245,6 @@ function setupHomeScreen() {
     setupSwipeNavigation();
     updateClock();
     applyWallpaper(db.wallpaper);
-    applyHomeScreenMode(db.homeScreenMode);
-    $('day-mode-btn')?.addEventListener('click', (e) => { e.preventDefault(); applyHomeScreenMode('day'); });
-    $('night-mode-btn')?.addEventListener('click', (e) => { e.preventDefault(); applyHomeScreenMode('night'); });
     document.getElementById('active-world-dock-btn')?.addEventListener('click', (e) => {
         e.preventDefault();
         $('active-world-enabled').checked = db.activeWorldEnabled || false;
