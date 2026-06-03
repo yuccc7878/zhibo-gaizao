@@ -884,6 +884,38 @@ label.btn-primary { color: var(--white-color) !important; }
 .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes dotBounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
 
+/* ─── AI 图片加载占位 ─── */
+.image-loading-bubble {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 16px; background: #f5f5f5; border-radius: 16px; min-width: 160px;
+    margin: 0 8px;
+}
+.image-loading-bubble .loading-spinner {
+    width: 28px; height: 28px;
+    border: 3px solid #ddd; border-top-color: #666;
+    border-radius: 50%; animation: imgSpin 0.8s linear infinite;
+}
+@keyframes imgSpin { to { transform: rotate(360deg); } }
+.image-loading-bubble .progress-bar {
+    width: 100%; height: 4px; background: #e0e0e0;
+    border-radius: 2px; overflow: hidden;
+}
+.image-loading-bubble .progress-fill {
+    width: 0%; height: 100%; background: #666;
+    animation: progressIndeterminate 1.5s ease-in-out infinite;
+}
+@keyframes progressIndeterminate {
+    0% { width: 0%; margin-left: 0; }
+    50% { width: 60%; margin-left: 20%; }
+    100% { width: 0%; margin-left: 100%; }
+}
+.image-loading-bubble span { font-size: 12px; color: #888; text-align: center; }
+.image-error-bubble {
+    padding: 8px 12px; border-radius: 12px; margin: 0 8px;
+    background: #fff0f0; color: #c44; font-size: 13px;
+    border: 1px solid #ffc0c0;
+}
+
 /* ─── 列表项 ─── */
 .list-item {
     display: flex; align-items: center; padding: 12px 20px;
