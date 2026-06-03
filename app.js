@@ -1636,6 +1636,85 @@ function setupFontSettingsApp() {
 
 // --- 世界书 ---
 function setupWorldBookApp() {
+    // AI 生成世界书按钮
+    const aiWbBtn = document.createElement('button');
+    aiWbBtn.className = 'action-btn';
+    aiWbBtn.textContent = '🎲';
+    aiWbBtn.title = 'AI 生成世界书';
+    document.querySelector('#world-book-screen .app-header .placeholder')?.before(aiWbBtn);
+    aiWbBtn.addEventListener('click', () => {
+        document.getElementById('ai-wb-keywords').value = '';
+        document.getElementById('ai-wb-r18').checked = false;
+        document.getElementById('ai-wb-result').style.display = 'none';
+        document.getElementById('ai-worldbook-modal').classList.add('visible');
+    });
+
+    // AI 生成按钮点击
+    document.getElementById('ai-wb-generate-btn').addEventListener('click', async () => {
+        const keywords = document.getElementById('ai-wb-keywords').value.trim();
+        const r18 = document.getElementById('ai-wb-r18').checked;
+        const btn = document.getElementById('ai-wb-generate-btn');
+        const resultDiv = document.getElementById('ai-wb-result');
+        btn.disabled = true; btn.textContent = '⏳ 生成中...';
+        resultDiv.style.display = 'none';
+        try {
+            const api = getActiveApi();
+            if (!api?.url || !api?.key || !api?.model) { showToast('请先在 API 设置中配置 AI 接口'); return; }
+            const prompt = '你是一个世界设定生成器。请生成一个完整的世界书条目，包含条目名称和详细设定内容。'
+                + (keywords ? `\n主题/关键词：${keywords}` : '\n主题：随机生成一个有趣的世界设定')
+                + (r18 ? '\n内容可以包含成人、黑暗、血腥等成熟主题。' : '\n内容保持全年龄向，适合大众阅读。')
+                + '\n\n请严格按以下格式输出（不要输出其他内容）：\n条目名称：xxx\n条目内容：xxx\n\n条目内容要详细、有创意，200-500字左右。';
+
+            const apiUrl = api.url.replace(/\/+$/, '');
+            let fullText = '';
+            if (api.provider === 'gemini') {
+                const resp = await fetch(apiUrl + '/v1beta/models/' + api.model + ':generateContent?key=' + api.key, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 1.0, maxOutputTokens: 800 } })
+                });
+                if (!resp.ok) throw new Error('API ' + resp.status);
+                const json = await resp.json();
+                fullText = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            } else {
+                const resp = await fetch(apiUrl + '/v1/chat/completions', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api.key },
+                    body: JSON.stringify({ model: api.model, stream: false, temperature: 1.0, max_tokens: 800, messages: [{ role: 'user', content: prompt }] })
+                });
+                if (!resp.ok) throw new Error('API ' + resp.status);
+                const json = await resp.json();
+                fullText = json.choices?.[0]?.message?.content || '';
+            }
+            if (!fullText) throw new Error('AI 返回内容为空');
+            // 解析结果
+            const nameMatch = fullText.match(/(?:条目名称|名称)[：:]\s*(.+)/);
+            const contentMatch = fullText.match(/(?:条目内容|内容)[：:]\s*([\s\S]+)/);
+            const name = nameMatch ? nameMatch[1].trim() : ('世界设定_' + Date.now());
+            const content = contentMatch ? contentMatch[1].trim() : fullText;
+            resultDiv.innerHTML = '<div style="padding:10px;background:#f5f5f5;border-radius:10px;text-align:left;">'
+                + '<strong>' + name + '</strong><br><span style="font-size:12px;color:#666;display:block;margin-top:6px;max-height:120px;overflow-y:auto;">' + content.substring(0, 200) + (content.length > 200 ? '...' : '') + '</span>'
+                + '</div><div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-primary" id="ai-wb-save-btn" style="flex:1;">💾 保存</button><button class="btn btn-neutral" id="ai-wb-retry-btn" style="flex:1;">🔄 重新生成</button></div>';
+            resultDiv.style.display = 'block';
+            // 保存按钮
+            document.getElementById('ai-wb-save-btn').onclick = async () => {
+                if (!db.worldBooks) db.worldBooks = [];
+                db.worldBooks.push({ id: 'wb_' + Date.now(), name, content, position: 'before' });
+                await saveData();
+                renderWorldBookList();
+                document.getElementById('ai-worldbook-modal').classList.remove('visible');
+                showToast('世界书"' + name + '"已保存！');
+            };
+            // 重新生成按钮
+            document.getElementById('ai-wb-retry-btn').onclick = () => {
+                document.getElementById('ai-wb-generate-btn').click();
+            };
+        } catch (err) {
+            showToast('生成失败: ' + err.message);
+            console.error('[WorldBook AI]', err);
+        } finally {
+            btn.disabled = false; btn.textContent = '✨ 开始生成';
+        }
+    });
+
     addWorldBookBtn.addEventListener('click', () => { currentEditingWorldBookId = null; editWorldBookForm.reset(); document.querySelector('input[name="world-book-position"][value="before"]').checked = true; switchScreen('edit-world-book-screen'); });
     editWorldBookForm.addEventListener('submit', async (e) => {
         e.preventDefault();
