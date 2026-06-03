@@ -135,7 +135,9 @@ function updateClock() {
 
 // --- 壁纸 ---
 function applyWallpaper(url) {
-    homeScreen.style.backgroundImage = `url(${url})`;
+    document.querySelectorAll('.screen').forEach(s => {
+        if (s.id !== 'chat-room-screen') s.style.backgroundImage = `url(${url})`;
+    });
 }
 
 // --- 滑动导航 ---

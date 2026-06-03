@@ -118,7 +118,9 @@ const loadData = async () => {
         });
         db.activeApiPresetId = db.apiPresets[0].id;
     }
-    if (!db.wallpaper) db.wallpaper = 'assets/wallpaper.jpg';
+    if (!db.wallpaper || db.wallpaper.includes('postimg.cc') || db.wallpaper.includes('i.postimg')) {
+        db.wallpaper = 'assets/wallpaper.jpg';
+    }
     if (!db.characters) db.characters = [];
     if (!db.groups) db.groups = [];
     if (!db.myStickers) db.myStickers = [];
