@@ -1002,9 +1002,51 @@ function setupStickerSystem() {
     });
 }
 
+// 预设表情包（从 assets/stickers/ 加载）
+const PRESET_STICKERS = [
+    { name: '不开心', file: '不开心.png' },
+    { name: '吃零食', file: '吃零食.png' },
+    { name: '哇塞',    file: '哇塞.png' },
+    { name: '心累',    file: '心累.png' },
+    { name: '拜拜',    file: '拜拜.png' },
+    { name: '摆烂',    file: '摆烂.png' },
+    { name: '比心',    file: '比心.png' },
+    { name: '紧张',    file: '紧张.png' },
+    { name: '酷盖',    file: '酷盖.png' },
+];
+
 function renderStickerGrid() {
     stickerGridContainer.innerHTML = '';
-    if (db.myStickers.length === 0) { stickerGridContainer.innerHTML = '<p style="color:#aaa;text-align:center;">还没有表情包，快去添加吧！</p>'; return; }
+
+    // 预设表情包
+    PRESET_STICKERS.forEach(s => {
+        const item = document.createElement('div'); item.className = 'sticker-item';
+        item.dataset.preset = s.name;
+        item.innerHTML = `<img src="assets/stickers/${s.file}" alt="${s.name}"><span>${s.name}</span>`;
+        item.addEventListener('click', () => {
+            sendSticker({ id: 'preset_' + s.name, name: s.name, data: 'assets/stickers/' + s.file });
+        });
+        item.addEventListener('mousedown', (e) => { if (e.button !== 0) return; e.stopPropagation(); longPressTimer = setTimeout(() => showToast('预设表情'), 500); });
+        item.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+        item.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+        item.addEventListener('touchstart', (e) => { e.stopPropagation(); longPressTimer = setTimeout(() => showToast('预设表情'), 500); });
+        item.addEventListener('touchend', () => clearTimeout(longPressTimer));
+        item.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+        stickerGridContainer.appendChild(item);
+
+        // 分隔线
+        const hr = document.createElement('hr'); hr.style.cssText = 'width:100%;border:none;border-top:1px solid #eee;margin:8px 0;';
+        item.after(hr);
+    });
+
+    // 用户自定义表情包
+    if (db.myStickers.length === 0) {
+        const empty = document.createElement('p');
+        empty.style.cssText = 'color:#aaa;text-align:center;font-size:13px;';
+        empty.textContent = '还没有自定义表情包，点击右上角 + 添加';
+        stickerGridContainer.appendChild(empty);
+        return;
+    }
     db.myStickers.forEach(sticker => {
         const item = document.createElement('div'); item.className = 'sticker-item';
         item.innerHTML = `<img src="${sticker.data}" alt="${sticker.name}"><span>${sticker.name}</span>`;
