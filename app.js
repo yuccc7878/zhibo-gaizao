@@ -209,6 +209,7 @@ function setupHomeScreen() {
             <a href="#" class="app-icon" id="day-mode-btn"><img src="${getIcon('day-mode-btn')}" alt="日间" class="icon-img"></a>
             <a href="#" class="app-icon" id="night-mode-btn"><img src="${getIcon('night-mode-btn')}" alt="夜间" class="icon-img"></a>
             <a href="#" class="app-icon" data-target="font-settings-screen"><img src="${getIcon('font-settings-screen')}" alt="字体" class="icon-img"></a>
+            <a href="#" class="app-icon" id="active-world-dock-btn" style="font-size:24px;">🌍</a>
         </div>`;
 
     const modules = Engine.getAllModules();
@@ -245,6 +246,14 @@ function setupHomeScreen() {
     applyHomeScreenMode(db.homeScreenMode);
     $('day-mode-btn')?.addEventListener('click', (e) => { e.preventDefault(); applyHomeScreenMode('day'); });
     $('night-mode-btn')?.addEventListener('click', (e) => { e.preventDefault(); applyHomeScreenMode('night'); });
+    document.getElementById('active-world-dock-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        $('active-world-enabled').checked = db.activeWorldEnabled || false;
+        $('active-world-interval').value = db.activeWorldInterval || 5;
+        $('active-world-scope').value = db.activeWorldScope || 'both';
+        updateActiveWorldStatus();
+        $('active-world-modal').classList.add('visible');
+    });
     document.querySelector('[data-target="world-book-screen"]').addEventListener('click', renderWorldBookList);
     document.querySelector('[data-target="customize-screen"]').addEventListener('click', renderCustomizeForm);
     document.querySelector('[data-target="tutorial-screen"]').addEventListener('click', renderTutorialContent);
@@ -2215,4 +2224,42 @@ async function initApp() {
 
     // 初始化所有 Engine 模块
     await Engine.initAll();
+
+    // 激活世界 - 加载引擎
+    const initActiveWorld = () => {
+        const s = document.createElement('script');
+        s.src = 'js/systems/activeWorld.js';
+        s.onload = () => {
+            if (window.activeWorld && db.activeWorldEnabled) window.activeWorld.start();
+            setupActiveWorldSettings();
+        };
+        document.body.appendChild(s);
+    };
+    initActiveWorld();
+}
+
+// ─── 激活世界设置 ──────────────────────
+function updateActiveWorldStatus() {
+    const el = document.getElementById('active-world-status');
+    if (!el) return;
+    const running = window.activeWorld?.isRunning?.();
+    el.textContent = running ? '🟢 运行中' : (db.activeWorldEnabled ? '⏸ 等待启动...' : '⚪ 已暂停');
+}
+
+function setupActiveWorldSettings() {
+    const saveBtn = document.getElementById('active-world-save-btn');
+    if (!saveBtn) return;
+    saveBtn.addEventListener('click', async () => {
+        db.activeWorldEnabled = document.getElementById('active-world-enabled').checked;
+        db.activeWorldInterval = parseInt(document.getElementById('active-world-interval').value) || 5;
+        db.activeWorldScope = document.getElementById('active-world-scope').value;
+        await saveData();
+        document.getElementById('active-world-modal').classList.remove('visible');
+        if (window.activeWorld) {
+            if (db.activeWorldEnabled) window.activeWorld.start();
+            else window.activeWorld.stop();
+        }
+        updateActiveWorldStatus();
+        showToast('激活世界设置已保存');
+    });
 }

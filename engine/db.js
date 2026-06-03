@@ -139,6 +139,10 @@ const loadData = async () => {
     }
     if (db.money === undefined) db.money = 500;
     if (!db.ownedItems) db.ownedItems = [];
+    // 激活世界配置
+    if (db.activeWorldEnabled === undefined) db.activeWorldEnabled = false;
+    if (db.activeWorldInterval === undefined) db.activeWorldInterval = 5;
+    if (!db.activeWorldScope) db.activeWorldScope = 'both';
 
     db.characters.forEach(c => {
         if (c.isPinned === undefined) c.isPinned = false;

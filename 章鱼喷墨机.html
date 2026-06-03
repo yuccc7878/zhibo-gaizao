@@ -153,6 +153,38 @@
         </div>
     </div>
 
+    <!-- 激活世界设置弹窗 -->
+    <div id="active-world-modal" class="modal-overlay">
+        <div class="modal-window" style="max-width:360px;">
+            <h3>🌍 激活世界</h3>
+            <p style="font-size:13px;color:#888;margin:-8px 0 16px;">让角色主动发消息，模拟真实社交场景</p>
+            <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" id="active-world-enabled" style="width:auto;"> <span>🌍 启用激活世界</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="active-world-interval">触发频率</label>
+                <select id="active-world-interval" style="width:100%;">
+                    <option value="3">每 3 分钟</option>
+                    <option value="5" selected>每 5 分钟（推荐）</option>
+                    <option value="8">每 8 分钟</option>
+                    <option value="10">每 10 分钟</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="active-world-scope">触发范围</label>
+                <select id="active-world-scope" style="width:100%;">
+                    <option value="both">私聊 + 群聊</option>
+                    <option value="private">仅私聊</option>
+                    <option value="group">仅群聊</option>
+                </select>
+            </div>
+            <div id="active-world-status" style="font-size:12px;color:#999;margin:8px 0;text-align:center;"></div>
+            <button type="button" class="btn btn-primary" id="active-world-save-btn" style="width:100%;">💾 保存设置</button>
+        </div>
+    </div>
+
     <!-- 动态注入屏幕占位 -->
     <div id="api-settings-screen" class="screen"></div>
     <div id="api-edit-screen" class="screen"></div>
