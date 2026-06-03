@@ -210,19 +210,20 @@ function setupHomeScreen() {
             <a href="#" class="app-icon" id="night-mode-btn"><img src="${getIcon('night-mode-btn')}" alt="夜间" class="icon-img"></a>
             <a href="#" class="app-icon" data-target="font-settings-screen"><img src="${getIcon('font-settings-screen')}" alt="字体" class="icon-img"></a>
             <a href="#" class="app-icon" id="active-world-dock-btn" style="font-size:24px;">🌍</a>
-            <a href="#" class="app-icon engine-module-btn" data-module="shop"><img src="assets/icons/商店.png" alt="商店" class="icon-img"></a>
-            <a href="#" class="app-icon engine-module-btn" data-module="live"><img src="assets/icons/直播.png" alt="直播" class="icon-img"></a>
-            <a href="#" class="app-icon engine-module-btn" data-module="gacha"><img src="assets/icons/摇一摇.png" alt="摇一摇" class="icon-img"></a>
-            <a href="#" class="app-icon" data-target="home-screen" style="font-size:24px;"><img src="assets/icons/天气.png" alt="天气" class="icon-img"></a>
-            <a href="#" class="app-icon" data-target="home-screen" style="font-size:24px;"><img src="assets/icons/电话.png" alt="电话" class="icon-img"></a>
         </div>`;
 
+    const MODULE_ICON_MAP = {
+        shop: 'assets/icons/商店.png',
+        live: 'assets/icons/直播.png',
+        gacha: 'assets/icons/摇一摇.png',
+    };
     const modules = Engine.getAllModules();
     homePageRight.innerHTML = `
         <div class="right-page-empty">
             <div class="right-page-title">模块中心</div>
             <div class="right-page-grid">
                 ${modules.map(mod => {
+                    const iconFile = MODULE_ICON_MAP[mod.id];
                     if (mod.id === 'album') {
                         const albumMod = Engine.getModule('album');
                         const coverUrl = albumMod && typeof albumMod.getCoverUrl === 'function' ? albumMod.getCoverUrl() : null;
@@ -234,8 +235,11 @@ function setupHomeScreen() {
                             <span class="app-name">${mod.name}</span>
                         </a>`;
                     }
+                    const iconHtml = iconFile
+                        ? `<img src="${iconFile}" alt="${mod.name}" style="width:100%;height:100%;object-fit:cover;border-radius:15px;">`
+                        : `<span style="font-size:30px;">${mod.icon}</span>`;
                     return `<a href="#" class="app-icon engine-module-btn" data-module="${mod.id}">
-                        <div class="icon-img" style="display:flex;align-items:center;justify-content:center;font-size:30px;background:rgba(255,255,255,0.85);box-shadow:0 4px 10px rgba(0,0,0,0.1);">${mod.icon}</div>
+                        <div class="icon-img" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);box-shadow:0 4px 10px rgba(0,0,0,0.1);overflow:hidden;">${iconHtml}</div>
                         <span class="app-name">${mod.name}</span>
                     </a>`;
                 }).join('')}
