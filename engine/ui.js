@@ -165,15 +165,15 @@ const colorThemes = {
 };
 
 const defaultIcons = {
-    'chat-list-screen':   { name: 'QQ',    url: 'https://i.postimg.cc/VvQB8dQT/chan-143.png' },
-    'api-settings-screen':{ name: 'api',   url: 'https://i.postimg.cc/50FqT8GL/chan-125.png' },
-    'wallpaper-screen':   { name: '壁纸',   url: 'https://i.postimg.cc/3wqFttL3/chan-90.png' },
-    'world-book-screen':  { name: '世界书', url: 'https://i.postimg.cc/prCWkrKT/chan-74.png' },
-    'customize-screen':   { name: '自定义', url: 'https://i.postimg.cc/vZVdC7gt/chan-133.png' },
-    'font-settings-screen':{ name: '字体',  url: 'https://i.postimg.cc/FzVtC0x4/chan-21.png' },
-    'tutorial-screen':    { name: '教程',   url: 'https://i.postimg.cc/6QgNzCFf/chan-118.png' },
-    'day-mode-btn':       { name: '',       url: 'https://i.postimg.cc/Jz0tYqnT/chan-145.png' },
-    'night-mode-btn':     { name: '',       url: 'https://i.postimg.cc/htYvkdQK/chan-146.png' }
+    'chat-list-screen':   { name: 'QQ',    url: 'assets/icons/qq.png' },
+    'api-settings-screen':{ name: 'api',   url: 'assets/icons/设置.png' },
+    'wallpaper-screen':   { name: '壁纸',   url: 'assets/icons/主题.png' },
+    'world-book-screen':  { name: '世界书', url: 'assets/icons/备忘录.png' },
+    'customize-screen':   { name: '自定义', url: 'assets/icons/拨号.png' },
+    'font-settings-screen':{ name: '字体',  url: 'assets/icons/文件管理.png' },
+    'tutorial-screen':    { name: '教程',   url: 'assets/icons/浏览器.png' },
+    'day-mode-btn':       { name: '',       url: 'assets/icons/白天开关.png' },
+    'night-mode-btn':     { name: '',       url: 'assets/icons/夜间开关.png' }
 };
 
 // --- 全局字体 ---
