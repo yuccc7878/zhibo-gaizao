@@ -210,6 +210,11 @@ function setupHomeScreen() {
             <a href="#" class="app-icon" id="night-mode-btn"><img src="${getIcon('night-mode-btn')}" alt="夜间" class="icon-img"></a>
             <a href="#" class="app-icon" data-target="font-settings-screen"><img src="${getIcon('font-settings-screen')}" alt="字体" class="icon-img"></a>
             <a href="#" class="app-icon" id="active-world-dock-btn" style="font-size:24px;">🌍</a>
+            <a href="#" class="app-icon engine-module-btn" data-module="shop"><img src="assets/icons/商店.png" alt="商店" class="icon-img"></a>
+            <a href="#" class="app-icon engine-module-btn" data-module="live"><img src="assets/icons/直播.png" alt="直播" class="icon-img"></a>
+            <a href="#" class="app-icon engine-module-btn" data-module="gacha"><img src="assets/icons/摇一摇.png" alt="摇一摇" class="icon-img"></a>
+            <a href="#" class="app-icon" data-target="home-screen" style="font-size:24px;"><img src="assets/icons/天气.png" alt="天气" class="icon-img"></a>
+            <a href="#" class="app-icon" data-target="home-screen" style="font-size:24px;"><img src="assets/icons/电话.png" alt="电话" class="icon-img"></a>
         </div>`;
 
     const modules = Engine.getAllModules();
