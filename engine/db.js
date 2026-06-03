@@ -75,13 +75,14 @@ let db = {
     apiSettings: {},
     apiPresets: [],
     activeApiPresetId: '',
-    wallpaper: 'https://i.postimg.cc/W4Z9R9x4/ins-1.jpg',
+    wallpaper: 'assets/wallpaper.jpg',
     myStickers: [],
     homeScreenMode: 'night',
     worldBooks: [],
     fontUrl: '',
     customIcons: {},
-    imgGenSettings: { url: '', key: '', model: '' }
+    imgGenSettings: { url: '', key: '', model: '' },
+    albumPhotos: []
 };
 
 // 保存数据
@@ -117,7 +118,7 @@ const loadData = async () => {
         });
         db.activeApiPresetId = db.apiPresets[0].id;
     }
-    if (!db.wallpaper) db.wallpaper = 'https://i.postimg.cc/W4Z9R9x4/ins-1.jpg';
+    if (!db.wallpaper) db.wallpaper = 'assets/wallpaper.jpg';
     if (!db.characters) db.characters = [];
     if (!db.groups) db.groups = [];
     if (!db.myStickers) db.myStickers = [];
@@ -139,6 +140,16 @@ const loadData = async () => {
     }
     if (db.money === undefined) db.money = 500;
     if (!db.ownedItems) db.ownedItems = [];
+    if (!db.albumPhotos) db.albumPhotos = [];
+    if (db.albumPhotos.length === 0) {
+        db.albumPhotos.push({
+            id: 'cover_' + Date.now(),
+            url: 'assets/album_cover.jpg',
+            name: '默认封面',
+            isCover: true,
+            timestamp: Date.now()
+        });
+    }
     // 激活世界配置
     if (db.activeWorldEnabled === undefined) db.activeWorldEnabled = false;
     if (db.activeWorldInterval === undefined) db.activeWorldInterval = 5;
