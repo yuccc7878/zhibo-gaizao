@@ -1641,7 +1641,7 @@ function setupWorldBookApp() {
     aiWbBtn.className = 'action-btn';
     aiWbBtn.textContent = '🎲';
     aiWbBtn.title = 'AI 生成世界书';
-    document.querySelector('#world-book-screen .app-header .placeholder')?.before(aiWbBtn);
+    document.querySelector('#world-book-screen .app-header')?.appendChild(aiWbBtn);
     aiWbBtn.addEventListener('click', () => {
         document.getElementById('ai-wb-keywords').value = '';
         document.getElementById('ai-wb-r18').checked = false;
