@@ -683,19 +683,25 @@ function createMessageBubbleElement(message) {
         ttsBtn.onmouseleave = () => ttsBtn.style.opacity = '0.4';
         ttsBtn.onclick = (e) => {
             e.stopPropagation();
-            if (window.speechSynthesis && window.speechSynthesis.speaking) {
-                window.speechSynthesis.cancel();
-                ttsBtn.textContent = '🔊';
-            } else {
-                const text = (bubbleElement.textContent || bubbleElement.innerText || '').replace(/\[.*?\]/g, '').trim();
-                if (text) {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = 'zh-CN';
-                    utterance.onend = () => { ttsBtn.textContent = '🔊'; };
-                    window.speechSynthesis.speak(utterance);
-                    ttsBtn.textContent = '🔇';
-                }
-            }
+            const ss = window.speechSynthesis;
+            if (!ss) return;
+            if (ss.speaking) { ss.cancel(); ttsBtn.textContent = '🔊'; return; }
+            const text = (bubbleElement.textContent || bubbleElement.innerText || '').replace(/\[.*?\]/g, '').trim();
+            if (!text) return;
+            try {
+                ss.cancel();
+                if (ss.getVoices) ss.getVoices();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.volume = 1;
+                utterance.rate = 1;
+                utterance.pitch = 1;
+                utterance.onend = () => { ttsBtn.textContent = '🔊'; };
+                utterance.onerror = () => { ttsBtn.textContent = '🔊'; };
+                ss.speak(utterance);
+                setTimeout(() => { if (ss.pending) { ss.pause(); ss.resume(); } }, 100);
+                ttsBtn.textContent = '🔇';
+            } catch (_) { ttsBtn.textContent = '🔊'; }
         };
         bubbleRow.appendChild(ttsBtn);
     }
