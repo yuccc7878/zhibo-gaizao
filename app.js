@@ -206,7 +206,8 @@ function setupHomeScreen() {
     const MODULE_ICON_MAP = {
         shop: 'assets/icons/商店.png',
         live: 'assets/icons/直播.png',
-        gacha: 'assets/icons/摇一摇.png',
+        gacha: 'assets/icons/电话.png',
+        wardrobe: 'assets/icons/摇一摇.png',
         bilibili: 'assets/icons/白天开关.png',
         games: 'assets/icons/夜间开关.png',
     };
