@@ -475,9 +475,16 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
                 }),
             });
 
+            const contentType = resp.headers.get('content-type') || '';
+
             if (!resp.ok) {
                 const errText = await resp.text().catch(() => '');
                 throw new Error(`API请求失败 (${resp.status}): ${errText.slice(0, 100)}`);
+            }
+
+            // 流式接口返回HTML说明地址错误
+            if (contentType.includes('text/html')) {
+                throw new Error('API返回HTML页面，流式接口地址可能有误');
             }
 
             const reader = resp.body.getReader();
@@ -607,12 +614,25 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
             }),
         });
 
+        const contentType = resp.headers.get('content-type') || '';
+        const rawText = await resp.text();
+
         if (!resp.ok) {
-            const errText = await resp.text().catch(() => '');
-            throw new Error(`API请求失败 (${resp.status}): ${errText.slice(0, 100)}`);
+            throw new Error(`API请求失败 (${resp.status}): ${rawText.slice(0, 100)}`);
         }
 
-        const data = await resp.json();
+        // 检查是否返回了HTML（404页面、错误页等）
+        if (contentType.includes('text/html') || rawText.trim().startsWith('<')) {
+            throw new Error(`API返回了HTML页面而非JSON，地址可能有误：${apiUrl.slice(0, 60)}...`);
+        }
+
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (e) {
+            throw new Error(`API响应不是有效JSON：${rawText.slice(0, 80)}`);
+        }
+
         const text = data.choices?.[0]?.message?.content || '';
         if (!text) throw new Error('AI返回内容为空');
         return text;
