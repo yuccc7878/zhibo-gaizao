@@ -143,12 +143,6 @@ Engine.register({
 
     doGacha: async function() {
         if (this.generating) return;
-        var api = getActiveApi();
-        if (!api.url || !api.key || !api.model) {
-            showToast('请先在 API 设置中配置 AI 接口');
-            switchScreen('api-settings-screen');
-            return;
-        }
         // 保存自定义愿望文本
         if (this.currentWishId === 'custom') {
             this.customWishText = document.getElementById('gacha-wish-input').value.trim();
@@ -160,7 +154,7 @@ Engine.register({
         var results = document.getElementById('gacha-results');
         if (results) results.innerHTML = '<div class="gacha-loading"><div class="gacha-loading-dots"><span></span><span></span><span></span></div>正在摇人中...</div>';
         try {
-            this.results = await this.generateCharacters(api, count);
+            this.results = await this.generateCharacters(count);
             this.renderResults();
         } catch (err) {
             if (results) results.innerHTML = '<div style="text-align:center;color:#ff6b6b;padding:40px;">生成失败: ' + err.message + '</div>';
@@ -169,7 +163,7 @@ Engine.register({
     },
 
     /** 一次 API 调用批量生成 count 个角色 */
-    generateCharacters: async function(api, count) {
+    generateCharacters: async function(count) {
         var wishDirective = this.getWishDirective();
         var roles = [];
         var traitsList = [];
@@ -196,29 +190,11 @@ Engine.register({
         }
         prompt += '要求：每个角色名字要有创意，符合角色设定。不要使用Markdown格式。';
 
-        var apiUrl = api.url.replace(/\/+$/, '');
-        var fullText = '';
-        var maxTokens = Math.max(300, count * 250);
-
-        if (api.provider === 'gemini') {
-            var resp = await fetch(apiUrl + '/v1beta/models/' + api.model + ':generateContent?key=' + api.key, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 1.0, maxOutputTokens: maxTokens } })
-            });
-            if (!resp.ok) throw new Error('API ' + resp.status);
-            var json = await resp.json();
-            fullText = (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0]) ? json.candidates[0].content.parts[0].text : '';
-        } else {
-            var resp = await fetch(apiUrl + '/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api.key },
-                body: JSON.stringify({ model: api.model, stream: false, temperature: 1.0, max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] })
-            });
-            if (!resp.ok) throw new Error('API ' + resp.status);
-            var json = await resp.json();
-            fullText = (json.choices && json.choices[0] && json.choices[0].message) ? json.choices[0].message.content : '';
-        }
+        var fullText = await Engine.services.aiChat({
+            system: '你是一个创意角色生成器。',
+            messages: [{ role: 'user', content: prompt }],
+            options: { temperature: 1.0, maxTokens: Math.max(300, count * 250) },
+        });
 
         if (!fullText) throw new Error('AI 返回内容为空');
 
@@ -263,7 +239,7 @@ Engine.register({
     },
 
     /** 单次生成一个角色（用于重新生成） */
-    generateCharacter: async function(api) {
+    generateCharacter: async function() {
         var traits = this.shufflePick(this.TRAIT_POOL, 3).join('、');
         var role = this.pick(this.ROLE_POOL);
         var wishDirective = this.getWishDirective();
@@ -277,28 +253,11 @@ Engine.register({
             + '背景：用1-2句话描述这个角色的背景故事\n\n'
             + '要求：名字要有创意，符合角色设定。不要使用Markdown格式。';
 
-        var apiUrl = api.url.replace(/\/+$/, '');
-        var fullText = '';
-
-        if (api.provider === 'gemini') {
-            var resp = await fetch(apiUrl + '/v1beta/models/' + api.model + ':generateContent?key=' + api.key, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 1.0, maxOutputTokens: 300 } })
-            });
-            if (!resp.ok) throw new Error('API ' + resp.status);
-            var json = await resp.json();
-            fullText = (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0]) ? json.candidates[0].content.parts[0].text : '';
-        } else {
-            var resp = await fetch(apiUrl + '/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api.key },
-                body: JSON.stringify({ model: api.model, stream: false, temperature: 1.0, max_tokens: 300, messages: [{ role: 'user', content: prompt }] })
-            });
-            if (!resp.ok) throw new Error('API ' + resp.status);
-            var json = await resp.json();
-            fullText = (json.choices && json.choices[0] && json.choices[0].message) ? json.choices[0].message.content : '';
-        }
+        var fullText = await Engine.services.aiChat({
+            system: '你是一个创意角色生成器。',
+            messages: [{ role: 'user', content: prompt }],
+            options: { temperature: 1.0, maxTokens: 300 },
+        });
 
         return this.parseCharacterBlock(fullText, role, traits);
     },
@@ -377,11 +336,9 @@ Engine.register({
     },
 
     rerollOne: async function(idx) {
-        var api = getActiveApi();
-        if (!api.url || !api.key || !api.model) { showToast('请先配置 API'); return; }
         showToast('重新生成中...');
         try {
-            this.results[idx] = await this.generateCharacter(api);
+            this.results[idx] = await this.generateCharacter();
             this.renderResults();
         } catch (err) {
             showToast('生成失败: ' + err.message);

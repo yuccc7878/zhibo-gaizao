@@ -7,7 +7,7 @@ import { state } from './core/state.js';
 import { initDomCache } from './core/dom.js';
 import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js';
 import * as dataService from './core/dataService.js';
-import { setChatConfig, setImageConfig } from './core/aiService.js';
+// aiService 已通过全局 script 加载，使用 window.AiService
 
 import * as chatRoom from './ui/chatRoom.js';
 import * as chatList from './ui/chatList.js';
@@ -52,10 +52,10 @@ async function initApp() {
   dom['customize-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">主屏幕自定义</h1></div><div class="placeholder"></div></header><main class="content"><form id="customize-form"></form><div style="margin-top:24px;padding:0 4px;"><button type="button" id="check-update-btn" class="btn btn-secondary" style="width:100%;padding:14px;font-size:15px;border-radius:12px;">🔄 检查更新</button><p style="font-size:12px;color:#999;text-align:center;margin-top:8px;">清除浏览器缓存并从仓库重新加载最新版本</p></div></main>`;
   dom['tutorial-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">教程</h1></div><div class="placeholder"></div></header><main class="content" id="tutorial-content-area"></main>`;
 
-  // 4. 同步 AI 配置到 aiService
+  // 4. 同步 AI 配置到 AiService
   const activePreset = db.apiPresets?.find(p => p.id === db.activeApiPresetId);
-  if (activePreset) setChatConfig(activePreset);
-  setImageConfig(db.imgGenSettings || {});
+  if (activePreset) window.AiService.setChatConfig(activePreset);
+  window.AiService.setImageConfig(db.imgGenSettings || {});
 
   // 5. 初始化所有模块（注入依赖）
   chatRoom.init(dom, chatList.renderChatList);

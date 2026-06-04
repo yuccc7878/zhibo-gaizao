@@ -5,7 +5,9 @@
 import { getActiveApi } from '../core/dataService.js';
 import { getDb, saveData } from '../core/dataService.js';
 import { showToast, switchScreen } from '../core/utils.js';
-import { setChatConfig, setImageConfig, fetchModels } from '../core/aiService.js';
+
+// aiService 已通过全局 script 加载
+const { setChatConfig, setImageConfig, fetchModels } = window.AiService;
 
 let dom = null;
 

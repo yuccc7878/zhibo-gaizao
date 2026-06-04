@@ -290,11 +290,6 @@ Engine.register({
 
     /** AI 生成虚拟主播 */
     async _generateAiHost() {
-        const api = getActiveApi();
-        if (!api?.url || !api?.key || !api?.model) {
-            showToast('请先在 API 设置中配置 AI 接口');
-            return;
-        }
         const body = document.getElementById('live-tab-body');
         if (body) body.innerHTML = '<div class="gacha-loading"><div class="gacha-loading-dots"><span></span><span></span><span></span></div>AI 生成主播中...</div>';
 
@@ -311,28 +306,11 @@ Engine.register({
                 + '背景：xxx\n\n'
                 + '要求：名字要有创意。不要使用Markdown格式。';
 
-            const apiUrl = api.url.replace(/\/+$/, '');
-            let fullText = '';
-
-            if (api.provider === 'gemini') {
-                const resp = await fetch(apiUrl + '/v1beta/models/' + api.model + ':generateContent?key=' + api.key, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 1.0, maxOutputTokens: 300 } })
-                });
-                if (!resp.ok) throw new Error('API ' + resp.status);
-                const json = await resp.json();
-                fullText = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            } else {
-                const resp = await fetch(apiUrl + '/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api.key },
-                    body: JSON.stringify({ model: api.model, stream: false, temperature: 1.0, max_tokens: 300, messages: [{ role: 'user', content: prompt }] })
-                });
-                if (!resp.ok) throw new Error('API ' + resp.status);
-                const json = await resp.json();
-                fullText = json.choices?.[0]?.message?.content || '';
-            }
+            const fullText = await Engine.services.aiChat({
+                system: '你是一个创意角色生成器。',
+                messages: [{ role: 'user', content: prompt }],
+                options: { temperature: 1.0, maxTokens: 300 },
+            });
 
             if (!fullText) throw new Error('AI 返回内容为空');
 
@@ -664,44 +642,12 @@ Engine.register({
     },
 
     async streamRequest(systemPrompt, userMessage, onDelta) {
-        const apiSettings = getActiveApi();
-        if (!apiSettings?.url || !apiSettings?.key || !apiSettings?.model) throw new Error('请先在 API 设置中配置 AI 接口');
-        const apiUrl = apiSettings.url.replace(/\/+$/, '');
-        let fullUrl, headers, body;
-        if (apiSettings.provider === 'gemini') {
-            fullUrl = `${apiUrl}/v1beta/models/${apiSettings.model}:streamGenerateContent?alt=sse&key=${apiSettings.key}`;
-            headers = { 'Content-Type': 'application/json' };
-            body = JSON.stringify({ contents: [{ parts: [{ text: userMessage }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { temperature: 0.9, maxOutputTokens: 1024 } });
-        } else {
-            fullUrl = `${apiUrl}/v1/chat/completions`;
-            headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiSettings.key}` };
-            body = JSON.stringify({ model: apiSettings.model, stream: true, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }], temperature: 0.9, max_tokens: 1024 });
-        }
-        const response = await fetch(fullUrl, { method: 'POST', headers, body });
-        if (!response.ok) throw new Error('AI 请求失败：' + response.status);
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '', fullText = '';
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            for (const line of lines) {
-                if (!line.startsWith('data: ')) continue;
-                const data = line.slice(6).trim();
-                if (data === '[DONE]') continue;
-                try {
-                    const json = JSON.parse(data);
-                    const delta = apiSettings.provider === 'gemini'
-                        ? (json.candidates?.[0]?.content?.parts?.[0]?.text || '')
-                        : (json.choices?.[0]?.delta?.content || '');
-                    if (delta) { fullText += delta; onDelta(fullText, delta); }
-                } catch (e) {}
-            }
-        }
-        return fullText;
+        return Engine.services.aiChat({
+            system: systemPrompt,
+            messages: [{ role: 'user', content: userMessage }],
+            options: { temperature: 0.9, maxTokens: 1024 },
+            onToken: onDelta,
+        });
     },
 
     async generateStory(userInput) {
@@ -760,13 +706,6 @@ Engine.register({
 
     // ─── 生成直播画面 ───
     async generateLiveImage() {
-        const globalImg = (typeof db !== 'undefined' && db.imgGenSettings) ? db.imgGenSettings : {};
-        const api = getActiveApi();
-        const imgUrl = globalImg.url || api.imgGenUrl;
-        const imgKey = globalImg.key || api.imgGenKey || api.key;
-        const imgModel = globalImg.model || 'black-forest-labs/FLUX.1-schnell';
-        if (!imgUrl) { showToast('请先在API设置中配置生图接口'); return; }
-
         const btn = document.getElementById('live-imggen-btn');
         if (btn.classList.contains('generating')) return;
         btn.classList.add('generating');
@@ -781,7 +720,6 @@ Engine.register({
             storySummary = storySummary.trim().slice(-500);
 
             const { level, scene } = this.state;
-            // 获取道具名称
             const shop = Engine.getModule('shop');
             const allItems = shop ? shop.getAllItems() : [];
             const propNames = (this.state.props || []).map(id => {
@@ -789,7 +727,6 @@ Engine.register({
                 return item ? item.label.replace(/^(\p{Emoji_Presentation}|\p{Emoji}️?)/u, '') : '';
             }).filter(Boolean).join('、');
 
-            // 根据等级调整画面尺度
             const levelScale = level.id >= 4
                 ? '性感撩人，衣着暴露，挑逗姿势，充满诱惑力，二次元风格'
                 : level.id >= 3
@@ -798,43 +735,9 @@ Engine.register({
 
             const prompt = `二次元动漫风格，${scene.label}场景，${level.label}主题。${propNames ? '道具：' + propNames + '。' : ''}${storySummary ? '当前剧情：' + storySummary.slice(0, 200) + '。' : ''}${levelScale}，精美画质，细节丰富。`;
 
+            const imageUrl = await Engine.services.aiGenerateImage(prompt + ', anime style, high quality, detailed', { imageSize: '768x1024' });
+
             const streamPage = document.getElementById('live-stream-page');
-            let imageUrl = '';
-
-            // 检测是否为 Pollinations（免费免 Key 生图 API）
-            if (imgUrl.includes('pollinations')) {
-                const encoded = encodeURIComponent(prompt + ', anime style, high quality, detailed');
-                imageUrl = `${imgUrl.replace(/\/+$/, '')}/${encoded}?width=768&height=1024&nologo=true`;
-                imageUrl = `${imgUrl.replace(/\/+$/, '')}/${encoded}?width=768&height=1024&nologo=true`;
-                // 直接预加载图片
-                await new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.onload = resolve;
-                    img.onerror = () => reject(new Error('Pollinations 图片加载失败'));
-                    img.src = imageUrl;
-                });
-            } else {
-                // OpenAI 兼容格式（SiliconFlow、DALL·E 等）
-                const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${imgKey}` };
-                const body = {
-                    model: imgModel,
-                    prompt: prompt,
-                    image_size: '768x1024',
-                    batch_size: 1
-                };
-                const resp = await fetch(imgUrl, { method: 'POST', headers, body: JSON.stringify(body) });
-                if (!resp.ok) throw new Error(`生图失败: ${resp.status}`);
-                const json = await resp.json();
-                if (json.data && json.data[0]) {
-                    imageUrl = json.data[0].url || json.data[0].b64_json || '';
-                }
-                if (!imageUrl) throw new Error('未返回图片地址');
-                if (json.data[0].b64_json && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
-                    imageUrl = 'data:image/png;base64,' + imageUrl;
-                }
-            }
-
-            // 设置为直播背景
             streamPage.style.backgroundImage = `url(${imageUrl})`;
             streamPage.style.backgroundSize = 'cover';
             streamPage.style.backgroundPosition = 'center';

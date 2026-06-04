@@ -4,8 +4,10 @@
 
 import { getDb, saveData } from '../core/dataService.js';
 import { showToast, switchScreen } from '../core/utils.js';
-import { setImageConfig } from '../core/aiService.js';
 import { renderImgGenStatus } from './apiSettings.js';
+
+// aiService 已通过全局 script 加载
+const { setImageConfig } = window.AiService;
 
 let dom = null;
 

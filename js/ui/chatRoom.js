@@ -5,8 +5,10 @@
 import { state, selectedMessageIds, MESSAGES_PER_PAGE } from '../core/state.js';
 import * as dataService from '../core/dataService.js';
 import * as utils from '../core/utils.js';
-import { chat, generateImage } from '../core/aiService.js';
 import { generatePrivateSystemPrompt, generateGroupSystemPrompt } from './promptBuilder.js';
+
+// aiService 已通过全局 script 加载
+const { chat, generateImage } = window.AiService;
 
 // ─── 依赖注入 ──────────────────────────
 

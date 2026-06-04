@@ -1214,8 +1214,6 @@ function generateGroupSystemPrompt(group) {
 // --- AI 请求 ---
 async function getAiReply() {
     if (isGenerating) return;
-    const { url, key, model, provider } = getActiveApi();
-    if (!url || !key || !model) { showToast('请先在"API设置"中配置AI接口！'); switchScreen('api-settings-screen'); return; }
     const chat = (currentChatType === 'private') ? db.characters.find(c => c.id === currentChatId) : db.groups.find(g => g.id === currentChatId);
     if (!chat) return;
     isGenerating = true; getReplyBtn.disabled = true;
@@ -1231,53 +1229,14 @@ async function getAiReply() {
             }
             return msg;
         });
-        // 去除 API URL 末尾斜杠，避免双斜杠导致请求失败
-        const apiUrl = url.replace(/\/+$/, '');
-        let requestBody;
-        if (provider === 'gemini') {
-            const contents = historySlice.map(msg => {
-                const role = msg.role === 'assistant' ? 'model' : 'user';
-                let parts;
-                if (msg.parts?.length > 0) {
-                    parts = msg.parts.map(p => {
-                        if (p.type === 'text' || p.type === 'html') return { text: p.text };
-                        return null;
-                    }).filter(Boolean);
-                } else parts = [{ text: msg.content }];
-                return { role, parts };
-            });
-            requestBody = { contents, system_instruction: { parts: [{ text: systemPrompt }] }, generationConfig: { temperature: 0.9, maxOutputTokens: 2048 } };
-        } else {
-            const messages = [{ role: 'system', content: systemPrompt }];
-            historySlice.forEach(msg => {
-                let content;
-                if (msg.parts?.length > 0) {
-                    content = msg.parts.map(p => {
-                        if (p.type === 'text' || p.type === 'html') return { type: 'text', text: p.text };
-                        if (p.type === 'image') return { type: 'image_url', image_url: { url: p.data } };
-                        return null;
-                    }).filter(Boolean);
-                } else content = msg.content;
-                messages.push({ role: msg.role, content });
-            });
-            requestBody = { model, messages, stream: false };
-        }
-        if (provider === 'gemini') {
-            const endpoint = `${apiUrl}/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${getRandomValue(key)}`;
-            requestBody.systemInstruction = requestBody.system_instruction;
-            delete requestBody.system_instruction;
-            const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
-            if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-            await processGeminiStream(response, chat);
-        } else {
-            const endpoint = `${apiUrl}/v1/chat/completions`;
-            const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(requestBody) });
-            if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-            const json = await response.json();
-            const fullResponse = json.choices?.[0]?.message?.content || '';
-            if (!fullResponse) throw new Error('AI 返回内容为空');
-            await handleAiResponse(fullResponse, chat);
-        }
+        const messages = historySlice.map(msg => ({ role: msg.role, content: msg.content, parts: msg.parts }));
+        const fullResponse = await Engine.services.aiChat({
+            system: systemPrompt,
+            messages: messages,
+            options: { temperature: 0.9, maxTokens: 2048 },
+        });
+        if (!fullResponse) throw new Error('AI 返回内容为空');
+        await handleAiResponse(fullResponse, chat);
     } catch (error) {
         console.error('AI回复失败:', error); showToast(`AI回复失败: ${error.message}`);
     } finally {
@@ -1387,81 +1346,18 @@ async function handleAiResponse(fullResponse, chat) {
 
 /** AI 生图：使用指定的 prompt 生成配图并发送到聊天 */
 async function maybeSendAiImage(chat, prompt) {
-    console.log('[AiImg] maybeSendAiImage called, prompt:', prompt ? prompt.substring(0, 30) : '(auto)', 'imgUrl:', (db.imgGenSettings?.url || '未配置').substring(0, 50));
+    console.log('[AiImg] maybeSendAiImage called, prompt:', prompt ? prompt.substring(0, 30) : '(auto)');
     if (!prompt) {
-        // 向后兼容：未传 prompt 时从最后一条助手消息提取
         const lastMsgs = chat.history.filter(m => m.role === 'assistant');
         const lastMsg = lastMsgs[lastMsgs.length - 1];
-        if (!lastMsg) { console.log('[AiImg] ⚠️ 无assistant消息'); return; }
+        if (!lastMsg) return;
         prompt = lastMsg.content.replace(/\[.*?\]/g, '').trim();
-        console.log('[AiImg] 自动提取prompt:', '«' + prompt + '»', '长度=', prompt.length);
-        if (!prompt) { console.log('[AiImg] ⚠️ prompt为空，跳过'); return; }
+        if (!prompt) return;
     }
 
-    const imgSettings = db.imgGenSettings || {};
-    const imgUrl = imgSettings.url || 'https://image.pollinations.ai/prompt/';
-    const imgKey = imgSettings.key || '';
-    const imgModel = imgSettings.model || 'black-forest-labs/FLUX.1-schnell';
-
     try {
-        let imageUrl = '';
-        if (imgUrl.includes('pollinations')) {
-            const encoded = encodeURIComponent(prompt + ', anime style, high quality');
-            imageUrl = imgUrl.replace(/\/+$/, '') + '/' + encoded + '?width=768&height=1024&nologo=true';
-            // 用 fetch 验证图片是否生成成功
-            try {
-                const resp = await fetch(imageUrl, { method: 'GET', signal: AbortSignal.timeout(30000) });
-                if (!resp.ok) {
-                    const text = await resp.text().catch(() => '');
-                    let msg = '生图失败 (' + resp.status + ')';
-                    try { const j = JSON.parse(text); if (j.error) msg += ': ' + j.error; } catch(_) {}
-                    throw new Error(msg);
-                }
-                // 确认返回的是图片
-                const ct = resp.headers.get('content-type') || '';
-                if (!ct.includes('image/')) throw new Error('接口未返回图片 (content-type: ' + ct + ')');
-            } catch (_) {
-                if (_.message && _.message.includes('生图失败')) throw _;
-                /* 网络预检失败，尝试直接发送 */
-            }
-        } else {
-            const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + imgKey };
-            console.log('[AiImg] 调用自定义API:', imgUrl, 'model:', imgModel);
-            const resp = await fetch(imgUrl, {
-                method: 'POST', headers,
-                body: JSON.stringify({ model: imgModel, prompt: prompt, image_size: '768x1024', batch_size: 1 }),
-                signal: AbortSignal.timeout(60000)
-            });
-            console.log('[AiImg] API响应状态:', resp.status, resp.statusText);
-            if (!resp.ok) {
-                const text = await resp.text().catch(() => '');
-                console.log('[AiImg] API错误体:', text.substring(0, 200));
-                throw new Error('生图失败: ' + resp.status + ' ' + text.substring(0, 100));
-            }
-            const contentType = resp.headers.get('content-type') || '';
-            console.log('[AiImg] API content-type:', contentType);
-            if (contentType.includes('image/')) {
-                // 直接返回图片二进制，转为 blob URL
-                const blob = await resp.blob();
-                imageUrl = URL.createObjectURL(blob);
-                console.log('[AiImg] 二进制图片 blob URL:', imageUrl.substring(0, 50));
-            } else {
-                const json = await resp.json();
-                console.log('[AiImg] API返回JSON keys:', Object.keys(json));
-                if (json.data && json.data[0]) {
-                    imageUrl = json.data[0].url || json.data[0].b64_json || '';
-                    console.log('[AiImg] 取到URL:', imageUrl ? imageUrl.substring(0, 80) : '空');
-                    if (json.data[0].b64_json && imageUrl.indexOf('http') !== 0 && imageUrl.indexOf('data:') !== 0) {
-                        imageUrl = 'data:image/png;base64,' + imageUrl;
-                    }
-                } else {
-                    console.log('[AiImg] 未识别的响应格式:', JSON.stringify(json).substring(0, 200));
-                }
-            }
-            if (!imageUrl) throw new Error('未返回图片地址');
-        }
+        const imageUrl = await Engine.services.aiGenerateImage(prompt + ', anime style, high quality', { imageSize: '768x1024' });
 
-        // 发送图片消息（采用 ephone 方式：type + imageUrl 分离）
         console.log('[AiImg] 生图成功, URL:', imageUrl.substring(0, 100));
         const msg = {
             id: 'msg_' + Date.now() + '_' + Math.random(),
@@ -1740,33 +1636,16 @@ function setupWorldBookApp() {
         btn.disabled = true; btn.textContent = '⏳ 生成中...';
         resultDiv.style.display = 'none';
         try {
-            const api = getActiveApi();
-            if (!api?.url || !api?.key || !api?.model) { showToast('请先在 API 设置中配置 AI 接口'); return; }
             const prompt = '你是一个世界设定生成器。请生成一个完整的世界书条目，包含条目名称和详细设定内容。'
                 + (keywords ? `\n主题/关键词：${keywords}` : '\n主题：随机生成一个有趣的世界设定')
                 + (r18 ? '\n内容可以包含成人、黑暗、血腥等成熟主题。' : '\n内容保持全年龄向，适合大众阅读。')
                 + '\n\n请严格按以下格式输出（不要输出其他内容）：\n条目名称：xxx\n条目内容：xxx\n\n条目内容要详细、有创意，200-500字左右。';
 
-            const apiUrl = api.url.replace(/\/+$/, '');
-            let fullText = '';
-            if (api.provider === 'gemini') {
-                const resp = await fetch(apiUrl + '/v1beta/models/' + api.model + ':generateContent?key=' + api.key, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 1.0, maxOutputTokens: 800 } })
-                });
-                if (!resp.ok) throw new Error('API ' + resp.status);
-                const json = await resp.json();
-                fullText = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            } else {
-                const resp = await fetch(apiUrl + '/v1/chat/completions', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api.key },
-                    body: JSON.stringify({ model: api.model, stream: false, temperature: 1.0, max_tokens: 800, messages: [{ role: 'user', content: prompt }] })
-                });
-                if (!resp.ok) throw new Error('API ' + resp.status);
-                const json = await resp.json();
-                fullText = json.choices?.[0]?.message?.content || '';
-            }
-            if (!fullText) throw new Error('AI 返回内容为空');
+            const fullText = await Engine.services.aiChat({
+                system: '你是一个世界设定生成器。',
+                messages: [{ role: 'user', content: prompt }],
+                options: { temperature: 1.0, maxTokens: 800 },
+            });
             // 解析结果
             const nameMatch = fullText.match(/(?:条目名称|名称)[：:]\s*(.+)/);
             const contentMatch = fullText.match(/(?:条目内容|内容)[：:]\s*([\s\S]+)/);
@@ -2115,8 +1994,6 @@ function setupChatSettings() {
         genSummaryBtn.addEventListener('click', async () => {
             const c = db.characters.find(ch => ch.id === currentChatId);
             if (!c || !c.history || c.history.length === 0) { showToast('没有聊天记录可以总结'); return; }
-            const api = getActiveApi();
-            if (!api.url || !api.key || !api.model) { showToast('请先配置 AI 接口'); return; }
             genSummaryBtn.textContent = '⏳ 生成中...'; genSummaryBtn.disabled = true;
             try {
                 const historyText = c.history.map(m => {
@@ -2124,25 +2001,12 @@ function setupChatSettings() {
                     return t ? (m.role === 'user' ? `我: ${t}` : `${c.remarkName}: ${t}`) : '';
                 }).filter(Boolean).slice(-60).join('\n');
                 const prompt = `以下是"${c.remarkName}"和"${c.myName}"的对话记录，请用3-5句话概括对话中的重要内容：双方关系进展、共同经历、约好的事情、了解到的彼此信息。不要编造不存在的内容。\n\n对话记录：\n${historyText}`;
-                let resp;
-                if (api.provider === 'gemini') {
-                    const apiUrl = api.url.replace(/\/+$/, '');
-                    resp = await fetch(apiUrl + '/v1beta/models/' + api.model + ':generateContent?key=' + api.key, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 500 } })
-                    });
-                    const json = await resp.json();
-                    c.memorySummary = (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0]) ? json.candidates[0].content.parts[0].text : '';
-                } else {
-                    const apiUrl = api.url.replace(/\/+$/, '');
-                    resp = await fetch(apiUrl + '/v1/chat/completions', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api.key },
-                        body: JSON.stringify({ model: api.model, stream: false, temperature: 0.7, max_tokens: 500, messages: [{ role: 'user', content: prompt }] })
-                    });
-                    const json = await resp.json();
-                    c.memorySummary = (json.choices && json.choices[0] && json.choices[0].message) ? json.choices[0].message.content : '';
-                }
-                $('setting-memory-summary').value = c.memorySummary || '（生成失败）';
+                c.memorySummary = await Engine.services.aiChat({
+                    system: '你是一个对话摘要生成器。',
+                    messages: [{ role: 'user', content: prompt }],
+                    options: { temperature: 0.7, maxTokens: 500 },
+                }) || '（生成失败）';
+                $('setting-memory-summary').value = c.memorySummary;
                 await saveData();
                 showToast('记忆摘要已生成 📝');
             } catch (err) {

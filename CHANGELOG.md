@@ -1,5 +1,38 @@
 # 更新日志
 
+## v0.9.0 - AI 服务层统一 (2026-06-05)
+
+### 🏗️ 架构：AiService 统一 AI 通信层
+
+- 新增 `js/core/aiService.js`：全局 AI 服务层，适配器模式自动处理 OpenAI / Gemini 差异
+- 通过 `window.AiService` 暴露给所有模块，`Engine.services` 提供桥接
+- 支持流式（`onToken` 回调）和非流式两种模式，Provider 差异完全对模块透明
+- 统一错误处理：`AiServiceError`（CONFIG_ERROR / API_ERROR / NETWORK_ERROR / PARSE_ERROR / ABORTED）
+
+### 📦 模块 AI 调用统一（13 处内联 fetch → 全部清除）
+
+- **摇一摇 (gacha.js)**：`generateCharacters` / `generateCharacter` / `rerollOne` → `Engine.services.aiChat()`
+- **直播 (live.js)**：`_generateAiHost` / `streamRequest` / `generateLiveImage` → `Engine.services.aiChat()` + `aiGenerateImage()`
+- **媒体 (media.js)**：`callAI` / `streamDetail` / `callImageAPI` → `Engine.services.aiChat()` + `aiGenerateImage()`
+- **app.js 主聊天**：`getAiReply` / `maybeSendAiImage` / 世界书生成 / 记忆摘要 → `Engine.services.aiChat()` + `aiGenerateImage()`
+
+### 🔧 Engine.services 新增
+
+- `aiChat(opts)` — AI 文字对话（自动同步 db 配置，支持流式）
+- `aiGenerateImage(prompt, options)` — AI 图片生成
+- `aiFetchModels(url, key, provider)` — 拉取模型列表
+- `syncAiConfig()` — 从 db.apiPresets 同步配置到 AiService
+
+### 📝 文档
+
+- 新增 `SKILL-MODULE-DEV.md`：模块开发标准作业流程（SOP）
+- 重写 `README.md`：更新架构说明和 AI 调用方式
+
+### 🐛 修复
+
+- 旧代码端点 `/chat/completions` 缺少 `/v1` 前缀 → 统一为 `/v1/chat/completions`
+- 新模块自动获得 Gemini 支持（之前需手动实现 Gemini 分支）
+
 ## v0.8.0 - 媒体模块重制 + 主页入口调整 (2026-06-04)
 
 ### 📰 媒体模块（全新）

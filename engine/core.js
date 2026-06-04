@@ -76,5 +76,56 @@ const Engine = {
         get screens() { return document.querySelectorAll('.screen'); },
         get homeScreen() { return document.getElementById('home-screen'); },
         get toastElement() { return document.getElementById('toast-notification'); },
+
+        // ─── AI 服务桥接 ──────────────────────
+
+        /**
+         * 同步当前 API 配置到 AiService（每次调用前自动执行）
+         * 从 db.apiPresets / db.apiSettings 读取活跃配置
+         */
+        syncAiConfig() {
+            const api = getActiveApi();
+            if (api?.url && api?.key && api?.model) {
+                AiService.setChatConfig(api);
+            }
+            AiService.setImageConfig(db.imgGenSettings || {});
+        },
+
+        /**
+         * AI 文字对话（统一入口）
+         * @param {Object} opts
+         * @param {string} opts.system - 系统提示词
+         * @param {Array} opts.messages - 消息数组 [{ role, content }]
+         * @param {Object} [opts.options] - { temperature, maxTokens }
+         * @param {function(string): void} [opts.onToken] - 流式回调（传此参数启用流式）
+         * @param {AbortSignal} [opts.signal] - 中止信号
+         * @returns {Promise<string>} AI 回复文本
+         */
+        async aiChat(opts) {
+            this.syncAiConfig();
+            return AiService.chat(opts);
+        },
+
+        /**
+         * AI 图片生成（统一入口）
+         * @param {string} prompt - 图片描述
+         * @param {Object} [options] - { imageSize }
+         * @returns {Promise<string>} 图片 URL
+         */
+        async aiGenerateImage(prompt, options) {
+            this.syncAiConfig();
+            return AiService.generateImage(prompt, options);
+        },
+
+        /**
+         * 拉取可用模型列表
+         * @param {string} url - API 地址
+         * @param {string} key - 密钥
+         * @param {string} provider - 服务商名
+         * @returns {Promise<string[]>}
+         */
+        async aiFetchModels(url, key, provider) {
+            return AiService.fetchModels(url, key, provider);
+        },
     }
 };

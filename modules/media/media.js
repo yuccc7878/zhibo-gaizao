@@ -444,94 +444,22 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
 
     /** 流式调用AI文字，逐字输出到详情页 */
     async streamDetail(prompt) {
-        const presets = db.apiPresets || [];
-        const activeId = db.activeApiPresetId;
-        let preset = presets.find(p => p.id === activeId) || presets[0];
-
-        if (!preset || !preset.url || !preset.key) {
-            this.appendDetailText('\n\n⚠️ 请先在设置中配置AI API');
-            this.finishDetail();
-            return;
-        }
-
-        const apiUrl = preset.url.replace(/\/+$/, '') + '/chat/completions';
-
         try {
-            const resp = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${preset.key}`,
+            await Engine.services.aiChat({
+                system: '你是一个内容生成器，严格按照用户要求输出内容，不要包含多余标记。',
+                messages: [{ role: 'user', content: prompt }],
+                options: { temperature: 0.85, maxTokens: 1500 },
+                onToken: (delta) => {
+                    if (this.detailAborted) return;
+                    this._fullText += delta;
+                    this.appendDetailText(delta);
                 },
-                body: JSON.stringify({
-                    model: preset.model,
-                    messages: [
-                        { role: 'system', content: '你是一个内容生成器，严格按照用户要求输出内容，不要包含多余标记。' },
-                        { role: 'user', content: prompt },
-                    ],
-                    temperature: 0.85,
-                    max_tokens: 1500,
-                    stream: true,
-                }),
             });
-
-            const contentType = resp.headers.get('content-type') || '';
-
-            if (!resp.ok) {
-                const errText = await resp.text().catch(() => '');
-                throw new Error(`API请求失败 (${resp.status}): ${errText.slice(0, 100)}`);
-            }
-
-            // 流式接口返回HTML说明地址错误
-            if (contentType.includes('text/html')) {
-                throw new Error('API返回HTML页面，流式接口地址可能有误');
-            }
-
-            const reader = resp.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-
-            while (true) {
-                if (this.detailAborted) { reader.cancel(); break; }
-
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (this.detailAborted) break;
-                    const trimmed = line.trim();
-                    if (!trimmed || !trimmed.startsWith('data:')) continue;
-                    const payload = trimmed.slice(5).trim();
-                    if (payload === '[DONE]') continue;
-
-                    try {
-                        const json = JSON.parse(payload);
-                        const delta = json.choices?.[0]?.delta?.content;
-                        if (delta) {
-                            this._fullText += delta;
-                            this.appendDetailText(delta);
-                        }
-                    } catch (e) {
-                        // 跳过解析失败的行
-                    }
-                }
-            }
         } catch (err) {
-            // 非流式降级：尝试普通请求
-            try {
-                const result = await this.callAI(prompt, 1500);
-                if (!this.detailAborted) {
-                    this._fullText = result;
-                    this.setDetailText(result);
-                }
-            } catch (e2) {
-                if (!this.detailAborted) {
-                    this.appendDetailText('\n\n⚠️ 内容生成失败：' + err.message);
-                }
+            if (err.name === 'AiServiceError' && err.code === 'ABORTED') {
+                // 用户取消，忽略
+            } else if (!this.detailAborted) {
+                this.appendDetailText('\n\n⚠️ 内容生成失败：' + err.message);
             }
         }
 
@@ -593,102 +521,17 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
     // =========== AI调用（非流式，用于列表生成） ===========
 
     async callAI(prompt, maxTokens) {
-        const presets = db.apiPresets || [];
-        const activeId = db.activeApiPresetId;
-        let preset = presets.find(p => p.id === activeId) || presets[0];
-
-        if (!preset || !preset.url || !preset.key) throw new Error('请先在设置中配置AI API');
-
-        const apiUrl = preset.url.replace(/\/+$/, '') + '/chat/completions';
-        const resp = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${preset.key}` },
-            body: JSON.stringify({
-                model: preset.model,
-                messages: [
-                    { role: 'system', content: '你是一个内容生成器，严格按照用户要求输出内容，不要包含多余标记。' },
-                    { role: 'user', content: prompt },
-                ],
-                temperature: 0.85,
-                max_tokens: maxTokens || 2000,
-            }),
+        return Engine.services.aiChat({
+            system: '你是一个内容生成器，严格按照用户要求输出内容，不要包含多余标记。',
+            messages: [{ role: 'user', content: prompt }],
+            options: { temperature: 0.85, maxTokens: maxTokens || 2000 },
         });
-
-        const contentType = resp.headers.get('content-type') || '';
-        const rawText = await resp.text();
-
-        if (!resp.ok) {
-            throw new Error(`API请求失败 (${resp.status}): ${rawText.slice(0, 100)}`);
-        }
-
-        // 检查是否返回了HTML（404页面、错误页等）
-        if (contentType.includes('text/html') || rawText.trim().startsWith('<')) {
-            throw new Error(`API返回了HTML页面而非JSON，地址可能有误：${apiUrl.slice(0, 60)}...`);
-        }
-
-        let data;
-        try {
-            data = JSON.parse(rawText);
-        } catch (e) {
-            throw new Error(`API响应不是有效JSON：${rawText.slice(0, 80)}`);
-        }
-
-        const text = data.choices?.[0]?.message?.content || '';
-        if (!text) throw new Error('AI返回内容为空');
-        return text;
     },
 
     // =========== 生图API ===========
 
     async callImageAPI(prompt) {
-        const imgSettings = db.imgGenSettings || {};
-        const imgUrl = imgSettings.url || 'https://image.pollinations.ai/prompt/';
-        const imgKey = imgSettings.key || '';
-        const imgModel = imgSettings.model || 'black-forest-labs/FLUX.1-schnell';
-
-        if (imgUrl.includes('pollinations')) {
-            const encoded = encodeURIComponent(prompt + ', high quality, detailed');
-            const imageUrl = imgUrl.replace(/\/+$/, '') + '/' + encoded + '?width=768&height=512&nologo=true';
-            try {
-                const resp = await fetch(imageUrl, { method: 'GET', signal: AbortSignal.timeout(30000) });
-                if (!resp.ok) throw new Error('生图失败 (' + resp.status + ')');
-                const ct = resp.headers.get('content-type') || '';
-                if (!ct.includes('image/')) throw new Error('接口未返回图片');
-            } catch (e) {
-                if (e.message.includes('生图失败')) throw e;
-            }
-            return imageUrl;
-        } else {
-            const headers = { 'Content-Type': 'application/json' };
-            if (imgKey) headers['Authorization'] = 'Bearer ' + imgKey;
-
-            const resp = await fetch(imgUrl, {
-                method: 'POST', headers,
-                body: JSON.stringify({ model: imgModel, prompt, image_size: '768x512', batch_size: 1 }),
-                signal: AbortSignal.timeout(60000),
-            });
-
-            if (!resp.ok) {
-                const text = await resp.text().catch(() => '');
-                throw new Error('生图失败: ' + resp.status + ' ' + text.substring(0, 100));
-            }
-
-            const contentType = resp.headers.get('content-type') || '';
-            if (contentType.includes('image/')) {
-                const blob = await resp.blob();
-                return URL.createObjectURL(blob);
-            } else {
-                const json = await resp.json();
-                if (json.data && json.data[0]) {
-                    let url = json.data[0].url || json.data[0].b64_json || '';
-                    if (json.data[0].b64_json && !url.startsWith('http') && !url.startsWith('data:')) {
-                        url = 'data:image/png;base64,' + url;
-                    }
-                    return url;
-                }
-                throw new Error('未识别的生图响应格式');
-            }
-        }
+        return Engine.services.aiGenerateImage(prompt + ', high quality, detailed', { imageSize: '768x512' });
     },
 
     parseJSON(text) {
