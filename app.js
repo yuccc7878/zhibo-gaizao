@@ -734,6 +734,15 @@ function createMessageBubbleElement(message) {
         bubbleRow.appendChild(ttsBtn);
     }
 
+    // 如果消息有待生成图片，添加占位
+    if (message.pendingImagePrompt) {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'image-placeholder';
+        placeholder.dataset.imageForMsgId = message.id;
+        placeholder.innerHTML = '<div class="placeholder-spinner"></div><span>🖼️ 图片生成中...</span>';
+        wrapper.appendChild(placeholder);
+    }
+
     wrapper.prepend(bubbleRow);
     return wrapper;
 }
@@ -1291,57 +1300,84 @@ async function processStream(response, chat) {
 }
 
 async function handleAiResponse(fullResponse, chat) {
-    // 检测 AI 自主决定的配图标记 [生成配图：描述]（支持全角/半角冒号和多种格式）
+    // 提取所有配图标记
     const imgRegexGlobal = /\[(?:生成配图|配图|生成图片)[：:]\s*([^\]]+)\]/g;
-    const imgMarkers = fullResponse.match(imgRegexGlobal);
-    let cleanedResponse = fullResponse.replace(imgRegexGlobal, '').trim();
-    if (db.imgGenSettings?.url && imgMarkers) {
-        for (const marker of imgMarkers) {
-            const match = marker.match(/\[(?:生成配图|配图|生成图片)[：:]\s*([^\]]+)\]/);
-            if (match) {
-                maybeSendAiImage(chat, match[1].trim()).catch(e => console.error('[AiImg] 标记配图失败:', e));
-            }
-        }
+    let imgPrompts = [];
+    let match;
+    while ((match = imgRegexGlobal.exec(fullResponse)) !== null) {
+        imgPrompts.push(match[1].trim());
     }
+    let cleanedResponse = fullResponse.replace(imgRegexGlobal, '').trim();
+
+    // 私聊处理
     if (currentChatType === 'private') {
         const character = chat;
         const messages = getMixedContent(cleanedResponse);
-        if (messages.length > 0) {
-            messages.forEach(item => {
-                const message = { id: `msg_${Date.now()}_${Math.random()}`, role: 'assistant', content: item.content.trim(), parts: [{ type: item.type, text: item.content.trim() }], timestamp: Date.now() };
-                if (/\[.*?的转账：.*?元；备注：.*?\]/.test(message.content)) message.transferStatus = 'pending';
-                else if (/\[.*?送来的礼物：.*?\]/.test(message.content)) message.giftStatus = 'sent';
-                chat.history.push(message); addMessageBubble(message);
+        const validMessages = messages.filter(item => item.content.trim());
+        if (validMessages.length > 0) {
+            validMessages.forEach(item => {
+                const msg = { id: `msg_${Date.now()}_${Math.random()}`, role: 'assistant', content: item.content.trim(), parts: [{ type: item.type || 'text', text: item.content.trim() }], timestamp: Date.now() };
+                if (/\[.*?的转账：.*?元；备注：.*?\]/.test(msg.content)) msg.transferStatus = 'pending';
+                else if (/\[.*?送来的礼物：.*?\]/.test(msg.content)) msg.giftStatus = 'sent';
+                if (imgPrompts.length > 0) msg.pendingImagePrompt = imgPrompts.shift();
+                chat.history.push(msg); addMessageBubble(msg);
             });
         } else {
             const msg = { id: `msg_${Date.now()}_${Math.random()}`, role: 'assistant', content: cleanedResponse, parts: [{ type: 'text', text: cleanedResponse }], timestamp: Date.now() };
+            if (imgPrompts.length > 0) msg.pendingImagePrompt = imgPrompts.shift();
             chat.history.push(msg); await addMessageBubble(msg);
         }
     } else {
         const group = chat;
         const messages = getMixedContent(cleanedResponse);
         const nameRegex = /\[(.*?)((?:的消息|的语音|发送的表情包|发来的照片\/视频))：/;
-        if (messages.length > 0) {
-            messages.forEach(item => {
-                const nameMatch = item.content.match(nameRegex);
-                if (nameMatch || item.char) {
-                    const senderName = item.char || nameMatch[1];
-                    const sender = group.members.find(m => m.realName === senderName || m.groupNickname === senderName);
-                    if (sender) {
-                        const message = { id: `msg_${Date.now()}_${Math.random()}`, role: 'assistant', content: item.content.trim(), parts: [{ type: item.type, text: item.content.trim() }], timestamp: Date.now(), senderId: sender.id };
-                        group.history.push(message); addMessageBubble(message);
-                    }
+        const validMessages = messages.filter(item => item.content.trim());
+        validMessages.forEach(item => {
+            const nameMatch = item.content.match(nameRegex);
+            if (nameMatch || item.char) {
+                const senderName = item.char || nameMatch[1];
+                const sender = group.members.find(m => m.realName === senderName || m.groupNickname === senderName);
+                if (sender) {
+                    const msg = { id: `msg_${Date.now()}_${Math.random()}`, role: 'assistant', content: item.content.trim(), parts: [{ type: item.type || 'text', text: item.content.trim() }], timestamp: Date.now(), senderId: sender.id };
+                    if (imgPrompts.length > 0) msg.pendingImagePrompt = imgPrompts.shift();
+                    group.history.push(msg); addMessageBubble(msg);
                 }
-            });
-        } else {
+            }
+        });
+        if (validMessages.length === 0 && cleanedResponse) {
             const firstMember = group.members[Math.floor(Math.random() * group.members.length)];
             if (firstMember) {
                 const msg = { id: `msg_${Date.now()}_${Math.random()}`, role: 'assistant', content: `[${firstMember.realName}的消息：${cleanedResponse}]`, parts: [{ type: 'text', text: `[${firstMember.realName}的消息：${cleanedResponse}]` }], timestamp: Date.now(), senderId: firstMember.id };
+                if (imgPrompts.length > 0) msg.pendingImagePrompt = imgPrompts.shift();
                 group.history.push(msg); await addMessageBubble(msg);
             }
         }
     }
     await saveData(); renderChatList();
+
+    // 异步触发所有待生成图片
+    chat.history.forEach(msg => {
+        if (msg.pendingImagePrompt && !msg._imageGenStarted) {
+            msg._imageGenStarted = true;
+            generateImageForMessage(msg.id, msg.pendingImagePrompt, chat);
+        }
+    });
+}
+
+/** 为消息生成配图，替换占位 DOM */
+async function generateImageForMessage(msgId, prompt, chat) {
+    const placeholder = document.querySelector(`.image-placeholder[data-image-for-msg-id="${msgId}"]`);
+    if (!placeholder) return;
+    try {
+        const imageUrl = await Engine.services.aiGenerateImage(prompt + ', anime style, high quality', { imageSize: '768x1024' });
+        placeholder.outerHTML = `<img src="${imageUrl}" alt="AI配图" class="ai-generated-image" style="max-width:100%;max-height:300px;border-radius:8px;margin-top:6px;">`;
+        const msg = chat.history.find(m => m.id === msgId);
+        if (msg) { msg.imageUrl = imageUrl; msg.pendingImagePrompt = undefined; }
+        await saveData();
+    } catch (err) {
+        console.error('[AiImg] 生成失败:', err);
+        if (placeholder) { placeholder.innerHTML = '<span>🖼️ 图片生成失败</span>'; placeholder.classList.add('image-placeholder-failed'); }
+    }
 }
 
 /** AI 生图：使用指定的 prompt 生成配图并发送到聊天 */

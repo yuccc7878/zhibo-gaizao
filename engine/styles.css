@@ -916,6 +916,21 @@ label.btn-primary { color: var(--white-color) !important; }
     border: 1px solid #ffc0c0;
 }
 
+/* ─── AI 配图占位 ─── */
+.image-placeholder {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; margin: 6px 0 0 0;
+    background: rgba(0,0,0,0.03); border-radius: 12px;
+    font-size: 13px; color: #888; max-width: 80%;
+}
+.image-placeholder-failed { color: #c44; background: rgba(255,240,240,0.5); }
+.placeholder-spinner {
+    width: 16px; height: 16px;
+    border: 2px solid #ddd; border-top-color: #999;
+    border-radius: 50%; animation: pSpin 0.8s linear infinite;
+}
+@keyframes pSpin { to { transform: rotate(360deg); } }
+
 /* ─── 列表项 ─── */
 .list-item {
     display: flex; align-items: center; padding: 12px 20px;
