@@ -224,7 +224,7 @@ function setupHomeScreen() {
                     if (mod.id === 'media') {
                         return `<a href="#" class="app-icon" style="opacity:0.5;cursor:default;">
                             <div class="icon-img" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);box-shadow:0 4px 10px rgba(0,0,0,0.1);overflow:hidden;">
-                                <span style="font-size:30px;">${mod.icon}</span>
+                                <img src="${iconFile}" alt="${mod.name}" style="width:100%;height:100%;object-fit:cover;border-radius:15px;">
                             </div>
                             <span class="app-name">待开发</span>
                         </a>`;
