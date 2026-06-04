@@ -198,7 +198,7 @@ function setupHomeScreen() {
             <a href="#" class="app-icon" data-target="wallpaper-screen"><img src="${getIcon('wallpaper-screen')}" alt="Wallpaper" class="icon-img"><span class="app-name">${defaultIcons['wallpaper-screen'].name}</span></a>
             <a href="#" class="app-icon" data-target="world-book-screen"><img src="${getIcon('world-book-screen')}" alt="World Book" class="icon-img"><span class="app-name">${defaultIcons['world-book-screen'].name}</span></a>
             <a href="#" class="app-icon" data-target="customize-screen"><img src="${getIcon('customize-screen')}" alt="Customize" class="icon-img"><span class="app-name">${defaultIcons['customize-screen'].name}</span></a>
-            <a href="#" class="app-icon" data-target="tutorial-screen"><img src="${getIcon('tutorial-screen')}" alt="Tutorial" class="icon-img"><span class="app-name">${defaultIcons['tutorial-screen'].name}</span></a>
+            <a href="#" class="app-icon" id="media-home-btn"><img src="assets/icons/白天开关.png" alt="媒体" class="icon-img"><span class="app-name">媒体</span></a>
         </div>
         <div class="dock">
             <a href="#" class="app-icon" data-target="font-settings-screen"><img src="${getIcon('font-settings-screen')}" alt="字体" class="icon-img"></a>
@@ -210,7 +210,7 @@ function setupHomeScreen() {
         live: 'assets/icons/直播.png',
         gacha: 'assets/icons/电话.png',
         wardrobe: 'assets/icons/摇一摇.png',
-        bilibili: 'assets/icons/白天开关.png',
+        media: 'assets/icons/白天开关.png',
         games: 'assets/icons/夜间开关.png',
     };
     const modules = Engine.getAllModules();
@@ -220,6 +220,15 @@ function setupHomeScreen() {
             <div class="right-page-grid">
                 ${modules.map(mod => {
                     const iconFile = MODULE_ICON_MAP[mod.id];
+                    // 媒体模块已移至主页，模块中心显示"待开发"
+                    if (mod.id === 'media') {
+                        return `<a href="#" class="app-icon" style="opacity:0.5;cursor:default;">
+                            <div class="icon-img" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);box-shadow:0 4px 10px rgba(0,0,0,0.1);overflow:hidden;">
+                                <span style="font-size:30px;">${mod.icon}</span>
+                            </div>
+                            <span class="app-name">待开发</span>
+                        </a>`;
+                    }
                     if (mod.id === 'album') {
                         const albumMod = Engine.getModule('album');
                         const coverUrl = albumMod && typeof albumMod.getCoverUrl === 'function' ? albumMod.getCoverUrl() : null;
@@ -245,6 +254,14 @@ function setupHomeScreen() {
         btn.addEventListener('click', (e) => { e.preventDefault(); Engine.openModule(btn.dataset.module); });
     });
 
+    // 主页媒体入口
+    document.getElementById('media-home-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        Engine.openModule('media');
+    });
+
+    // 说明入口已移除
+
     setupSwipeNavigation();
     updateClock();
     applyWallpaper(db.wallpaper);
@@ -258,7 +275,7 @@ function setupHomeScreen() {
     });
     document.querySelector('[data-target="world-book-screen"]').addEventListener('click', renderWorldBookList);
     document.querySelector('[data-target="customize-screen"]').addEventListener('click', renderCustomizeForm);
-    document.querySelector('[data-target="tutorial-screen"]').addEventListener('click', renderTutorialContent);
+    // tutorial-screen 入口已移至媒体模块
 }
 
 // --- 聊天列表 ---

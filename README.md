@@ -23,9 +23,9 @@ zhibo-gaizao/
 │   ├── live/
 │   │   ├── live.css        # 直播样式
 │   │   └── live.js         # 直播逻辑
-│   ├── bilibili/
-│   │   ├── bilibili.css    # B站样式
-│   │   └── bilibili.js     # B站逻辑
+│   ├── media/
+│   │   ├── media.css       # 媒体样式
+│   │   └── media.js        # 媒体逻辑（B站/头条/OnlyFans，AI生成，详情页，分享）
 │   ├── games/
 │   │   ├── games.css       # 游戏中心样式
 │   │   └── games.js        # 游戏中心逻辑
@@ -51,7 +51,7 @@ zhibo-gaizao/
 |------|------|------|
 | shop | 🛒 | 商店（日常消费 + R18，含限定套装，购买后可赠送） |
 | live | 📺 | 直播（双 tab：自己开播/主播选择，AI 剧情+弹幕，打赏系统，二次元生图，道具消耗，加为好友） |
-| bilibili | 📱 | B站热门视频 |
+| media | 📰 | 媒体（B站/今日头条/OnlyFans 三Tab，AI生成内容，详情页流式文字+AI配图，分享到QQ联系人） |
 | games | 🎮 | 游戏中心（2048/贪吃蛇/像素鸟/老虎机，触控+键盘，金币奖励） |
 | album | 📷 | 相册（导入图片，设封面，主页大图标） |
 | gacha | 🎲 | 摇一摇（AI 角色生成，许愿系统，批量生成，加为好友） |
@@ -90,6 +90,28 @@ zhibo-gaizao/
 - Dexie.js 操作 IndexedDB 持久化自定义衣物
 - html2canvas 截图导出
 - 像素画风格，`image-rendering: pixelated`
+
+## 📰 媒体模块
+
+AI 驱动的媒体内容浏览模块，三频道切换，详情页流式输出。
+
+### 功能特性
+
+- **三Tab频道**：B站 / 今日头条 / OnlyFans，独立提示词生成内容
+- **AI生成列表**：调用聊天API生成6条模拟热门数据，右下角刷新按钮
+- **确认弹窗**：点击卡片弹出确认框，确认后进入详情页
+- **详情页流式文字**：SSE 流式输出 AI 深度解读（300-500字），逐字显示+光标动画
+- **后台AI配图**：与文字并行调用生图API，图片生成完成后淡入插入
+- **分享到QQ**：读取 QQ 聊天模块的联系人列表，一键分享内容到对话中
+- **渐变头部 + 配图 + 文章段落**：详情页完整布局
+
+### 技术实现
+
+- SSE（Server-Sent Events）流式读取 AI 文字输出
+- `Promise.allSettled` 并行调用文字+生图，互不阻塞
+- 复用 `db.apiPresets`（聊天API）和 `db.imgGenSettings`（生图API）配置
+- 通过 `openChatRoom()` 跳转到 QQ 聊天模块
+- 支持 Pollinations 和 OpenAI 兼容格式生图
 
 ## 🚀 新增模块指南
 
