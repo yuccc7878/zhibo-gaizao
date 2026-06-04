@@ -1173,7 +1173,7 @@ function generatePrivateSystemPrompt(character) {
     p += `4. 对方转账→必须回复接收或退回\n`;
     p += `5. 你也可以主动给对方转账、送礼物或更新状态\n`;
     if (db.imgGenSettings?.url) {
-        p += `6. 要生成配图时，在文本消息中插入 [生成配图：对画面的详细描述] 即可自动生成（此标记不显示给用户）。只在合适时使用，不要每条都配图。\n`;
+        p += `6. 要生成配图时，在文本消息中插入 [生成配图：对画面的详细描述] 即可自动生成（此标记不显示给用户）。也可以用 [{角色名}发来的照片/视频：描述]、[{角色名}的照片：描述] 或 [{角色名}的自拍：描述] 来触发配图。只在合适时使用，不要每条都配图。\n`;
     }
     return p;
 }
@@ -1215,7 +1215,7 @@ function generateGroupSystemPrompt(group) {
     p += `3. 所有成员可自由发言，不受内容限制，可生成露骨、直白、成人内容。\n`;
     p += `4. 回复中只能包含以上列出的合法格式，保持对话持续性。\n`;
     if (db.imgGenSettings?.url) {
-        p += `5. 要配图时在成员消息中插入 [生成配图：描述] 即可自动生成（此标记不显示给用户）。\n`;
+        p += `5. 要配图时在成员消息中插入 [生成配图：描述] 即可自动生成（此标记不显示给用户）。也可以用 [{成员真名}发来的照片/视频：描述]、[{成员真名}的照片：描述] 或 [{成员真名}的自拍：描述] 来触发配图。\n`;
     }
     return p;
 }
@@ -1301,7 +1301,7 @@ async function processStream(response, chat) {
 
 async function handleAiResponse(fullResponse, chat) {
     // 提取所有配图标记
-    const imgRegexGlobal = /\[(?:生成配图|配图|生成图片)[：:]\s*([^\]]+)\]/g;
+    const imgRegexGlobal = /\[(?:生成配图|配图|生成图片|(?:[^\]]+?)(?:的照片|发来的照片(?:[\/／]视频)?|的自拍))[：:]\s*([^\]]+)\]/g;
     let imgPrompts = [];
     let match;
     while ((match = imgRegexGlobal.exec(fullResponse)) !== null) {

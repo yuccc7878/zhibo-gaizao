@@ -1,0 +1,46 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start HTTP Server",
+      "type": "shell",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/.vscode/serve.js"
+      ],
+      "group": "none",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "章鱼喷墨机",
+          "endsPattern": "Ctrl\\+C"
+        }
+      },
+      "detail": "使用 Node.js 服务器在端口 3000 提供静态文件服务"
+    },
+    {
+      "label": "Stop HTTP Server",
+      "type": "shell",
+      "command": "taskkill",
+      "args": [
+        "/f",
+        "/im",
+        "node.exe",
+        "2>nul",
+        "||",
+        "echo 服务器已停止"
+      ],
+      "group": "none",
+      "detail": "停止 Node.js HTTP 服务器"
+    }
+  ]
+}

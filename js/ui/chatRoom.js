@@ -743,14 +743,14 @@ async function triggerAiReply() {
 
 async function handleAiResponse(fullResponse, chat) {
   // 检测 AI 自主决定的配图标记
-  const imgRegexGlobal = /\[(?:生成配图|配图|生成图片)[：:]\s*([^\]]+)\]/g;
+  const imgRegexGlobal = /\[(?:生成配图|配图|生成图片|(?:[^\]]+?)(?:的照片|发来的照片(?:[\/／]视频)?|的自拍))[：:]\s*([^\]]+)\]/g;
   const imgMarkers = fullResponse.match(imgRegexGlobal);
   let cleanedResponse = fullResponse.replace(imgRegexGlobal, '').trim();
 
   const db = dataService.getDb();
   if (chat.aiImgGen && imgMarkers) {
     for (const marker of imgMarkers) {
-      const match = marker.match(/\[(?:生成配图|配图|生成图片)[：:]\s*([^\]]+)\]/);
+      const match = marker.match(/\[(?:生成配图|配图|生成图片|(?:[^\]]+?)(?:的照片|发来的照片(?:[\/／]视频)?|的自拍))[：:]\s*([^\]]+)\]/);
       if (match) {
         try {
           const imageUrl = await generateImage(match[1].trim());

@@ -57,7 +57,7 @@ const IDS = [
   // 设置
   'setting-theme-color', 'setting-use-custom-css', 'setting-custom-bubble-css',
   'reset-custom-bubble-css-btn', 'private-bubble-css-preview',
-  'setting-char-avatar-preview', 'setting-char-avatar-upload',
+  'setting-char-avatar-preview', 'setting-char-avatar-upload', 'setting-char-avatar-ai-btn',
   'setting-char-remark', 'setting-char-persona',
   'setting-my-avatar-preview', 'setting-my-avatar-upload',
   'setting-my-name', 'setting-my-persona', 'setting-max-memory',

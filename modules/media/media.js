@@ -37,87 +37,81 @@ Engine.register({
             label: 'B站',
             icon: '📺',
             color: '#00a1d6',
-            prompt: `请生成6条B站热门视频的模拟数据。每条包含以下字段：
-title（吸引眼球的中文标题，要有B站风格）
-author（UP主名称）
-views（播放量，纯数字）
-danmaku（弹幕数，纯数字）
-likes（点赞数，纯数字）
-duration（视频时长秒数）
-description（一句话内容摘要）
-风格要求：混合科技、游戏、生活、美食、搞笑等类型，标题要有B站特色（如"震惊！""万字解析""手把手教你"等）
+            prompt: `生成6条B站视频模拟数据，每条JSON包含：title, author, views, danmaku, likes, duration(秒), description。要求：
+- 标题要多样化，不要只做"震惊体"，可以包含：整活/测评/Vlog/教程/鬼畜/纪录片/剧情/杂谈/挑战/科普等
+- UP主名字要有创意（可玩梗、谐音、风格化）
+- 播放量、弹幕、点赞要合理（几万到几百万不等）
+- 描述要勾人，像B站缩略图下方那行简介文案
+- 内容涵盖：科技数码、游戏电竞、美食探店、生活记录、美妆穿搭、知识科普、动漫二次元、音乐翻唱、鬼畜搞笑、影视解说、户外冒险、手工制作等，每次随机挑选不同类型，不要每次都出同样的分类
 请直接返回JSON数组，不要包含任何其他文字或markdown标记。字段名用英文双引号。`,
-            detailPrompt: (item) => `你是一位资深B站UP主，请根据以下视频信息撰写一篇详细的内容介绍（300-500字）：
+            detailPrompt: (item) => `你是一个很会整活的B站UP主，这是你刚发的视频信息：
 
-标题：${item.title}
-UP主：${item.author}
-播放量：${item.views}
+标题：《${item.title}》
+播放量：${item.views}  👀 弹幕：${item.danmaku}
 简介：${item.description}
 
-要求：
-1. 开头用一句话概括视频亮点
-2. 中间分析视频可能涵盖的内容、看点、亮点
-3. 结尾给出观看建议或推荐理由
-4. 语言风格轻松有趣，有B站味道
-5. 不要使用markdown标记，纯文本输出`,
-            imgPrompt: (item) => `anime style, ${item.title}, ${item.author}, vibrant colors, high quality illustration, detailed background`,
+请你以UP主的身份，用第一人称写一篇"制作感言/幕后故事"（300-500字），分享这个视频从策划到剪辑的整个过程。要求：
+- 开头用一句金句或梗总结视频
+- 中间写制作过程：灵感来源、拍摄花絮、剪辑时的痛苦或乐子、遇到的意外状况
+- 结尾可以求三连、整活预告、或者煽情一下
+- 语言风格：真实UP主语感，带语气词、口语化、不端着
+- 不要用任何markdown标记，纯文本`,
+            imgPrompt: (item) => `anime illustration style, bilibili video cover for "${item.title}" by ${item.author}, dynamic composition, vibrant colors, eye-catching thumbnail style, high detail, 16:9`,
         },
         {
             id: 'toutiao',
             label: '今日头条',
             icon: '📋',
             color: '#ff0000',
-            prompt: `请生成6条今日头条热门新闻的模拟数据。每条包含以下字段：
-title（中文新闻标题，简洁有力）
-source（来源媒体名称，如"人民日报""央视新闻""澎湃新闻"等）
-comments（评论数，纯数字）
-likes（点赞数，纯数字）
-category（分类，从以下选择：社会/科技/娱乐/财经/体育/国际）
-description（一句话新闻摘要）
-风格要求：真实新闻感，涵盖多个领域，标题要有头条风格（如"刚刚！""重磅""突发"等）
+            prompt: `生成6条今日头条热文模拟数据，每条JSON包含：title, source, comments, likes, category, description。要求：
+- 标题要多样化：可以是重磅突发、深度调查、民生故事、科技爆料、国际局势、财经分析、娱乐八卦、体育赛事、健康养生、奇闻趣事等，不要只重复"刚刚！""突发"套路
+- 来源覆盖：主流媒体、地方媒体、自媒体大V、垂直领域KOL，随机搭配
+- 评论和点赞量要有差异（几百到几十万），体现热度高低
+- 分类从：社会/科技/娱乐/财经/体育/国际/军事/健康/教育/三农 中随机选，每次尽量覆盖不同组合
+- 描述要有信息量，像头条列表页那行灰色摘要文案的风格
 请直接返回JSON数组，不要包含任何其他文字或markdown标记。字段名用英文双引号。`,
-            detailPrompt: (item) => `你是一位资深新闻记者，请根据以下新闻标题撰写一篇详细的新闻报道（300-500字）：
+            detailPrompt: (item) => `你是一线调查记者，写一篇关于这条新闻的深度报道（350-550字）：
 
 标题：${item.title}
-来源：${item.source}
-分类：${item.category}
+来源：${item.source}  |  分类：${item.category}
 摘要：${item.description}
 
-要求：
-1. 开头交代新闻核心事实（5W1H）
-2. 中间展开背景、细节、各方反应
-3. 结尾展望影响或后续发展
-4. 语言风格客观专业，有新闻报道感
-5. 不要使用markdown标记，纯文本输出`,
-            imgPrompt: (item) => `news photography, ${item.title}, ${item.category}, professional photojournalism, realistic, high quality, detailed`,
+写法要求（打破常规新闻模板）：
+- 选一个独特切入口，不要平铺直叙"近日…据了解…"
+- 可以写：当事人视角、现场细节、数据深挖、行业内幕、历史对比、争议焦点
+- 语言不做作，避免套话，像深度报道特稿的感觉
+- 结尾可以留一个开放式问题或展望
+- 不要用markdown标记，纯文本输出`,
+            imgPrompt: (item) => `news photography style, ${item.title}, ${item.category}, cinematic lighting, photojournalism, realistic scene, high quality, 4k detail, press photo composition`,
         },
         {
             id: 'onlyfans',
             label: 'OnlyFans',
             icon: '🔥',
             color: '#00aff0',
-            prompt: `请生成6条OnlyFans创作者推荐的模拟数据。每条包含以下字段：
-title（创作者名称/标题，英文艺名）
-description（中文内容简介，描述创作风格和特色内容）
-subscribers（订阅者数量，纯数字）
-posts（帖子数量，纯数字）
-category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photography）
-风格要求：创意内容创作者，涵盖健身、美妆、音乐、艺术、烹饪、摄影等领域，内容保持SFW（安全工作环境），体现创作者的个人特色
+            prompt: `生成6条OnlyFans创作者推荐模拟数据，每条JSON包含：title（英文艺名，每次不同）, description（中文内容介绍）, subscribers（订阅数）, posts（帖子数）, likes（平均点赞数，纯数字）, price（月订阅美元价格，数字，范围3-25美元）, category（分类）。要求：
+- 创作者人设要多样且真实：涵盖成人内容创作者、Coser、模特、健身教练、ASMR主播、成人演员、网黄情侣、足控、Domi/Sub、变装皇后、涩图画师、成人写手等，每次随机组合
+- description用中文写，描述创作者的内容风格和特色，要真实还原OnlyFans上的口吻：撩人、直接、有挑逗性、强调"独家内容""一对一互动""定制内容""露骨""无遮"等，每条风格不同
+- category从：Cosplay/Adult/NSFW/Fitness/ASMR/Modeling/SexPositive/Lingerie/BDSM/Fetish/Feet/AdultArt 中随机选
+- title用英文艺名，要有OnlyFans风格（如：LunaVixxen、DaddyJay、Sweet_Emi、RogueCola等）
+- subscribers从几百到几十万
+- 每条内容的风格、尺度、人设要有明显差异，不要同质化
 请直接返回JSON数组，不要包含任何其他文字或markdown标记。字段名用英文双引号。`,
-            detailPrompt: (item) => `你是一位内容策划专家，请根据以下创作者信息撰写一篇详细的创作者介绍（300-500字）：
+            detailPrompt: (item) => `你是OnlyFans平台的内容策划编辑，用中文为这位创作者撰写一篇"创作者推荐/订阅指南"（300-500字）：
 
-创作者：${item.title}
+艺名：${item.title}
 分类：${item.category}
-订阅者：${item.subscribers}
+订阅数：${item.subscribers}  |  月费：$${item.price}
 简介：${item.description}
 
-要求：
-1. 开头介绍创作者的特色和定位
-2. 中间分析其内容风格、受众群体、创作亮点
-3. 结尾给出关注建议
-4. 语言风格轻松有感染力
-5. 不要使用markdown标记，纯文本输出`,
-            imgPrompt: (item) => `creative portrait, ${item.title}, ${item.category} content creator, aesthetic, artistic, high quality, professional lighting`,
+写作要求（模仿真实OF推荐文案风格）：
+- 开头用一句诱人的hook描述创作者的核心魅力/特色
+- 介绍ta提供的内容类型：日常照片、独家视频、定制内容、一对一聊天、PPV内容等
+- 描述ta的互动风格（回复速度、定制接受度、粉丝黏性等）
+- 强调订阅价值：为什么值得花这个钱，有什么独家福利
+- 语言风格：有煽动力、带成人感、像真人推荐而不是机器写的简介
+- 不要用markdown标记，纯文本输出`,
+            imgPrompt: (item) => `professional OnlyFans style portrait, ${item.title}, ${item.category} creator, seductive elegant pose, soft cinematic lighting, high quality glamour photography, studio lighting, sharp focus, bokeh background, attractive aesthetic`,
         },
     ],
 
@@ -315,7 +309,8 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
                 metaHtml = `<div class="media-card-meta">
                     <span class="media-tag">${esc(item.category || '')}</span>
                     <span>👥 ${formatNum(item.subscribers)} 订阅</span>
-                    <span>📝 ${formatNum(item.posts)} 帖子</span>
+                    <span>💖 ${formatNum(item.likes || 0)}</span>
+                    <span>💲${item.price || '?'}/月</span>
                 </div>`;
             }
 
@@ -398,7 +393,7 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
             ? `<div class="media-detail-meta">👤 ${esc(item.author || '')} · ▶ ${this.formatNum(item.views)} · 💬 ${this.formatNum(item.danmaku)}</div>`
             : tabId === 'toutiao'
                 ? `<div class="media-detail-meta">📰 ${esc(item.source || '')} · ${esc(item.category || '')} · 💬 ${this.formatNum(item.comments)}</div>`
-                : `<div class="media-detail-meta">${esc(item.category || '')} · 👥 ${this.formatNum(item.subscribers)} 订阅</div>`;
+                : `<div class="media-detail-meta">${esc(item.category || '')} · 👥 ${this.formatNum(item.subscribers)} 订阅 · 💖 ${this.formatNum(item.likes || 0)} · 💲${item.price || '?'}/月</div>`;
 
         // 初始渲染：头部 + 图片占位 + 文字占位
         detailContent.innerHTML = `
@@ -446,9 +441,9 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
     async streamDetail(prompt) {
         try {
             await Engine.services.aiChat({
-                system: '你是一个内容生成器，严格按照用户要求输出内容，不要包含多余标记。',
+                system: '你是一个有创意的写作者，根据用户要求自由发挥，语言生动不套路。纯文本输出，不要使用markdown。',
                 messages: [{ role: 'user', content: prompt }],
-                options: { temperature: 0.85, maxTokens: 1500 },
+                options: { temperature: 0.9, maxTokens: 2000 },
                 onToken: (delta) => {
                     if (this.detailAborted) return;
                     this._fullText += delta;
@@ -522,9 +517,9 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
 
     async callAI(prompt, maxTokens) {
         return Engine.services.aiChat({
-            system: '你是一个内容生成器，严格按照用户要求输出内容，不要包含多余标记。',
+            system: '你是一个有创意的写作者，根据用户要求自由发挥，语言生动。直接返回数据，不要有多余说明。',
             messages: [{ role: 'user', content: prompt }],
-            options: { temperature: 0.85, maxTokens: maxTokens || 2000 },
+            options: { temperature: 0.9, maxTokens: maxTokens || 2500 },
         });
     },
 
@@ -563,19 +558,27 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
             html = '<div class="media-share-empty">暂无联系人<br><small>请先在QQ聊天中添加角色或群聊</small></div>';
         } else {
             if (characters.length > 0) {
-                html += '<div class="media-share-group-label">私聊</div>';
+                html += '<div class="media-share-group-label">📱 私聊</div>';
                 characters.forEach(c => {
+                    const av = c.avatar;
+                    const avatarHtml = av && av.startsWith('http')
+                        ? `<img src="${this.esc(av)}" class="media-share-avatar-img" alt="">`
+                        : (this.esc(av) || '👤');
                     html += `<button class="media-share-contact" data-id="${c.id}" data-type="private">
-                        <span class="media-share-avatar">${c.avatar || '👤'}</span>
-                        <span class="media-share-name">${this.esc(c.name || c.realName || '未命名')}</span>
+                        <span class="media-share-avatar">${avatarHtml}</span>
+                        <span class="media-share-name">${this.esc(c.remarkName || c.realName || '未命名')}</span>
                     </button>`;
                 });
             }
             if (groups.length > 0) {
-                html += '<div class="media-share-group-label">群聊</div>';
+                html += '<div class="media-share-group-label">👥 群聊</div>';
                 groups.forEach(g => {
+                    const av = g.avatar;
+                    const avatarHtml = av && av.startsWith('http')
+                        ? `<img src="${this.esc(av)}" class="media-share-avatar-img" alt="">`
+                        : (this.esc(av) || '👥');
                     html += `<button class="media-share-contact" data-id="${g.id}" data-type="group">
-                        <span class="media-share-avatar">👥</span>
+                        <span class="media-share-avatar">${avatarHtml}</span>
                         <span class="media-share-name">${this.esc(g.name || '未命名群')}</span>
                     </button>`;
                 });
@@ -605,23 +608,26 @@ category（分类，从以下选择：Fitness/Beauty/Music/Art/Cooking/Photograp
 
         if (!chat) { showToast('联系人不存在'); return; }
 
-        const esc = (s) => String(s || '');
+        // 安全转义文本（防 HTML 注入）
+        const s = (v) => String(v ?? '');
+
         let shareText = '';
         if (tabId === 'bilibili') {
-            shareText = `📺 分享一条B站视频：\n《${esc(data.title)}》\nUP主：${esc(data.author)} | 播放：${this.formatNum(data.views)}\n${esc(data.description)}`;
+            shareText = `📺 分享B站视频：\n《${s(data.title)}》\nUP主：${s(data.author)} | ▶ ${this.formatNum(data.views)}\n${s(data.description)}`;
         } else if (tabId === 'toutiao') {
-            shareText = `📋 分享一条头条新闻：\n《${esc(data.title)}》\n来源：${esc(data.source)} | ${esc(data.category)}\n${esc(data.description)}`;
+            shareText = `📋 分享头条新闻：\n《${s(data.title)}》\n来源：${s(data.source)} | ${s(data.category)}\n${s(data.description)}`;
         } else if (tabId === 'onlyfans') {
-            shareText = `🔥 分享一位OF创作者：\n${esc(data.title)}\n分类：${esc(data.category)} | 订阅：${this.formatNum(data.subscribers)}\n${esc(data.description)}`;
+            shareText = `🔥 分享OF创作者：\n${s(data.title)}\n分类：${s(data.category)} · 订阅：${this.formatNum(data.subscribers)} · 💲${data.price || '?'}/月\n${s(data.description)}`;
         }
 
         if (this._fullText) {
-            const summary = this._fullText.substring(0, 150) + (this._fullText.length > 150 ? '...' : '');
-            shareText += `\n\n📖 AI解读：${summary}`;
+            const summary = this._fullText.substring(0, 150) + (this._fullText.length > 150 ? '…' : '');
+            shareText += `\n\n📖 ${summary}`;
         }
 
         const myName = (chatType === 'private') ? (chat.myName || '我') : (chat.me?.nickname || '我');
-        const messageContent = `[${myName}分享了一条媒体内容：\n${shareText}]`;
+        // 使用 .分享内容：格式，让聊天框以纯文本显示，避免 [] 特殊匹配导致的解析问题
+        const messageContent = `${myName}分享了媒体内容：\n${shareText}`;
 
         const message = {
             id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,

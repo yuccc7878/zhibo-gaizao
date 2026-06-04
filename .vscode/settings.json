@@ -1,0 +1,41 @@
+{
+  // █ 推荐安装的扩展
+  "extensions.recommendations": [
+    "ritwickdey.LiveServer",
+    "ms-edgedevtools.vscode-edge-devtools"
+  ],
+
+  // █ Live Server 配置（如果安装了 Live Server 扩展）
+  "liveServer.settings.port": 3000,
+  "liveServer.settings.root": "/",
+  "liveServer.settings.wait": 100,
+  "liveServer.settings.useLocalIp": false,
+  "liveServer.settings.donotVerifyTags": true,
+  "liveServer.settings.donotShowInfoMsg": true,
+  "liveServer.settings.ignoreFiles": [
+    ".git/**",
+    ".vscode/**",
+    "**/*.md"
+  ],
+
+  // █ 文件排除（减少搜索噪音）
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true
+  },
+
+  // █ 编辑器设置
+  "editor.tabSize": 2,
+  "editor.detectIndentation": true,
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+
+  // █ HTML 格式化
+  "html.format.indentInnerHtml": true,
+  "html.format.preserveNewLines": true,
+  "html.format.maxPreserveNewLines": 2,
+
+  // █ 调试设置
+  "debug.internalConsoleOptions": "neverOpen",
+  "debug.openDebug": "openOnDebugBreak"
+}

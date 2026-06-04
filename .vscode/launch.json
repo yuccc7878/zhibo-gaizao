@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "msedge",
+      "request": "launch",
+      "name": "🟦 Edge - 启动并调试",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "runtimeExecutable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+      "preLaunchTask": "Start HTTP Server",
+      "postDebugTask": "Stop HTTP Server"
+    },
+    {
+      "name": "🌐 仅启动服务器（不打开浏览器）",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/.vscode/serve.bat",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}

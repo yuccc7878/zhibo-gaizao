@@ -94,6 +94,31 @@ function bindEvents() {
     }
   });
 
+  // AI 生成头像（基于角色人设）
+  dom['setting-char-avatar-ai-btn'].addEventListener('click', async () => {
+    const persona = dom['setting-char-persona'].value.trim();
+    if (!persona) {
+      showToast(dom['toast-notification'], '请先填写角色人设作为头像生成提示词');
+      dom['setting-char-persona'].focus();
+      return;
+    }
+    const btn = dom['setting-char-avatar-ai-btn'];
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ 生成中...';
+    btn.disabled = true;
+    try {
+      const prompt = `角色头像，anime风格，精美角色立绘图，基于以下人设：\n${persona}\n\n要求：半身像或胸像，干净背景，柔和光线，突出角色特征，高画质。`;
+      const imageUrl = await Engine.services.aiGenerateImage(prompt, { imageSize: '512x512' });
+      dom['setting-char-avatar-preview'].src = imageUrl;
+      showToast(dom['toast-notification'], '✅ 头像已 AI 生成');
+    } catch (err) {
+      showToast(dom['toast-notification'], '头像生成失败: ' + (err.message || '未知错误'));
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
   dom['setting-my-avatar-upload'].addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
