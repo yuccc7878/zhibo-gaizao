@@ -393,6 +393,205 @@ function setupAddCharModal() {
     });
 }
 
+// --- 导入酒馆角色卡 ---
+function setupImportCard() {
+    const modal = addCharModal;
+    const form = addCharForm;
+    const importPanel = $('import-tab-panel');
+    const dropzone = $('import-dropzone');
+    const fileInput = $('import-card-file');
+    const selectBtn = $('import-select-btn');
+    const previewEl = $('import-preview');
+    const errorEl = $('import-error');
+
+    // 标签切换
+    modal.querySelectorAll('.modal-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            modal.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const isImport = tab.dataset.tab === 'import';
+            form.style.display = isImport ? 'none' : '';
+            importPanel.style.display = isImport ? '' : 'none';
+            // 切换弹窗宽度
+            $('add-char-modal-window').style.maxWidth = isImport ? '420px' : '340px';
+            if (!isImport) { resetImport(); }
+        });
+    });
+
+    // 选择文件按钮
+    selectBtn.addEventListener('click', () => fileInput.click());
+    // 拖拽区域点击
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    // 文件选择
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        await handleImportFile(file);
+        fileInput.value = '';
+    });
+
+    // 重置导入状态
+    function resetImport() {
+        previewEl.style.display = 'none';
+        errorEl.style.display = 'none';
+        dropzone.style.display = '';
+        previewEl.innerHTML = '';
+        errorEl.innerHTML = '';
+        window._lastImportedCard = null;
+        window._lastImportedWorldBooks = null;
+    }
+
+    async function handleImportFile(file) {
+        dropzone.style.display = 'none';
+        errorEl.style.display = 'none';
+        previewEl.style.display = 'none';
+        previewEl.innerHTML = '';
+        errorEl.innerHTML = '';
+
+        try {
+            const card = await SillyTavernImporter.parseCardFile(file);
+            window._lastImportedCard = card;
+            const wbEntries = SillyTavernImporter.extractBuiltinWorldBook(card.character_book);
+            window._lastImportedWorldBooks = wbEntries;
+            renderPreview(card, wbEntries);
+        } catch (err) {
+            console.error('[Import]', err);
+            errorEl.style.display = '';
+            errorEl.innerHTML = `
+                <div style="font-size:24px;margin-bottom:8px;">⚠️</div>
+                <div>${escHtml(err.message)}</div>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('import-select-btn').click()" style="margin-top:12px;width:auto;display:inline-block;padding:8px 20px;">重新选择</button>
+            `;
+            dropzone.style.display = '';
+        }
+    }
+
+    function renderPreview(card, wbEntries) {
+        previewEl.style.display = '';
+        previewEl.innerHTML = '';
+
+        // 头部：头像 + 名字
+        const header = document.createElement('div');
+        header.className = 'import-card-header';
+        header.innerHTML = `
+            <img src="${escHtml(card.avatar || '')}" class="import-card-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22><rect fill=%22%23f0f0f0%22 width=%2248%22 height=%2248%22/><text x=%2224%22 y=%2232%22 text-anchor=%22middle%22 font-size=%2224%22>👤</text></svg>'">
+            <div class="import-card-name">${escHtml(card.name || '未命名')}</div>
+        `;
+        previewEl.appendChild(header);
+
+        // 勾选项
+        const checks = document.createElement('div');
+        checks.className = 'import-section';
+
+        // 基本信息（必选）
+        checks.innerHTML += `<div class="import-checkbox-row disabled"><input type="checkbox" checked disabled><span>基本信息（名字 + 人设）</span><span class="count-badge">必选</span></div>`;
+
+        // 场景设定
+        if (card.scenario) {
+            checks.innerHTML += `<div class="import-checkbox-row"><input type="checkbox" id="import-include-scenario" checked><label for="import-include-scenario">场景设定</label></div>`;
+        }
+
+        // 对话示例
+        if (card.mes_example) {
+            const lineCount = card.mes_example.split('\n').filter(l => l.trim()).length;
+            checks.innerHTML += `<div class="import-checkbox-row"><input type="checkbox" id="import-include-examples" checked><label for="import-include-examples">对话示例</label><span class="count-badge">${lineCount} 行</span></div>`;
+        }
+
+        // 系统指令
+        if (card.system_prompt) {
+            checks.innerHTML += `<div class="import-checkbox-row"><input type="checkbox" id="import-include-system" checked><label for="import-include-system">系统指令</label></div>`;
+        }
+
+        previewEl.appendChild(checks);
+
+        // 人设摘要
+        if (card.description || card.personality) {
+            const desc = document.createElement('div');
+            desc.className = 'import-section';
+            desc.innerHTML = `<div class="import-section-label">📋 人设摘要</div><div class="import-section-text">${escHtml(card.description || '')}${card.personality ? '\n\n' + escHtml(card.personality) : ''}</div>`;
+            previewEl.appendChild(desc);
+        }
+
+        // 内嵌世界书列表
+        if (wbEntries.length > 0) {
+            const wbSection = document.createElement('div');
+            wbSection.className = 'import-section';
+            wbSection.innerHTML = `<div class="import-section-label">📖 内嵌世界书（${wbEntries.length} 条）</div>`;
+            wbEntries.forEach((entry, idx) => {
+                const item = document.createElement('div');
+                item.className = 'import-wb-item';
+                item.innerHTML = `
+                    <input type="checkbox" checked data-wb-index="${idx}" style="width:auto;margin:2px 0 0 0;flex-shrink:0;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:500;font-size:12px;">${escHtml(entry.name)}</div>
+                        <div style="font-size:11px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(entry.content.substring(0, 80))}${entry.content.length > 80 ? '…' : ''}</div>
+                    </div>
+                `;
+                item.querySelector('input').addEventListener('change', function() {
+                    this.parentElement.style.opacity = this.checked ? '1' : '0.4';
+                });
+                wbSection.appendChild(item);
+            });
+            previewEl.appendChild(wbSection);
+        }
+
+        // 操作按钮
+        const actions = document.createElement('div');
+        actions.className = 'import-actions';
+        actions.innerHTML = `
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('import-select-btn').click()">重新选择</button>
+            <button type="button" class="btn btn-primary" id="import-confirm-btn">✅ 确认导入</button>
+        `;
+        previewEl.appendChild(actions);
+
+        // 确认导入
+        $('import-confirm-btn').addEventListener('click', async () => {
+            const card = window._lastImportedCard;
+            if (!card) return;
+
+            const wbEntries = window._lastImportedWorldBooks || [];
+            const selectedWBIndices = [];
+            previewEl.querySelectorAll('[data-wb-index]').forEach(cb => {
+                if (cb.checked) selectedWBIndices.push(parseInt(cb.dataset.wbIndex));
+            });
+
+            try {
+                const result = SillyTavernImporter.saveImportedCard(card, {
+                    includeScenario: $('import-include-scenario')?.checked ?? true,
+                    includeExamples: $('import-include-examples')?.checked ?? true,
+                    includeSystemPrompt: $('import-include-system')?.checked ?? true,
+                    selectedWorldBookIndices: selectedWBIndices,
+                });
+
+                await saveData();
+                renderChatList();
+                modal.classList.remove('visible');
+                showToast(`✅ 成功导入角色"${card.name}"${result.builtinWorldBookIds.length > 0 ? ` + ${result.builtinWorldBookIds.length} 条世界书` : ''}`);
+                resetImport();
+            } catch (err) {
+                showToast('导入失败: ' + err.message);
+            }
+        });
+    }
+
+    function escHtml(str) {
+        return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // 打开弹窗时重置导入状态
+    const origShow = addChatBtn.click;
+    addChatBtn.addEventListener('click', () => {
+        resetImport();
+        // 确保手动创建 tab 默认激活
+        modal.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+        modal.querySelector('[data-tab="manual"]').classList.add('active');
+        form.style.display = '';
+        importPanel.style.display = 'none';
+        $('add-char-modal-window').style.maxWidth = '340px';
+    });
+}
+
 // --- 聊天室 ---
 function setupChatRoom() {
     sendMessageBtn.addEventListener('click', sendMessage);
@@ -1112,8 +1311,11 @@ function setupImageRecognition() {
 
 // --- AI 提示词（结构化重写） ---
 function generatePrivateSystemPrompt(character) {
-    const wbBefore = (character.worldBookIds || []).map(id => db.worldBooks.find(wb => wb.id === id && wb.position === 'before')).filter(Boolean).map(wb => wb.content).join('\n');
-    const wbAfter = (character.worldBookIds || []).map(id => db.worldBooks.find(wb => wb.id === id && wb.position === 'after')).filter(Boolean).map(wb => wb.content).join('\n');
+    const wbBefore = (character.worldBookIds || []).map(id => db.worldBooks.find(wb => wb.id === id && wb.position === 'before' && wb.enabled !== false)).filter(Boolean).map(wb => wb.content).join('\n');
+    const wbAfter = (character.worldBookIds || []).map(id => db.worldBooks.find(wb => wb.id === id && wb.position === 'after' && wb.enabled !== false)).filter(Boolean).map(wb => wb.content).join('\n');
+    // 内嵌世界书（专属）
+    const builtinBefore = (character.builtinWorldBooks || []).filter(wb => wb.enabled !== false && wb.position !== 'after').map(wb => wb.content).join('\n');
+    const builtinAfter = (character.builtinWorldBooks || []).filter(wb => wb.enabled !== false && wb.position === 'after').map(wb => wb.content).join('\n');
     const now = new Date();
     const currentTime = `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日 ${pad(now.getHours())}:${pad(now.getMinutes())}`;
     const personaText = character.persona || '无特定人设（由你自行发挥）';
@@ -1122,11 +1324,19 @@ function generatePrivateSystemPrompt(character) {
     p += `你正在"QQ"聊天软件上与"${character.myName}"对话。严格按照以下规则扮演你的角色。\n\n`;
 
     p += `# Part 1: 你是谁\n`;
+    // 系统指令（酒馆 system_prompt）
+    if (character.systemPrompt) p += `${character.systemPrompt}\n`;
+    // 全局世界书 before
     if (wbBefore) p += `${wbBefore}\n`;
+    // 内嵌世界书 before
+    if (builtinBefore) p += `${builtinBefore}\n`;
     p += `- 你的名字: ${character.realName}\n`;
     p += `- 对方称呼你: ${character.myName}\n`;
     p += `- 你的状态: ${character.status}\n`;
     p += `- 你的人设: ${personaText}\n`;
+    // 内嵌世界书 after
+    if (builtinAfter) p += `${builtinAfter}\n`;
+    // 全局世界书 after
     if (wbAfter) p += `${wbAfter}\n`;
     if (character.myPersona) p += `- 对方人设: ${character.myPersona}\n`;
     if (character.memorySummary) p += `- 记忆摘要: ${character.memorySummary}\n`;
@@ -1135,6 +1345,7 @@ function generatePrivateSystemPrompt(character) {
 
     p += `# Part 2: 当前情景\n`;
     p += `- 当前时间: ${currentTime}（除非明确相关，否则不主动提及）\n`;
+    if (character.scenario) p += `- 场景: ${character.scenario}\n`;
     p += `- 纯线上聊天，无线下关系，严禁提议线下见面\n\n`;
 
     p += `# Part 3: 对方消息格式\n`;
@@ -1175,20 +1386,40 @@ function generatePrivateSystemPrompt(character) {
     if (db.imgGenSettings?.url) {
         p += `6. 要生成配图时，在文本消息中插入 [生成配图：对画面的详细描述] 即可自动生成（此标记不显示给用户）。也可以用 [{角色名}发来的照片/视频：描述]、[{角色名}的照片：描述] 或 [{角色名}的自拍：描述] 来触发配图。只在合适时使用，不要每条都配图。\n`;
     }
+    if (character.mesExample) {
+        p += `\n# 对话风格示例（模仿以下示例的风格回复，不要直接复制内容）\n${character.mesExample}\n`;
+    }
     return p;
 }
 
 function generateGroupSystemPrompt(group) {
-    const wbBefore = (group.worldBookIds || []).map(id => db.worldBooks.find(wb => wb.id === id && wb.position === 'before')).filter(Boolean).map(wb => wb.content).join('\n');
-    const wbAfter = (group.worldBookIds || []).map(id => db.worldBooks.find(wb => wb.id === id && wb.position === 'after')).filter(Boolean).map(wb => wb.content).join('\n');
+    const wbBefore = (group.worldBookIds || []).map(id => db.worldBooks.find(wb => wb.id === id && wb.position === 'before' && wb.enabled !== false)).filter(Boolean).map(wb => wb.content).join('\n');
+    const wbAfter = (group.worldBookIds || []).map(id => db.worldBooks.find(wb => wb.id === id && wb.position === 'after' && wb.enabled !== false)).filter(Boolean).map(wb => wb.content).join('\n');
+    // 群级别专属世界书
+    const builtinBefore = (group.builtinWorldBooks || []).filter(wb => wb.enabled !== false && wb.position !== 'after').map(wb => wb.content).join('\n');
+    const builtinAfter = (group.builtinWorldBooks || []).filter(wb => wb.enabled !== false && wb.position === 'after').map(wb => wb.content).join('\n');
     let p = `# 【群聊角色扮演 - ${group.name}】\n`;
     p += `你在"QQ"群"${group.name}"中，需要同时扮演所有 AI 成员。我（${group.me.nickname}）是唯一的人类用户。\n\n`;
+    if (group.systemPrompt) p += `${group.systemPrompt}\n`;
+    if (group.scenario) p += `当前场景: ${group.scenario}\n`;
 
     p += `# Part 1: 群成员\n`;
     p += `- 我 (用户): ${group.me.nickname}，人设: ${group.me.persona || '无特定'}\n`;
-    group.members.forEach(m => { p += `- ${m.realName} (AI): 群昵称 ${m.groupNickname}，人设: ${m.persona || '无特定'}\n`; });
+    group.members.forEach(m => {
+        let memberInfo = `- ${m.realName} (AI): 群昵称 ${m.groupNickname}，人设: ${m.persona || '无特定'}`;
+        // 成员专属系统指令
+        if (m.systemPrompt) memberInfo += `\n  系统指令: ${m.systemPrompt}`;
+        // 成员内嵌世界书
+        if (m.builtinWorldBooks && m.builtinWorldBooks.length > 0) {
+            const mb = m.builtinWorldBooks.filter(wb => wb.enabled !== false).map(wb => wb.content).join('\n');
+            if (mb) memberInfo += `\n  ${mb}`;
+        }
+        p += memberInfo + '\n';
+    });
     p += `\n`;
     if (wbBefore) p += `${wbBefore}\n`;
+    if (builtinBefore) p += `${builtinBefore}\n`;
+    if (builtinAfter) p += `${builtinAfter}\n`;
     if (wbAfter) p += `${wbAfter}\n`;
     if (group.memorySummary) p += `记忆摘要: ${group.memorySummary}\n`;
     if (group.keyEvents?.length) p += `关键事件: ${group.keyEvents.join('；')}\n`;
@@ -1694,7 +1925,7 @@ function setupWorldBookApp() {
             // 保存按钮
             document.getElementById('ai-wb-save-btn').onclick = async () => {
                 if (!db.worldBooks) db.worldBooks = [];
-                db.worldBooks.push({ id: 'wb_' + Date.now(), name, content, position: 'before' });
+                db.worldBooks.push({ id: 'wb_' + Date.now(), name, content, position: 'before', enabled: true });
                 await saveData();
                 renderWorldBookList();
                 document.getElementById('ai-worldbook-modal').classList.remove('visible');
@@ -1718,7 +1949,7 @@ function setupWorldBookApp() {
         const name = worldBookNameInput.value.trim(), content = worldBookContentInput.value.trim(), position = document.querySelector('input[name="world-book-position"]:checked').value;
         if (!name || !content) return showToast('名称和内容不能为空');
         if (currentEditingWorldBookId) { const book = db.worldBooks.find(wb => wb.id === currentEditingWorldBookId); if (book) { book.name = name; book.content = content; book.position = position; } }
-        else db.worldBooks.push({ id: `wb_${Date.now()}`, name, content, position });
+        else db.worldBooks.push({ id: `wb_${Date.now()}`, name, content, position, enabled: true });
         await saveData(); showToast('世界书条目已保存'); renderWorldBookList(); switchScreen('world-book-screen');
     });
     worldBookListContainer.addEventListener('click', e => {
@@ -1739,9 +1970,18 @@ function renderWorldBookList() {
     worldBookListContainer.innerHTML = '';
     noWorldBooksPlaceholder.style.display = db.worldBooks.length === 0 ? 'block' : 'none';
     db.worldBooks.forEach(book => {
+        const enabled = book.enabled !== false;
         const li = document.createElement('li'); li.className = 'list-item world-book-item'; li.dataset.id = book.id;
-        li.innerHTML = `<div class="item-details" style="padding-left:20px;"><div class="item-name">${book.name}</div><div class="item-preview">${book.content}</div></div>`;
+        li.innerHTML = `<div class="item-details" style="padding-left:20px;"><div class="item-name">${escHtml(book.name)}</div><div class="item-preview">${escHtml(book.content)}</div></div><label class="wb-toggle-switch" title="${enabled ? '点击停用' : '点击启用'}"><input type="checkbox" ${enabled ? 'checked' : ''} data-wb-id="${book.id}"><span class="wb-toggle-slider"></span></label>`;
         worldBookListContainer.appendChild(li);
+    });
+    // 开关点击事件（即时保存，不触发编辑）
+    worldBookListContainer.querySelectorAll('.wb-toggle-switch input').forEach(cb => {
+        cb.addEventListener('change', async function(e) {
+            e.stopPropagation();
+            const book = db.worldBooks.find(wb => wb.id === this.dataset.wbId);
+            if (book) { book.enabled = this.checked; await saveData(); }
+        });
     });
 }
 
@@ -1871,6 +2111,8 @@ function setupGroupChatSystem() {
         if (member) {
             member.avatar = $('edit-member-avatar-preview').src; member.groupNickname = $('edit-member-group-nickname').value;
             member.realName = $('edit-member-real-name').value; member.persona = $('edit-member-persona').value;
+            if ($('edit-member-system-prompt')) member.systemPrompt = $('edit-member-system-prompt').value.trim();
+            // builtinWorldBooks 已在编辑时即时保存
             await saveData(); renderGroupMembersInSettings(g); showToast('成员信息已更新');
         }
         editGroupMemberModal.classList.remove('visible');
@@ -1884,7 +2126,7 @@ function setupGroupChatSystem() {
     confirmInviteBtn.addEventListener('click', async () => {
         const g = db.groups.find(gr => gr.id === currentChatId); if (!g) return;
         const selectedCharIds = Array.from(inviteMemberSelectionList.querySelectorAll('input:checked')).map(i => i.value);
-        selectedCharIds.forEach(charId => { const c = db.characters.find(ch => ch.id === charId); if (c) { g.members.push({ id: `member_${c.id}`, originalCharId: c.id, realName: c.realName, groupNickname: c.remarkName, persona: c.persona, avatar: c.avatar }); sendInviteNotification(g, c.realName); } });
+        selectedCharIds.forEach(charId => { const c = db.characters.find(ch => ch.id === charId); if (c) { g.members.push({ id: `member_${c.id}`, originalCharId: c.id, realName: c.realName, groupNickname: c.remarkName, persona: c.persona, avatar: c.avatar, systemPrompt: c.systemPrompt || '', builtinWorldBooks: (c.builtinWorldBooks || []).map(wb => ({...wb})) }); sendInviteNotification(g, c.realName); } });
         if (selectedCharIds.length > 0) { await saveData(); renderGroupMembersInSettings(g); renderMessages(false, true); showToast('已邀请新成员'); }
         inviteMemberModal.classList.remove('visible');
     });
@@ -1892,7 +2134,7 @@ function setupGroupChatSystem() {
     createMemberForGroupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const g = db.groups.find(gr => gr.id === currentChatId); if (!g) return;
-        const newMember = { id: `member_group_only_${Date.now()}`, originalCharId: null, realName: $('create-group-member-realname').value, groupNickname: $('create-group-member-nickname').value, persona: $('create-group-member-persona').value, avatar: $('create-group-member-avatar-preview').src };
+        const newMember = { id: `member_group_only_${Date.now()}`, originalCharId: null, realName: $('create-group-member-realname').value, groupNickname: $('create-group-member-nickname').value, persona: $('create-group-member-persona').value, avatar: $('create-group-member-avatar-preview').src, systemPrompt: '', builtinWorldBooks: [] };
         g.members.push(newMember); sendInviteNotification(g, newMember.realName);
         await saveData(); renderGroupMembersInSettings(g); renderMessages(false, true);
         showToast(`新成员 ${newMember.groupNickname} 已加入`); createMemberForGroupModal.classList.remove('visible');
@@ -1922,6 +2164,104 @@ function renderMemberSelectionList() {
     db.characters.forEach(c => { const li = document.createElement('li'); li.className = 'member-selection-item'; li.innerHTML = `<input type="checkbox" id="select-${c.id}" value="${c.id}"><img src="${c.avatar}" alt="${c.remarkName}"><label for="select-${c.id}">${c.remarkName}</label>`; memberSelectionList.appendChild(li); });
 }
 
+// ─── 群专属世界书 ──────────────────────────
+
+function renderGroupBuiltinWorldBooks(g) {
+    const container = $('setting-group-builtin-wb-list');
+    const countEl = $('setting-group-wb-count');
+    if (!container) return;
+    const books = g.builtinWorldBooks || [];
+    if (countEl) countEl.textContent = books.length;
+    if (books.length === 0) { container.innerHTML = '<div style="font-size:12px;color:#bbb;text-align:center;padding:12px;">暂无群专属世界书条目</div>'; return; }
+    container.innerHTML = books.map((book, idx) =>
+        `<div class="builtin-wb-item" data-idx="${idx}">
+            <label class="wb-toggle-switch" style="position:relative;transform:scale(0.85);transform-origin:top left;">
+                <input type="checkbox" ${book.enabled !== false ? 'checked' : ''} data-idx="${idx}"><span class="wb-toggle-slider"></span>
+            </label>
+            <div class="wb-item-content">
+                <div class="wb-item-name">${escHtml(book.name)}</div>
+                <div class="wb-item-text">${escHtml(book.content)}</div>
+            </div>
+            <div class="wb-item-actions">
+                <button title="编辑" data-action="edit-group-wb" data-idx="${idx}">✏️</button>
+                <button title="删除" data-action="del-group-wb" data-idx="${idx}">🗑️</button>
+            </div>
+        </div>`
+    ).join('');
+    // 开关
+    container.querySelectorAll('.wb-toggle-switch input').forEach(cb => cb.addEventListener('change', function() {
+        const g2 = db.groups.find(gr => gr.id === currentChatId);
+        if (g2 && g2.builtinWorldBooks) g2.builtinWorldBooks[parseInt(this.dataset.idx)].enabled = this.checked;
+    }));
+    // 编辑
+    container.querySelectorAll('[data-action="edit-group-wb"]').forEach(btn => btn.addEventListener('click', function() {
+        const idx = parseInt(this.dataset.idx); const g2 = db.groups.find(gr => gr.id === currentChatId);
+        if (g2 && g2.builtinWorldBooks && g2.builtinWorldBooks[idx]) showBuiltinWBEditForm(container, idx, g2.builtinWorldBooks[idx]);
+    }));
+    // 删除
+    container.querySelectorAll('[data-action="del-group-wb"]').forEach(btn => btn.addEventListener('click', async function() {
+        if (!confirm('确定删除？')) return; const idx = parseInt(this.dataset.idx); const g2 = db.groups.find(gr => gr.id === currentChatId);
+        if (g2 && g2.builtinWorldBooks) { g2.builtinWorldBooks.splice(idx, 1); await saveData(); renderGroupBuiltinWorldBooks(g2); }
+    }));
+}
+
+// ─── 成员专属世界书（编辑弹窗内） ──────────
+
+function renderMemberBuiltinWBList(member) {
+    const container = $('edit-member-wb-list');
+    if (!container) return;
+    const books = member.builtinWorldBooks || [];
+    if (books.length === 0) { container.innerHTML = '<div style="font-size:11px;color:#ccc;text-align:center;padding:6px;">暂无专属条目</div>'; return; }
+    container.innerHTML = books.map((book, idx) =>
+        `<div style="display:flex;align-items:flex-start;gap:4px;padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:11px;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:500;">${escHtml(book.name)}</div>
+                <div style="color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(book.content)}</div>
+            </div>
+            <button style="background:none;border:none;cursor:pointer;color:#e53935;font-size:12px;padding:2px 4px;" data-idx="${idx}">✕</button>
+        </div>`
+    ).join('');
+    container.querySelectorAll('[data-idx]').forEach(btn => btn.addEventListener('click', async function() {
+        const memberId = $('editing-member-id').value;
+        const g3 = db.groups.find(gr => gr.id === currentChatId);
+        const mem = g3?.members.find(m => m.id === memberId);
+        if (mem && mem.builtinWorldBooks) { mem.builtinWorldBooks.splice(parseInt(this.dataset.idx), 1); await saveData(); renderMemberBuiltinWBList(mem); }
+    }));
+}
+
+// 成员弹窗内新增专属世界书（在 setupChatSettings 中绑定）
+function setupMemberWBAddBtn() {
+    const addBtn = $('edit-member-add-wb');
+    if (!addBtn || addBtn._bound) return; addBtn._bound = true;
+    addBtn.addEventListener('click', async () => {
+        const memberId = $('editing-member-id').value;
+        const g = db.groups.find(gr => gr.id === currentChatId);
+        const mem = g?.members.find(m => m.id === memberId);
+        if (!mem) return;
+        if (!mem.builtinWorldBooks) mem.builtinWorldBooks = [];
+        const name = prompt('条目名称:'); if (!name) return;
+        const content = prompt('条目内容:'); if (!content) return;
+        mem.builtinWorldBooks.push({ name, content, position: 'before', enabled: true });
+        await saveData();
+        renderMemberBuiltinWBList(mem);
+    });
+}
+
+// 群专属世界书添加按钮
+function setupGroupBuiltinWBAddBtn() {
+    const addBtn = $('setting-group-add-builtin-wb');
+    if (!addBtn || addBtn._bound) return; addBtn._bound = true;
+    addBtn.addEventListener('click', async () => {
+        const g = db.groups.find(gr => gr.id === currentChatId);
+        if (!g) return;
+        if (!g.builtinWorldBooks) g.builtinWorldBooks = [];
+        g.builtinWorldBooks.push({ name: '', content: '', position: 'before', enabled: true });
+        renderGroupBuiltinWorldBooks(g);
+        const last = document.querySelector('#setting-group-builtin-wb-list .builtin-wb-item:last-child');
+        if (last) { const edit = last.querySelector('[data-action="edit-group-wb"]'); if (edit) edit.click(); }
+    });
+}
+
 function loadGroupSettingsToSidebar() {
     const g = db.groups.find(gr => gr.id === currentChatId); if (!g) return;
     const themeSelect = $('setting-group-theme-color');
@@ -1934,6 +2274,11 @@ function loadGroupSettingsToSidebar() {
     const useCss = $('setting-group-use-custom-css'), cssText = $('setting-group-custom-bubble-css'), previewBox = $('group-bubble-css-preview');
     useCss.checked = g.useCustomBubbleCss || false; cssText.value = g.customBubbleCss || ''; cssText.disabled = !useCss.checked;
     updateBubbleCssPreview(previewBox, g.customBubbleCss, !g.useCustomBubbleCss, colorThemes[g.theme || 'white_pink']);
+    // 对话风格
+    if ($('setting-group-scenario')) $('setting-group-scenario').value = g.scenario || '';
+    if ($('setting-group-system-prompt')) $('setting-group-system-prompt').value = g.systemPrompt || '';
+    // 专属世界书
+    renderGroupBuiltinWorldBooks(g);
 }
 
 function renderGroupMembersInSettings(group) {
@@ -1956,6 +2301,8 @@ async function saveGroupSettingsFromSidebar() {
     g.me.nickname = $('setting-group-my-nickname').value; g.me.persona = $('setting-group-my-persona').value;
     g.theme = $('setting-group-theme-color').value; g.maxMemory = $('setting-group-max-memory').value;
     g.useCustomBubbleCss = $('setting-group-use-custom-css').checked; g.customBubbleCss = $('setting-group-custom-bubble-css').value;
+    if ($('setting-group-scenario')) g.scenario = $('setting-group-scenario').value.trim();
+    if ($('setting-group-system-prompt')) g.systemPrompt = $('setting-group-system-prompt').value.trim();
     updateCustomBubbleStyle(currentChatId, g.customBubbleCss, g.useCustomBubbleCss);
     await saveData(); showToast('群聊设置已保存！'); chatRoomTitle.textContent = g.name; renderChatList(); renderMessages(false, true);
 }
@@ -1966,6 +2313,9 @@ function openGroupMemberEditModal(memberId) {
     $('edit-group-member-title').textContent = `编辑 ${m.groupNickname}`; $('editing-member-id').value = m.id;
     $('edit-member-avatar-preview').src = m.avatar; $('edit-member-group-nickname').value = m.groupNickname;
     $('edit-member-real-name').value = m.realName; $('edit-member-persona').value = m.persona;
+    if ($('edit-member-system-prompt')) $('edit-member-system-prompt').value = m.systemPrompt || '';
+    // 成员专属世界书
+    renderMemberBuiltinWBList(m);
     editGroupMemberModal.classList.add('visible');
 }
 
@@ -2067,22 +2417,33 @@ function setupChatSettings() {
             if (c && c.keyEvents && confirm('确定清空所有关键事件吗？')) { c.keyEvents = []; renderKeyEventsList(c); await saveData(); showToast('关键事件已清空'); }
         });
     }
+
+    // 专属世界书新增按钮
+    setupMemberWBAddBtn();
+    setupGroupBuiltinWBAddBtn();
 }
 
 function loadSettingsToSidebar() {
     const c = db.characters.find(ch => ch.id === currentChatId); if (!c) return;
+    // 核心信息
     $('setting-char-avatar-preview').src = c.avatar; $('setting-char-remark').value = c.remarkName;
     $('setting-char-persona').value = c.persona; $('setting-my-avatar-preview').src = c.myAvatar;
     $('setting-my-name').value = c.myName; $('setting-my-persona').value = c.myPersona;
+    // 对话风格
+    $('setting-char-scenario') && ($('setting-char-scenario').value = c.scenario || '');
+    $('setting-char-system-prompt') && ($('setting-char-system-prompt').value = c.systemPrompt || '');
+    $('setting-char-mes-example') && ($('setting-char-mes-example').value = c.mesExample || '');
+    // 外观样式
     $('setting-theme-color').value = c.theme || 'white_pink'; $('setting-max-memory').value = c.maxMemory;
     const useCss = $('setting-use-custom-css'), cssText = $('setting-custom-bubble-css'), previewBox = $('private-bubble-css-preview');
     useCss.checked = c.useCustomBubbleCss || false; cssText.value = c.customBubbleCss || ''; cssText.disabled = !useCss.checked;
     updateBubbleCssPreview(previewBox, c.customBubbleCss, !c.useCustomBubbleCss, colorThemes[c.theme || 'white_pink']);
-    // AI 生图
     $('setting-ai-img-gen').checked = c.aiImgGen || false;
     // 记忆系统
     $('setting-memory-summary').value = c.memorySummary || '';
     renderKeyEventsList(c);
+    // 专属世界书
+    renderBuiltinWorldBooks(c);
 }
 
 function renderKeyEventsList(c) {
@@ -2110,6 +2471,147 @@ function renderKeyEventsList(c) {
     });
 }
 
+// ─── 专属世界书管理 ──────────────────────────
+
+function renderBuiltinWorldBooks(c) {
+    const container = $('setting-builtin-wb-list');
+    const countEl = $('setting-wb-count');
+    if (!container) return;
+    const books = c.builtinWorldBooks || [];
+    if (countEl) countEl.textContent = books.length;
+
+    if (books.length === 0) {
+        container.innerHTML = '<div style="font-size:12px;color:#bbb;text-align:center;padding:12px;">暂无专属世界书条目</div>';
+        return;
+    }
+
+    container.innerHTML = books.map((book, idx) => `
+        <div class="builtin-wb-item" data-idx="${idx}">
+            <label class="wb-toggle-switch" style="position:relative;transform:scale(0.85);transform-origin:top left;" title="${book.enabled !== false ? '点击停用' : '点击启用'}">
+                <input type="checkbox" ${book.enabled !== false ? 'checked' : ''} data-idx="${idx}"><span class="wb-toggle-slider"></span>
+            </label>
+            <div class="wb-item-content">
+                <div class="wb-item-name">${escHtml(book.name)}</div>
+                <div class="wb-item-text">${escHtml(book.content)}</div>
+            </div>
+            <div class="wb-item-actions">
+                <button title="编辑" data-action="edit" data-idx="${idx}">✏️</button>
+                <button title="删除" data-action="delete" data-idx="${idx}">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+
+    // 启用/停用开关
+    container.querySelectorAll('.wb-toggle-switch input').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const c2 = db.characters.find(ch => ch.id === currentChatId);
+            if (c2 && c2.builtinWorldBooks && c2.builtinWorldBooks[parseInt(this.dataset.idx)]) {
+                c2.builtinWorldBooks[parseInt(this.dataset.idx)].enabled = this.checked;
+            }
+        });
+    });
+
+    // 编辑按钮 → 内嵌展开编辑表单
+    container.querySelectorAll('[data-action="edit"]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const idx = parseInt(this.dataset.idx);
+            const c2 = db.characters.find(ch => ch.id === currentChatId);
+            if (!c2 || !c2.builtinWorldBooks || !c2.builtinWorldBooks[idx]) return;
+            const book = c2.builtinWorldBooks[idx];
+            showBuiltinWBEditForm(container, idx, book);
+        });
+    });
+
+    // 删除按钮
+    container.querySelectorAll('[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            if (!confirm('确定删除该条目吗？')) return;
+            const idx = parseInt(this.dataset.idx);
+            const c2 = db.characters.find(ch => ch.id === currentChatId);
+            if (c2 && c2.builtinWorldBooks) {
+                c2.builtinWorldBooks.splice(idx, 1);
+                await saveData();
+                renderBuiltinWorldBooks(c2);
+            }
+        });
+    });
+}
+
+/** 内嵌展开专属世界书编辑表单 */
+function showBuiltinWBEditForm(container, idx, book) {
+    // 移除已有的编辑表单
+    const existing = container.querySelector('.builtin-wb-edit-form');
+    if (existing) existing.remove();
+
+    const form = document.createElement('div');
+    form.className = 'builtin-wb-edit-form';
+    form.innerHTML = `
+        <input type="text" class="wb-edit-name" value="${escHtml(book.name)}" placeholder="条目名称">
+        <textarea class="wb-edit-content" placeholder="条目内容">${escHtml(book.content)}</textarea>
+        <div style="margin-bottom:6px;display:flex;align-items:center;gap:12px;font-size:12px;">
+            <label style="display:flex;align-items:center;gap:4px;"><input type="radio" name="wb-edit-pos" value="before" ${book.position === 'before' ? 'checked' : ''}> 注入前</label>
+            <label style="display:flex;align-items:center;gap:4px;"><input type="radio" name="wb-edit-pos" value="after" ${book.position === 'after' ? 'checked' : ''}> 注入后</label>
+            <span style="color:#bbb;margin-left:auto;">内嵌世界书</span>
+        </div>
+        <div class="builtin-wb-edit-actions">
+            <button type="button" class="btn btn-neutral wb-edit-cancel-btn" style="color:#666;">取消</button>
+            <button type="button" class="btn btn-primary wb-edit-save-btn" style="background:var(--primary-color);color:#fff;">保存</button>
+        </div>
+    `;
+
+    // 插入到列表顶部
+    container.prepend(form);
+
+    form.querySelector('.wb-edit-save-btn').addEventListener('click', async () => {
+        const c2 = db.characters.find(ch => ch.id === currentChatId);
+        const g2 = db.groups.find(gr => gr.id === currentChatId);
+        const target = c2 || g2;
+        if (!target || !target.builtinWorldBooks || !target.builtinWorldBooks[idx]) return;
+        const name = form.querySelector('.wb-edit-name').value.trim();
+        const content = form.querySelector('.wb-edit-content').value.trim();
+        const position = form.querySelector('input[name="wb-edit-pos"]:checked').value;
+        if (!name || !content) { showToast('名称和内容不能为空'); return; }
+        target.builtinWorldBooks[idx].name = name;
+        target.builtinWorldBooks[idx].content = content;
+        target.builtinWorldBooks[idx].position = position;
+        await saveData();
+        form.remove();
+        if (c2) renderBuiltinWorldBooks(c2);
+        if (g2) renderGroupBuiltinWorldBooks(g2);
+        showToast('✅ 已保存');
+    });
+
+    form.querySelector('.wb-edit-cancel-btn').addEventListener('click', () => form.remove());
+
+    // 聚焦名称框
+    form.querySelector('.wb-edit-name').focus();
+}
+
+// ─── 专属世界书添加 ──────────────────────────
+
+// 监听新增按钮
+document.addEventListener('DOMContentLoaded', () => {
+    const addBtn = $('setting-add-builtin-wb');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            const c2 = db.characters.find(ch => ch.id === currentChatId);
+            if (!c2) return;
+            if (!c2.builtinWorldBooks) c2.builtinWorldBooks = [];
+            const emptyBook = { name: '', content: '', position: 'before', enabled: true };
+            c2.builtinWorldBooks.push(emptyBook);
+            renderBuiltinWorldBooks(c2);
+            // 自动展开编辑
+            const lastItem = document.querySelector('.builtin-wb-item:last-child');
+            if (lastItem) {
+                const editBtn = lastItem.querySelector('[data-action="edit"]');
+                if (editBtn) editBtn.click();
+            }
+        });
+    }
+});
+
 async function saveSettingsFromSidebar() {
     const c = db.characters.find(ch => ch.id === currentChatId); if (!c) return;
     c.avatar = $('setting-char-avatar-preview').src; c.remarkName = $('setting-char-remark').value;
@@ -2119,6 +2621,12 @@ async function saveSettingsFromSidebar() {
     c.useCustomBubbleCss = $('setting-use-custom-css').checked; c.customBubbleCss = $('setting-custom-bubble-css').value;
     c.aiImgGen = $('setting-ai-img-gen').checked;
     c.memorySummary = $('setting-memory-summary').value.trim();
+    // 对话风格
+    if ($('setting-char-scenario')) c.scenario = $('setting-char-scenario').value.trim();
+    if ($('setting-char-system-prompt')) c.systemPrompt = $('setting-char-system-prompt').value.trim();
+    if ($('setting-char-mes-example')) c.mesExample = $('setting-char-mes-example').value.trim();
+    // 专属世界书（已在编辑时即时保存，但确保引用完整）
+    if (!c.builtinWorldBooks) c.builtinWorldBooks = [];
     await saveData(); showToast('设置已保存！'); chatRoomTitle.textContent = c.remarkName;
     renderChatList(); updateCustomBubbleStyle(currentChatId, c.customBubbleCss, c.useCustomBubbleCss);
     currentPage = 1; renderMessages(false, true);
@@ -2165,6 +2673,7 @@ async function initApp() {
     setupHomeScreen();
     setupChatListScreen();
     setupAddCharModal();
+    setupImportCard();
     setupChatRoom();
     setupChatSettings();
     setupApiSettingsApp();

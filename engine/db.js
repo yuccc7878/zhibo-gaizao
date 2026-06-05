@@ -126,6 +126,7 @@ const loadData = async () => {
     if (!db.myStickers) db.myStickers = [];
     // 移除：日间/夜间切换已删除
     if (!db.worldBooks) db.worldBooks = [];
+    db.worldBooks.forEach(wb => { if (wb.enabled === undefined) wb.enabled = true; });
     if (!db.fontUrl) db.fontUrl = '';
     if (!db.customIcons) db.customIcons = {};
     if (!db.imgGenSettings) db.imgGenSettings = {};
@@ -167,6 +168,11 @@ const loadData = async () => {
         if (!c.keyEvents) c.keyEvents = [];
         if (c.summaryIndex === undefined) c.summaryIndex = 0;
         if (c.aiImgGen === undefined) c.aiImgGen = false;
+        // 酒馆导入新字段
+        if (!c.builtinWorldBooks) c.builtinWorldBooks = [];
+        if (c.scenario === undefined) c.scenario = '';
+        if (c.systemPrompt === undefined) c.systemPrompt = '';
+        if (c.mesExample === undefined) c.mesExample = '';
     });
     db.groups.forEach(g => {
         if (g.isPinned === undefined) g.isPinned = false;
@@ -176,6 +182,14 @@ const loadData = async () => {
         if (g.memorySummary === undefined) g.memorySummary = '';
         if (!g.keyEvents) g.keyEvents = [];
         if (g.summaryIndex === undefined) g.summaryIndex = 0;
+        // 酒馆导入新字段
+        if (!g.builtinWorldBooks) g.builtinWorldBooks = [];
+        if (g.scenario === undefined) g.scenario = '';
+        if (g.systemPrompt === undefined) g.systemPrompt = '';
+        if (g.members) g.members.forEach(m => {
+            if (!m.builtinWorldBooks) m.builtinWorldBooks = [];
+            if (m.systemPrompt === undefined) m.systemPrompt = '';
+        });
     });
 
     return Promise.resolve();
