@@ -95,6 +95,7 @@ Engine.register({
                     <input type="text" id="live-input" placeholder="发送弹幕...">
                     <button id="live-send-btn">发送</button>
                 </div>
+                <div class="live-bg-toggle" id="live-bg-toggle" title="切换背景">👁️</div>
             </div>
             <div class="live-reward-overlay" id="live-reward-overlay">
                 <div class="live-reward-box" id="live-reward-box"></div>
@@ -599,6 +600,19 @@ Engine.register({
             await this.generateStory(text);
         };
         input.onkeydown = (e) => { if (e.key === 'Enter') sendBtn.click(); };
+        // 背景切换开关
+        const bgToggle = document.getElementById('live-bg-toggle');
+        if (bgToggle) {
+            bgToggle.className = 'live-bg-toggle hidden-btn';
+            bgToggle.onclick = () => {
+                const page = document.getElementById('live-stream-page');
+                page.classList.toggle('live-overlay-hidden');
+                const hidden = page.classList.contains('live-overlay-hidden');
+                bgToggle.textContent = hidden ? '✕' : '👁️';
+                bgToggle.title = hidden ? '返回直播' : '查看背景';
+                bgToggle.classList.toggle('hidden-btn', !hidden);
+            };
+        }
     },
 
     appendStory(text) {
