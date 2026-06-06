@@ -51,11 +51,13 @@ window.SillyTavernImporter = (() => {
         const rawData = new Uint8Array(buffer, pos, dataLen);
 
         if (type === 'tEXt') {
-          // tEXt: keyword + null + text (Latin-1)
+          // tEXt: keyword + null + text (Latin-1 编码，但部分卡片存的是 UTF-8)
           const nullIdx = rawData.indexOf(0);
           if (nullIdx >= 0) {
             const keyword = new TextDecoder('utf-8').decode(rawData.slice(0, nullIdx));
-            const text = new TextDecoder('utf-8').decode(rawData.slice(nullIdx + 1));
+            // 尝试 UTF-8 解码（兼容原生 UTF-8 存储的卡片）
+            // 如果失败则降级到 Latin-1(iso-8859-1) 解码
+            var text = tryDecodeText(rawData.slice(nullIdx + 1));
             result[keyword] = text;
           }
         } else if (type === 'zTXt') {
@@ -111,6 +113,22 @@ window.SillyTavernImporter = (() => {
 
     console.log('[STImport] PNG chunks found:', foundChunks.join(', '), 'keys:', Object.keys(result));
     return result;
+  }
+
+  /**
+   * 解码 tEXt 块文本：优先 UTF-8（兼容原生 UTF-8 卡片），
+   * 失败后降级到 iso-8859-1（标准 Latin-1）。
+   * @param {Uint8Array} bytes
+   * @returns {string}
+   */
+  function tryDecodeText(bytes) {
+    // 先尝试 UTF-8（非严格模式）
+    var utf8 = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+    // 替换字符 U+FFFD 出现说明有非 UTF-8 字节 → 降级 Latin-1
+    if (utf8.indexOf('�') >= 0) {
+      return new TextDecoder('iso-8859-1').decode(bytes);
+    }
+    return utf8;
   }
 
   /** 简单的 pako inflate（需要加载 pako 库） */
@@ -315,9 +333,10 @@ window.SillyTavernImporter = (() => {
           }
           return card;
         }
-        throw new Error('ccv3 数据格式无法识别（不匹配 V1/V2/V3 结构）');
+        console.warn('[STImport] ccv3 数据格式无法识别，尝试 chara');
+      } else {
+        console.warn('[STImport] ccv3 JSON 解析失败，尝试 chara');
       }
-      throw new Error('ccv3 文本块包含无效 JSON，无法解析');
     }
 
     // 尝试 chara (V1/V2)
@@ -327,9 +346,12 @@ window.SillyTavernImporter = (() => {
       if (chara) {
         var card = normalizeCard(chara);
         if (card) return card;
-        throw new Error('chara 数据格式无法识别（不匹配 V1/V2 结构）');
+        console.warn('[STImport] chara 数据格式无法识别');
+      } else {
+        console.warn('[STImport] chara JSON 解析失败');
+        // 输出原始文本前 200 字符帮助调试
+        console.warn('[STImport] chara 原文:', charaRaw.substring(0, 200));
       }
-      throw new Error('chara 文本块包含无效 JSON');
     }
 
     throw new Error('PNG 中未找到角色卡数据（已有块: ' + keys.join(', ') + '），不包含 chara 或 ccv3');
