@@ -2200,8 +2200,8 @@ function renderGroupBuiltinWorldBooks(g) {
                 <div class="wb-item-text">${escHtml(book.content)}</div>
             </div>
             <div class="wb-item-actions">
-                <button title="编辑" data-action="edit-group-wb" data-idx="${idx}">✏️</button>
-                <button title="删除" data-action="del-group-wb" data-idx="${idx}">🗑️</button>
+                <button type="button" title="编辑" data-action="edit-group-wb" data-idx="${idx}">✏️</button>
+                <button type="button" title="删除" data-action="del-group-wb" data-idx="${idx}">🗑️</button>
             </div>
         </div>`
     ).join('');
@@ -2512,8 +2512,8 @@ function renderBuiltinWorldBooks(c) {
                 <div class="wb-item-text">${escHtml(book.content)}</div>
             </div>
             <div class="wb-item-actions">
-                <button title="编辑" data-action="edit" data-idx="${idx}">✏️</button>
-                <button title="删除" data-action="delete" data-idx="${idx}">🗑️</button>
+                <button type="button" title="编辑" data-action="edit" data-idx="${idx}">✏️</button>
+                <button type="button" title="删除" data-action="delete" data-idx="${idx}">🗑️</button>
             </div>
         </div>
     `).join('');

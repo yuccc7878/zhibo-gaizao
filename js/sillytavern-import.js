@@ -37,12 +37,15 @@ window.SillyTavernImporter = (() => {
     let pos = 8; // 跳过 PNG 签名
 
     const result = {};
+    const foundChunks = [];
 
     while (pos + 8 < len) {
       const dataLen = readUint32(view, pos);
       pos += 4;
       const type = decodeText(buffer, pos, 4);
       pos += 4;
+
+      foundChunks.push(type);
 
       if (dataLen > 0 && pos + dataLen <= len) {
         const rawData = new Uint8Array(buffer, pos, dataLen);
@@ -51,15 +54,15 @@ window.SillyTavernImporter = (() => {
           // tEXt: keyword + null + text (Latin-1)
           const nullIdx = rawData.indexOf(0);
           if (nullIdx >= 0) {
-            const keyword = new TextDecoder('latin-1').decode(rawData.slice(0, nullIdx));
-            const text = new TextDecoder('latin-1').decode(rawData.slice(nullIdx + 1));
+            const keyword = new TextDecoder('utf-8').decode(rawData.slice(0, nullIdx));
+            const text = new TextDecoder('utf-8').decode(rawData.slice(nullIdx + 1));
             result[keyword] = text;
           }
         } else if (type === 'zTXt') {
           // zTXt: keyword + null + compression(0x00) + compressed text
           const nullIdx = rawData.indexOf(0);
           if (nullIdx >= 0 && nullIdx + 2 < rawData.length) {
-            const keyword = new TextDecoder('latin-1').decode(rawData.slice(0, nullIdx));
+            const keyword = new TextDecoder('utf-8').decode(rawData.slice(0, nullIdx));
             const compression = rawData[nullIdx + 1];
             if (compression === 0x00) {
               try {
@@ -77,7 +80,7 @@ window.SillyTavernImporter = (() => {
           // iTXt: keyword + null + compression(0/1) + compMethod(0) + lang + null + translated_keyword + null + text
           const null1 = rawData.indexOf(0);
           if (null1 >= 0) {
-            const keyword = new TextDecoder('latin-1').decode(rawData.slice(0, null1));
+            const keyword = new TextDecoder('utf-8').decode(rawData.slice(0, null1));
             const compression = rawData[null1 + 1];
             const compMethod = rawData[null1 + 2];
             let off = null1 + 3;
@@ -106,6 +109,7 @@ window.SillyTavernImporter = (() => {
       pos += dataLen + 4; // skip CRC
     }
 
+    console.log('[STImport] PNG chunks found:', foundChunks.join(', '), 'keys:', Object.keys(result));
     return result;
   }
 
@@ -114,19 +118,21 @@ window.SillyTavernImporter = (() => {
     if (typeof pako !== 'undefined') {
       return pako.inflate(data);
     }
-    // 尝试加载 pako（如果尚未加载）
-    throw new Error('pako 未加载，无法解压压缩文本块。大部分角色卡使用非压缩格式，不影响正常导入。');
+    throw new Error('pako 未加载');
   }
 
   // ─── JSON 解析 ─────────────────────────────
 
   /**
-   * 尝试解析 JSON 字符串
+   * 尝试解析 JSON 字符串（自动清除 BOM 和零宽字符）
    */
   function tryParseJSON(str) {
     if (!str) return null;
     try {
-      return JSON.parse(str);
+      // 清除 BOM (﻿)、零宽字符、首尾空白
+      // 清除 BOM (U+FEFF)、零宽字符、首尾空白
+      var cleaned = str.replace(/﻿/g, '').replace(/[​-‍﻿]/g, '').trim();
+      return JSON.parse(cleaned);
     } catch (e) {
       return null;
     }
@@ -284,21 +290,24 @@ window.SillyTavernImporter = (() => {
     }
 
     const chunks = parsePngTextChunks(buffer);
+    var keys = Object.keys(chunks);
+    if (keys.length === 0) {
+      throw new Error('PNG 文件中未找到文本块，请确认是 SillyTavern 角色卡');
+    }
 
     // 尝试 V3 (ccv3)
-    const ccv3Raw = chunks['ccv3'];
+    var ccv3Raw = chunks['ccv3'];
     if (ccv3Raw) {
-      const ccv3 = tryParseJSON(ccv3Raw);
+      var ccv3 = tryParseJSON(ccv3Raw);
       if (ccv3) {
-        const card = normalizeCard(ccv3);
+        var card = normalizeCard(ccv3);
         if (card) {
-          // 尝试从 iTXt 提取更高优先级的 chara
-          const charaRaw = chunks['chara'];
+          // 尝试从 chara 补充可能缺失的信息
+          var charaRaw = chunks['chara'];
           if (charaRaw && !card.system_prompt) {
-            // chara V2 可能含 system_prompt
-            const chara = tryParseJSON(charaRaw);
+            var chara = tryParseJSON(charaRaw);
             if (chara) {
-              const v2Card = normalizeCard(chara);
+              var v2Card = normalizeCard(chara);
               if (v2Card && v2Card.system_prompt) {
                 card.system_prompt = card.system_prompt || v2Card.system_prompt;
               }
@@ -306,20 +315,24 @@ window.SillyTavernImporter = (() => {
           }
           return card;
         }
+        throw new Error('ccv3 数据格式无法识别（不匹配 V1/V2/V3 结构）');
       }
+      throw new Error('ccv3 文本块包含无效 JSON，无法解析');
     }
 
     // 尝试 chara (V1/V2)
-    const charaRaw = chunks['chara'];
+    var charaRaw = chunks['chara'];
     if (charaRaw) {
-      const chara = tryParseJSON(charaRaw);
+      var chara = tryParseJSON(charaRaw);
       if (chara) {
-        const card = normalizeCard(chara);
+        var card = normalizeCard(chara);
         if (card) return card;
+        throw new Error('chara 数据格式无法识别（不匹配 V1/V2 结构）');
       }
+      throw new Error('chara 文本块包含无效 JSON');
     }
 
-    throw new Error('PNG 文件中未找到有效角色卡数据（无 chara 或 ccv3 文本块）');
+    throw new Error('PNG 中未找到角色卡数据（已有块: ' + keys.join(', ') + '），不包含 chara 或 ccv3');
   }
 
   async function parseJsonCard(file) {
