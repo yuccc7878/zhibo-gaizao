@@ -768,7 +768,13 @@ async function deleteSelectedMessages() {
 function openChatRoom(chatId, type) {
     const chat = (type === 'private') ? db.characters.find(c => c.id === chatId) : db.groups.find(g => g.id === chatId);
     if (!chat) return;
+    currentChatId = chatId; currentChatType = type;
     exitMultiSelectMode(); cancelMessageEdit();
+    // 保存状态，刷新后恢复聊天室
+    db._currentScreen = 'chat-room-screen';
+    db._currentChatId = chatId;
+    db._currentChatType = type;
+    saveData();
     chatRoomTitle.textContent = (type === 'private') ? chat.remarkName : chat.name;
     const subtitle = $('chat-room-subtitle');
     if (type === 'private') { subtitle.style.display = 'flex'; chatRoomStatusText.textContent = chat.status || '在线'; }
@@ -2727,6 +2733,17 @@ async function initApp() {
 
     // 初始化所有 Engine 模块
     await Engine.initAll();
+
+    // ─── 刷新后恢复状态 ───
+    if (db._currentScreen && db._currentScreen !== 'home-screen') {
+        var scr = db._currentScreen;
+        if (scr === 'chat-room-screen' && db._currentChatId && db._currentChatType) {
+            // 恢复聊天室
+            openChatRoom(db._currentChatId, db._currentChatType);
+        } else {
+            switchScreen(scr);
+        }
+    }
 
     // 激活世界 - 加载引擎
     const initActiveWorld = () => {

@@ -26,6 +26,12 @@ function switchScreen(targetId) {
     document.getElementById(targetId)?.classList.add('active');
     document.querySelectorAll('.modal-overlay, .action-sheet-overlay, .settings-sidebar')
         .forEach(o => o.classList.remove('visible', 'open'));
+    // 保存当前屏幕状态，刷新后恢复
+    if (typeof db !== 'undefined' && typeof saveData !== 'undefined') {
+        db._currentScreen = targetId;
+        if (targetId !== 'chat-room-screen') { db._currentChatId = ''; db._currentChatType = ''; }
+        saveData();
+    }
 }
 
 // --- 图片压缩 ---

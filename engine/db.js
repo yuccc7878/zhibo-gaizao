@@ -154,6 +154,9 @@ const loadData = async () => {
         });
     }
     // 激活世界配置
+    if (db._currentScreen === undefined) db._currentScreen = 'home-screen';
+    if (db._currentChatId === undefined) db._currentChatId = '';
+    if (db._currentChatType === undefined) db._currentChatType = '';
     if (db.activeWorldEnabled === undefined) db.activeWorldEnabled = false;
     if (db.activeWorldInterval === undefined) db.activeWorldInterval = 5;
     if (!db.activeWorldScope) db.activeWorldScope = 'both';
