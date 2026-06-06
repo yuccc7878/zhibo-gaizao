@@ -109,75 +109,78 @@ Engine.register({
     else if(this.step===2) this._prp(b);
   },
 
-  /* ─── 等级 ─── */
+  /* ─── 等级（直接操作DOM）─── */
   _lev(b){
-    var h=this;
     var selId=this.state.level?this.state.level.id:-1;
     b.innerHTML=
-      '<div class="live-wizard-header"><div class="live-wizard-title">选择直播等级</div><div class="live-wizard-step">'+(h.tab==='hosts'?'1/4':'1/3')+'</div></div>'+
+      '<div class="live-wizard-header"><div class="live-wizard-title">选择直播等级</div><div class="live-wizard-step">'+(this.tab==='hosts'?'1/4':'1/3')+'</div></div>'+
       '<div class="live-wizard-body"><div class="live-level-grid">'+
         this.LEVELS.map(function(l){
-          return '<div class="live-level-card'+(selId===l.id?' selected':'')+'" onclick="Engine._lv._pickLev('+l.id+')">'+
+          return '<div class="live-level-card'+(selId===l.id?' selected':'')+'" onclick="Engine._lv._pickLev('+l.id+',this)">'+
             '<div class="live-level-dot" style="background:'+l.color+'"></div>'+
             '<div class="live-level-info"><div class="live-level-name">'+l.label+'</div><div class="live-level-desc">'+l.desc+'</div></div></div>';
         }).join('')+
       '</div></div>'+
       '<div class="live-wizard-footer"><button class="live-wiz-btn-back" onclick="document.getElementById(\'lvo\').classList.remove(\'visible\')">取消</button><button class="live-wiz-btn-next" onclick="Engine._lv._goLev()">下一步</button></div>';
   },
-  _pickLev(id){ this.state.level=this.LEVELS.find(function(l){return l.id===id;}); this._render(); },
+  _pickLev(id,el){
+    document.querySelectorAll('#lvc .live-level-card').forEach(function(c){c.classList.remove('selected');});
+    el.classList.add('selected');
+    this.state.level=this.LEVELS.find(function(l){return l.id===id;});
+  },
   _goLev(){ if(!this.state.level)return; this.step=1; this._render(); },
 
-  /* ─── 场景 ─── */
+  /* ─── 场景（直接操作DOM，防多选）─── */
   _scn(b){
-    var h=this;
     var selId=this.state.scene?this.state.scene.id:'';
     b.innerHTML=
-      '<div class="live-wizard-header"><div class="live-wizard-title">选择场景</div><div class="live-wizard-step">'+(h.tab==='hosts'?'2/4':'2/3')+'</div></div>'+
+      '<div class="live-wizard-header"><div class="live-wizard-title">选择场景（单选）</div><div class="live-wizard-step">'+(this.tab==='hosts'?'2/4':'2/3')+'</div></div>'+
       '<div class="live-wizard-body">'+
         this.SCENE_CATEGORIES.map(function(cat){
           return '<details class="live-scene-category"><summary>'+cat.label+'</summary><div class="live-scene-grid">'+
             cat.scenes.map(function(s){
-              return '<div class="live-scene-item'+(selId===s.id?' selected':'')+'" onclick="Engine._lv._pickScn(\''+s.id+'\')">'+s.label+'</div>';
+              return '<div class="live-scene-item'+(selId===s.id?' selected':'')+'" onclick="Engine._lv._pickScn(\''+s.id+'\',this)">'+s.label+'</div>';
             }).join('')+'</div></details>';
         }).join('')+
       '</div>'+
       '<div class="live-wizard-footer"><button class="live-wiz-btn-back" onclick="Engine._lv._back()">返回</button><button class="live-wiz-btn-next" onclick="Engine._lv._goScn()">下一步</button></div>';
   },
-  _pickScn(id){
-    var h=this;
+  _pickScn(id,el){
+    // 单选：清除所有选中 → 标记当前
+    document.querySelectorAll('#lvc .live-scene-item').forEach(function(c){c.classList.remove('selected');});
+    el.classList.add('selected');
     for(var i=0;i<this.SCENE_CATEGORIES.length;i++){
       var cat=this.SCENE_CATEGORIES[i];
       for(var j=0;j<cat.scenes.length;j++){
-        if(cat.scenes[j].id===id){ this.state.scene=cat.scenes[j]; this._render(); return; }
+        if(cat.scenes[j].id===id){ this.state.scene=cat.scenes[j]; return; }
       }
     }
   },
   _goScn(){ if(!this.state.scene)return; this.step=2; this._render(); },
 
-  /* ─── 道具/主播 ─── */
+  /* ─── 道具（多选，直接操作DOM，联动商店已拥有）─── */
   _prp(b){
     if(this.tab==='hosts'&&!this.host){ this._hostPkr(b); return; }
-    var h=this;
     var shop=Engine.getModule('shop');
-    var items=shop?shop.getAllItems():[];
+    var items=shop?shop.getOwnedProps():[];
     var stepTxt=this.tab==='hosts'?'4/4':'3/3';
     b.innerHTML=
-      '<div class="live-wizard-header"><div class="live-wizard-title">选择道具（可选）</div><div class="live-wizard-step">'+stepTxt+'</div></div>'+
+      '<div class="live-wizard-header"><div class="live-wizard-title">选择道具（多选）</div><div class="live-wizard-step">'+stepTxt+'</div></div>'+
       '<div class="live-wizard-body">'+
-        (items.length===0?'<div style="text-align:center;color:#999;padding:30px 0;">暂无可用道具</div>':
+        (items.length===0?'<div style="text-align:center;color:#999;padding:30px 0;">暂无可选道具<br><small>需要先在商店购买道具</small></div>':
           '<div class="live-prop-grid">'+items.map(function(p){
-            var n=p.label.replace(/^(\p{Emoji_Presentation}|\p{Emoji}️?)/u,'');
-            var s=(h.state.props||[]).indexOf(p.id)>=0;
-            return '<div class="live-prop-item'+(s?' selected':'')+'" onclick="Engine._lv._tglProp(\''+p.id+'\')">'+n+'</div>';
-          }).join('')+'</div>')+
+            var n=p.label.replace(/^(\p{Emoji_Presentation}|\p{Emoji}️?)/u,'')||p.label;
+            var s=(this.state.props||[]).indexOf(p.id)>=0;
+            return '<div class="live-prop-item'+(s?' selected':'')+'" onclick="Engine._lv._tglProp(\''+p.id+'\',this)">'+n+'</div>';
+          },this).join('')+'</div>')+
       '</div>'+
       '<div class="live-wizard-footer"><button class="live-wiz-btn-back" onclick="Engine._lv._back()">返回</button><button class="live-wiz-btn-skip" onclick="Engine._lv.start()">跳过</button><button class="live-wiz-btn-next" onclick="Engine._lv.start()">开始直播</button></div>';
   },
-  _tglProp(id){
+  _tglProp(id,el){
     this.state.props=this.state.props||[];
     var i=this.state.props.indexOf(id);
-    if(i>=0) this.state.props.splice(i,1); else this.state.props.push(id);
-    this._render();
+    if(i>=0){ this.state.props.splice(i,1); el.classList.remove('selected'); }
+    else{ this.state.props.push(id); el.classList.add('selected'); }
   },
 
   /* ─── 主播选择 ─── */
@@ -190,14 +193,18 @@ Engine.register({
         (chars.length===0?'<div class="live-host-empty">暂无角色，请先创建QQ联系人</div>':
           '<div class="live-host-grid">'+chars.map(function(c){
             var s=h.host&&h.host.id===c.id;
-            return '<div class="live-host-card'+(s?' selected':'')+'" onclick="Engine._lv._pickHost(\''+c.id+'\')">'+
+            return '<div class="live-host-card'+(s?' selected':'')+'" onclick="Engine._lv._pickHost(\''+c.id+'\',this)">'+
               '<img src="'+h._esc(c.avatar||'')+'" class="live-host-avatar" onerror="this.outerHTML=\'<div class=live-host-avatar style=background:#eee;border-radius:50%;width:48px;height:48px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:24px;>👤</div>\'">'+
               '<div class="live-host-name">'+h._esc(c.remarkName||c.realName||'?')+'</div></div>';
           }).join('')+'</div>')+
       '</div>'+
       '<div class="live-wizard-footer"><button class="live-wiz-btn-back" onclick="Engine._lv._back()">返回</button><button class="live-wiz-btn-next" onclick="Engine._lv._goHost()">下一步（选道具）</button></div>';
   },
-  _pickHost(id){ this.host=(db.characters||[]).find(function(c){return c.id===id;}); this._render(); },
+  _pickHost(id,el){
+    document.querySelectorAll('#lvc .live-host-card').forEach(function(c){c.classList.remove('selected');});
+    el.classList.add('selected');
+    this.host=(db.characters||[]).find(function(c){return c.id===id;});
+  },
   _goHost(){ if(!this.host)return; this.step=2; this._render(); },
 
   _back(){ if(this.step>0){this.step--;this._render();} },
