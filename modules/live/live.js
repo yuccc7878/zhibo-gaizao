@@ -127,26 +127,28 @@ Engine.register({
   open() {
     switchScreen(this.screen);
     if (this.isStreaming) return;
-    this._resetWizard();
-    document.getElementById('live-overlay').classList.add('visible');
-    this._renderStep();
-  },
-
-  _resetWizard() {
     this.wizardStep = 0;
     this.currentTab = 'self';
     this.hostChar = null;
     this.isViewerMode = false;
     this.state = { level: null, scene: null, props: [] };
-    // 标签页绑定
+    this._bindWizardTabs();
+    document.getElementById('live-overlay').classList.add('visible');
+    this._renderStep();
+  },
+
+  _bindWizardTabs() {
     const tabs = document.querySelectorAll('#lw-tabs .live-host-tab');
     tabs.forEach(t => {
-      t.classList.toggle('active', t.dataset.tab === this.currentTab);
       t.onclick = () => {
         if (t.dataset.tab === this.currentTab) return;
         this.currentTab = t.dataset.tab;
         this.hostChar = null;
-        this._resetWizard(); // 从0开始
+        this.wizardStep = 0;
+        this.state = { level: null, scene: null, props: [] };
+        this.isViewerMode = this.currentTab === 'hosts';
+        tabs.forEach(t2 => t2.classList.toggle('active', t2.dataset.tab === this.currentTab));
+        this._renderStep();
       };
     });
   },
