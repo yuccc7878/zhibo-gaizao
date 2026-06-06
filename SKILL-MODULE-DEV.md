@@ -1,6 +1,6 @@
 # 🛠️ 模块开发标准作业流程 (SOP)
 
-> 适用于 `zhibo-gaizao` 项目新增功能模块。
+> 适用于 `zhibo-gaizao` 项目**新增功能模块**及**修改现有代码**。
 > 所有 AI 调用统一使用 `AiService`，禁止内联 fetch。
 
 ---
@@ -16,6 +16,7 @@
 7. [数据持久化规范](#7-数据持久化规范)
 8. [UI 与交互规范](#8-ui-与交互规范)
 9. [Checklist](#9-checklist)
+10. [修改现有代码规范（非新增模块）](#10-修改现有代码规范非新增模块)
 
 ---
 
@@ -497,6 +498,111 @@ async doTask() {
 - [ ] finally 恢复状态
 
 ---
+
+## 10. 修改现有代码规范（非新增模块）
+
+> **重要**：以下规则适用于修改 `app.js`、`engine/`、`js/` 下已有文件的场景。
+> 新增模块请走上面的 Step 1~4，不要混用。
+
+### 10.1 全局作用域规则
+
+本项目中 `<script>` 标签加载的脚本共享全局作用域，但 **`let`/`const` 不挂到 `window`**：
+
+```html
+<!-- engine/db.js -->
+<script>
+let db = { characters: [] };     // ❌ window.db === undefined
+const saveData = async () => {}; // ❌ window.saveData === undefined
+var config = {};                 // ✅ window.config === undefined
+</script>
+
+<!-- app.js（后加载，可直接访问 db） -->
+<script>
+console.log(db);        // ✅ OK — 同一全局作用域
+console.log(window.db); // ❌ undefined — let 不挂 window
+</script>
+```
+
+**规则**：
+
+| 场景 | 正确做法 | 错误做法 |
+|------|---------|---------|
+| 跨脚本访问 `db` | 直接用 `db` | `window.db` |
+| 跨脚本访问 `saveData` | 直接用 `saveData()` | `window.saveData()` |
+| IIFE 内访问全局变量 | 直接用变量名 | `window.变量名` |
+| 检查全局变量是否存在 | `typeof db === 'undefined'` | `window.db === undefined` |
+
+### 10.2 app.js 内部结构
+
+`app.js` 是**普通脚本**（非 ES Module），不支持 `import`/`export`。
+
+```
+app.js 结构：
+├── 全局状态变量（let currentChatId, ...）
+├── DOM 引用缓存（const $ = id => document.getElementById(id), ...）
+├── 工具函数（function escHtml, function pad, ...）
+├── 功能函数（function renderChatList, function setupImportCard, ...）
+└── initApp() — 入口函数
+```
+
+**规则**：
+
+- ❌ 禁止在 `app.js` 中使用 `import`/`export` 语法
+- ❌ 禁止将 `app.js` 改为 `<script type="module">`
+- ✅ 工具函数必须定义在顶层作用域（不在其他函数内部）
+- ✅ 仅在单一函数内使用的辅助函数可以定义为该函数的内部函数（闭包）
+
+### 10.3 修改 app.js 的检查清单
+
+修改 `app.js` 前，必须确认：
+
+- [ ] **作用域**：新增/移动的函数在正确的层级（顶层 vs 闭包）
+- [ ] **依赖**：引用的全局变量（`db`, `saveData`, `showToast` 等）已由 `engine/db.js` 或 `engine/ui.js` 在之前加载
+- [ ] **函数名冲突**：不与已有函数同名
+- [ ] **DOM 就绪**：操作 DOM 的代码在 `initApp()` 内或之后调用
+- [ ] **不破坏闭包**：如果函数从闭包内移到顶层，确认其访问的局部变量也已提升
+
+### 10.4 非模块脚本（IIFE）交互规范
+
+`sillytavern-import.js` 等文件使用 IIFE 模式：
+
+```js
+window.SillyTavernImporter = (() => {
+    'use strict';
+    // 内部代码...
+    function saveImportedCard(card, selections) {
+        // ✅ 直接访问全局 db（let 声明，同页面可访问）
+        if (typeof db === 'undefined') throw new Error('db 未就绪');
+        db.characters.push(newChar);
+    }
+    return { parseCardFile, saveImportedCard };
+})();
+```
+
+**规则**：
+
+- IIFE 内访问全局变量：直接用变量名，不要加 `window.`
+- 检查全局变量是否存在：用 `typeof varName === 'undefined'`（避免 ReferenceError）
+- IIFE 通过 `window.xxx` 暴露自身接口是正确的（这是 IIFE 的标准用法）
+- 调用 IIFE 暴露的方法：`window.Xxx.method()` 或 `Xxx.method()` 均可
+
+### 10.5 Bug 修复流程
+
+修复已有代码的 bug 时，遵循以下步骤：
+
+1. **定位**：确认 bug 的根本原因（作用域？时序？数据？DOM？）
+2. **最小改动**：只改必须改的，不重构、不迁移到模块
+3. **验证**：修改后 grep 确认无副作用（函数唯一性、变量可达性）
+4. **端到端测试**：走完用户操作路径
+
+**常见 bug 模式**：
+
+| 症状 | 可能原因 | 检查方式 |
+|------|---------|---------|
+| `ReferenceError: xxx is not defined` | 变量在 IIFE/闭包内，或脚本加载顺序错误 | 检查 `<script>` 顺序和作用域 |
+| `xxx is undefined` | `let`/`const` 通过 `window.` 访问 | 改为直接访问变量名 |
+| 修改后页面不更新 | 函数作用域错误，调用的是旧闭包版本 | grep 确认函数定义位置 |
+| `import` 语法错误 | 在非 module `<script>` 中使用了 ES Module 语法 | 移除 import/export，用全局变量 |
 
 ## 附录：速查卡片
 

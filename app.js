@@ -393,6 +393,11 @@ function setupAddCharModal() {
     });
 }
 
+// --- 全局工具函数 ---
+function escHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // --- 导入酒馆角色卡 ---
 function setupImportCard() {
     const modal = addCharModal;
@@ -573,10 +578,6 @@ function setupImportCard() {
                 showToast('导入失败: ' + err.message);
             }
         });
-    }
-
-    function escHtml(str) {
-        return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     // 打开弹窗时重置导入状态

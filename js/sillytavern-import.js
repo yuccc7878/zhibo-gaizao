@@ -422,8 +422,7 @@ window.SillyTavernImporter = (() => {
       summaryIndex: 0,
     };
 
-    const db = window.db;
-    if (!db) throw new Error('全局 db 未就绪');
+    if (typeof db === 'undefined') throw new Error('全局 db 未就绪');
     db.characters.push(newChar);
 
     // 将专属世界书也加到全局世界书列表？不，用 isBuiltin 标记区分
