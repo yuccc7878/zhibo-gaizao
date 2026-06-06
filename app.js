@@ -538,7 +538,23 @@ function setupImportCard() {
         if (wbEntries.length > 0) {
             const wbSection = document.createElement('div');
             wbSection.className = 'import-section';
-            wbSection.innerHTML = `<div class="import-section-label">📖 内嵌世界书（${wbEntries.length} 条）</div>`;
+            wbSection.innerHTML = `<div class="import-section-label">📖 内嵌世界书（${wbEntries.length} 条）</div>
+                <div class="import-checkbox-row" style="border-bottom:1px solid #f0f0f0;margin-bottom:4px;padding-bottom:4px;">
+                    <input type="checkbox" id="import-wb-select-all" checked style="width:auto;flex-shrink:0;">
+                    <label for="import-wb-select-all" style="font-size:12px;color:#666;">全选/取消全选</label>
+                </div>`;
+            // 全选/取消全选（将 wbSection 插入 DOM 后再绑定）
+            requestAnimationFrame(function() {
+                var selAll = wbSection.querySelector('#import-wb-select-all');
+                if (selAll) selAll.addEventListener('change', function() {
+                    var checked = this.checked;
+                    wbSection.querySelectorAll('[data-wb-index]').forEach(function(cb) {
+                        cb.checked = checked;
+                        var row = cb.closest('.import-wb-item');
+                        if (row) row.style.opacity = checked ? '1' : '0.4';
+                    });
+                });
+            });
             wbEntries.forEach((entry, idx) => {
                 const item = document.createElement('div');
                 item.className = 'import-wb-item';
