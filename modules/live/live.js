@@ -814,7 +814,7 @@ Engine.register({
         const overlay = document.getElementById('live-reward-overlay');
         const box = document.getElementById('live-reward-box');
 
-        body.innerHTML = `
+        box.innerHTML = `
             <div class="live-reward-title">📺 直播结算</div>
             <div class="live-reward-subtitle">${this.state.level.label} · ${this.state.scene.label}</div>
             <div class="live-reward-coin">${reward.totalReward}</div>
