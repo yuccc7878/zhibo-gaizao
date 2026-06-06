@@ -286,7 +286,7 @@ Engine.register({
     var persp=this.host?'用第三人称"她/他"描述主播':'用第二人称"你"描述主播（即用户自己）';
     this._msg('story','✨ 生成中...','_loading');
 
-    var sys='你是成人向直播内容生成器。虚构内容，成年人。等级：'+lv.label+' 场景：'+sc.label+' '+hi+' 尺度：'+ls+' '+persp+'\n返回JSON数组：{"type":"类型","text":"内容"}。type: story(剧情粉字),danmaku(弹幕白字,text格式"昵称: 内容"),tip(打赏金字),gift(礼物金字加粗)。10-18条混合输出。剧情要详细，每条story至少2-3句话有画面感和互动细节。先推进剧情再混入弹幕。只返回JSON数组。';
+    var sys='你是成人向直播内容生成器。虚构内容，成年人。等级：'+lv.label+' 场景：'+sc.label+' '+hi+' 尺度：'+ls+' '+persp+'\n返回JSON数组：{"type":"类型","text":"内容"}。type: story(剧情粉字),danmaku(弹幕白字,text格式"昵称: 内容"),tip(打赏金字),gift(礼物金字加粗)。15-25条混合输出。剧情要详细，每条story至少2-3句话有画面感和互动细节。先推进剧情再混入弹幕。只返回JSON数组。';
     var msg=uin?'观众弹幕："'+uin+'"，据此推进剧情并生成观众反应。':'直播开场，生成详细的开场画面和观众反应。';
 
     try{
@@ -392,10 +392,53 @@ Engine.register({
   },
 
   share(){
+    var h=this;
     var ln=this.state.level, sc=this.state.scene;
     var hn=this.host?(this.host.remarkName||this.host.realName):'我';
     var txt='📺 直播分享：'+hn+' · '+ln.label+' · '+sc.label+'\n快来直播间看看吧！';
-    navigator.clipboard.writeText(txt).then(function(){showToast('✅ 已复制')}).catch(function(){showToast('复制失败')});
+    var chars=db.characters||[], grps=db.groups||[];
+    var ov=document.getElementById('lvso');
+    var b=document.getElementById('lvsb');
+    var html='<div class="live-settle-title">📤 分享给</div><div style="max-height:50vh;overflow-y:auto;margin-bottom:12px;">';
+    if(chars.length===0&&grps.length===0){
+      html+='<div style="text-align:center;color:rgba(255,255,255,0.4);padding:20px;">暂无联系人</div>';
+    }else{
+      if(chars.length>0){
+        html+='<div style="color:rgba(255,255,255,0.4);font-size:11px;margin-bottom:6px;">📱 私聊</div>';
+        chars.forEach(function(c){
+          html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:background 0.15s;" onclick="Engine._lv._doShare(\''+c.id+'\',\'private\')" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'\'">'+
+            '<div style="width:36px;height:36px;border-radius:50%;background:'+(c.avatar?'url('+h._esc(c.avatar)+') center/cover':'#555')+';flex-shrink:0;"></div>'+
+            '<div style="color:#fff;font-size:14px;">'+h._esc(c.remarkName||c.realName||'?')+'</div></div>';
+        });
+      }
+      if(grps.length>0){
+        html+='<div style="color:rgba(255,255,255,0.4);font-size:11px;margin:10px 0 6px;">👥 群聊</div>';
+        grps.forEach(function(g){
+          html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:background 0.15s;" onclick="Engine._lv._doShare(\''+g.id+'\',\'group\')" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'\'">'+
+            '<div style="width:36px;height:36px;border-radius:50%;background:#555;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;">👥</div>'+
+            '<div style="color:#fff;font-size:14px;">'+h._esc(g.name||'?')+'</div></div>';
+        });
+      }
+    }
+    html+='</div><button class="live-settle-btn" style="background:#555;color:#fff;" onclick="document.getElementById(\'lvso\').classList.remove(\'visible\')">取消</button>';
+    b.innerHTML=html; ov.classList.add('visible');
+    // 保存分享文本
+    this._shareText=txt;
+  },
+  _doShare(cid,ctype){
+    document.getElementById('lvso').classList.remove('visible');
+    var txt=this._shareText||'📺 直播分享';
+    this._shareText=null;
+    var chat=ctype==='private'?(db.characters||[]).find(function(c){return c.id===cid;}):(db.groups||[]).find(function(g){return g.id===cid;});
+    if(!chat){showToast('联系人不存在');return;}
+    var myName=ctype==='private'?(chat.myName||'我'):((chat.me||{}).nickname||'我');
+    var msg={id:'msg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),role:'user',content:'['+myName+'分享了一条内容：\n'+txt+']',parts:[{type:'text',text:'['+myName+'分享了一条内容：\n'+txt+']'}],timestamp:Date.now()};
+    if(ctype==='group')msg.senderId='user_me';
+    chat.history=chat.history||[]; chat.history.push(msg);
+    saveData();
+    if(typeof openChatRoom==='function')openChatRoom(cid,ctype);
+    else switchScreen('home-screen');
+    showToast('已分享给 '+(chat.remarkName||chat.realName||chat.name||'联系人'));
   },
 
   async genBg(){
