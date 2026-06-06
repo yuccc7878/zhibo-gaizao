@@ -270,7 +270,9 @@ body {
 }
 .modal-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
 .modal-tab:hover { color: var(--secondary-color); }
-#import-tab-panel { min-height: 200px; }
+#import-tab-panel { min-height: 200px; max-height: 70vh; overflow-y: auto; }
+#import-tab-panel .import-section-text { max-height: 60px; }
+#import-tab-panel .import-card-header { flex-shrink: 0; }
 
 .import-dropzone {
     border: 2px dashed #ddd; border-radius: 12px; padding: 30px 20px;

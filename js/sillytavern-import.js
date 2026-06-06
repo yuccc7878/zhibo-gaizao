@@ -152,7 +152,14 @@ window.SillyTavernImporter = (() => {
       return JSON.parse(cleaned);
     } catch (e) {
       // JSON 解析失败 -> 尝试 base64 解码（SillyTavern 部分卡片使用 base64）
-      try { return JSON.parse(atob(str.replace(/\s/g, ''))); } catch (e2) { return null; }
+      try {
+        var raw = atob(str.replace(/\s/g, ''));
+        // atob 返回 Latin-1 字符串，转为 bytes 再用 UTF-8 解码（修复中文乱码）
+        var bytes = new Uint8Array(raw.length);
+        for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+        var utf8 = new TextDecoder('utf-8').decode(bytes);
+        return JSON.parse(utf8);
+      } catch (e2) { return null; }
     }
   }
 
