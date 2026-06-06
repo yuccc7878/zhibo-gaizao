@@ -57,96 +57,106 @@
     flex-direction: column; color: #fff;
 }
 .live-stream-page.active { display: flex; }
+
+/* ─── 顶部导航栏 ─── */
 .live-stream-header {
-    display: flex; align-items: center; padding: 12px 16px; gap: 12px;
-    background: rgba(0,0,0,0.15); backdrop-filter: blur(6px);
-    flex-shrink: 0; z-index: 2;
+    display: flex; align-items: center; padding: 10px 14px; gap: 10px;
+    background: rgba(0,0,0,0.35); flex-shrink: 0; z-index: 2;
+    min-height: 48px;
 }
 .live-back-home-btn {
     background: rgba(255,255,255,0.15); border: none; color: #fff;
-    width: 32px; height: 32px; border-radius: 8px; font-size: 22px;
+    width: 30px; height: 30px; border-radius: 8px; font-size: 20px;
     font-weight: bold; cursor: pointer; display: flex;
     align-items: center; justify-content: center; flex-shrink: 0;
-    transition: background 0.2s;
 }
-.live-back-home-btn:hover { background: rgba(255,255,255,0.3); }
 .live-back-home-btn:active { transform: scale(0.9); }
 .live-stream-avatar {
-    width: 36px; height: 36px; border-radius: 50%;
+    width: 34px; height: 34px; border-radius: 50%;
     background: var(--primary-color); display: flex;
-    align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+    align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+    background-size: cover; background-position: center;
 }
 .live-stream-info { flex: 1; min-width: 0; }
-.live-stream-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.live-stream-tags { display: flex; gap: 6px; margin-top: 2px; }
+.live-stream-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live-stream-tags { display: flex; gap: 4px; margin-top: 1px; }
 .live-stream-tag {
-    font-size: 10px; padding: 1px 6px; border-radius: 6px;
+    font-size: 9px; padding: 1px 5px; border-radius: 5px;
     background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.8);
 }
 .live-stream-tag.hot { background: rgba(255,80,80,0.7); color: #fff; }
 .live-viewer-count {
-    font-size: 12px; color: rgba(255,255,255,0.7);
-    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: rgba(255,255,255,0.7);
+    display: flex; align-items: center; gap: 4px; white-space: nowrap;
 }
 .live-viewer-dot {
-    width: 6px; height: 6px; border-radius: 50%;
+    width: 5px; height: 5px; border-radius: 50%;
     background: #ff4444; animation: livePulse 1.5s infinite;
 }
 @keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-.live-end-btn {
+.live-end-btn, .live-imggen-btn {
     background: rgba(255,255,255,0.15); border: none; color: #fff;
-    padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+    padding: 5px 10px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer;
+    white-space: nowrap; transition: background 0.15s;
 }
-.live-imggen-btn {
-    background: rgba(255,255,255,0.15); border: none; color: #fff;
-    width: 32px; height: 32px; border-radius: 8px; font-size: 16px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: transform 0.2s, background 0.2s; flex-shrink: 0;
+.live-end-btn:active, .live-imggen-btn:active { transform: scale(0.93); }
+
+/* ─── 中间区域：剧情 + 弹幕 ─── */
+.live-split-body {
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden; min-height: 0;
+    position: relative;
 }
-.live-imggen-btn:hover { background: rgba(255,255,255,0.25); }
-.live-imggen-btn:active { transform: scale(0.9); }
-.live-imggen-btn.generating { opacity: 0.5; pointer-events: none; animation: imggenPulse 1s infinite; }
-@keyframes imggenPulse { 0%,100% { opacity: 0.5; } 50% { opacity: 0.8; } }
-.live-split-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+
+/* 剧情区域 — 半透明黑底，文字清晰叠加在背景图上 */
 .live-story-area {
-    flex: 7; overflow-y: auto; padding: 12px 16px;
-    display: flex; flex-direction: column; gap: 4px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    min-height: 0;
-    background: rgba(0,0,0,0.04);
-    backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
-    transition: opacity 0.4s;
+    flex: 1; overflow-y: auto; padding: 14px 16px;
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.35);
+    min-height: 40%;
 }
-.live-story-label { font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; }
+.live-story-label {
+    font-size: 10px; color: rgba(255,255,255,0.3);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 10px; display: block;
+}
 .live-story-text {
-    font-size: 14px; line-height: 1.9; color: rgba(255,255,255,0.92);
-    animation: liveFadeIn 0.5s ease;
-    text-shadow: 0 1px 5px rgba(0,0,0,0.8);
-    padding: 4px 0;
+    font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.9);
+    margin-bottom: 12px; display: block;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    word-break: break-word;
 }
+
+/* 弹幕区域 */
 .live-danmaku-area {
-    flex: 3; overflow-y: auto; padding: 8px 16px;
-    display: flex; flex-direction: column; gap: 3px;
-    min-height: 0;
-    background: rgba(0,0,0,0.06);
-    backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px);
-    transition: opacity 0.4s;
+    flex: 0 0 auto; overflow-y: auto; padding: 8px 16px;
+    display: block;
+    background: rgba(0,0,0,0.25);
+    max-height: 40%;
+    min-height: 60px;
 }
-.live-danmaku-label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; }
+.live-danmaku-label {
+    font-size: 10px; color: rgba(255,255,255,0.3);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 6px; display: block;
+}
 .live-danmaku-item {
-    font-size: 13px; color: rgba(255,255,255,0.85); padding: 4px 0;
-    animation: liveFadeIn 0.3s ease; line-height: 1.4;
+    font-size: 13px; color: rgba(255,255,255,0.85);
+    padding: 3px 0; line-height: 1.4;
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 .live-danmaku-item .danmaku-user { color: var(--primary-color); font-weight: 600; margin-right: 4px; }
 .live-loading-bar {
-    display: flex; align-items: center; gap: 8px; padding: 10px 0;
+    display: flex; align-items: center; gap: 8px; padding: 8px 0;
     color: rgba(255,255,255,0.4); font-size: 13px;
 }
-@keyframes liveFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes liveFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ─── 底部输入栏 ─── */
 .live-stream-input-bar {
     display: flex; padding: 10px 12px; gap: 8px;
-    background: rgba(0,0,0,0.2); backdrop-filter: blur(6px); flex-shrink: 0;
+    background: rgba(0,0,0,0.4); flex-shrink: 0;
 }
 .live-stream-input-bar input {
     flex: 1; padding: 10px 14px; border: none; border-radius: 20px;
