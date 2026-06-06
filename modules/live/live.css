@@ -206,6 +206,16 @@
   backdrop-filter: blur(4px);
 }
 .live-side-btn:active { transform: scale(0.85); }
+.live-side-btn.generating {
+  animation: imgGenSpin 0.8s linear infinite;
+  background: rgba(255,100,100,0.5);
+}
+@keyframes imgGenSpin {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(10deg); }
+  75% { transform: rotate(-10deg); }
+  100% { transform: rotate(0deg); }
+}
 .live-side-btn .count {
   position: absolute; top: -4px; right: -4px;
   background: #ff4444; color: #fff; font-size: 9px;

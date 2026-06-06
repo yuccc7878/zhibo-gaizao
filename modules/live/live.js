@@ -74,10 +74,10 @@ Engine.register({
         '</div>'+
         '<div class="live-danmaku-wrap"><div class="live-danmaku-list" id="lvl"></div></div>'+
         '<div class="live-side-btns">'+
-          '<button class="live-side-btn" onclick="Engine._lv.like()">❤️<span class="count" id="lvc2">0</span></button>'+
-          '<button class="live-side-btn" onclick="Engine._lv.showTip()">🎁</button>'+
+          '<button class="live-side-btn" id="lv-like-btn" onclick="Engine._lv.like()">❤️<span class="count" id="lvc2">0</span></button>'+
+          '<button class="live-side-btn" id="lv-tip-btn" onclick="Engine._lv.showTip()">🎁</button>'+
           '<button class="live-side-btn" onclick="Engine._lv.share()">📤</button>'+
-          '<button class="live-side-btn" onclick="Engine._lv.genBg()">🎨</button>'+
+          '<button class="live-side-btn" id="lv-img-btn" onclick="Engine._lv.genBg()">🎨</button>'+
         '</div>'+
         '<div class="live-input-bar"><input type="text" id="lvi" placeholder="说点什么..." onkeydown="if(event.key===\'Enter\')Engine._lv.send()"><button class="live-send-btn" onclick="Engine._lv.send()">发送</button></div>'+
         '<div class="live-gift-overlay" id="lvg"></div>'+
@@ -248,8 +248,19 @@ Engine.register({
     document.getElementById('lvl').innerHTML='';
     document.getElementById('lvc2').textContent='0';
     document.getElementById('lvv').textContent='0';
-    page.classList.remove('bg-only');
     document.getElementById('lvb').style.backgroundImage='';
+    page.classList.remove('bg-only');
+
+    /* 自己开播：禁用点赞/打赏；观众模式：启用 */
+    var lb=document.getElementById('lv-like-btn');
+    var tb=document.getElementById('lv-tip-btn');
+    if(this.host){
+      lb.style.opacity=''; lb.style.pointerEvents=''; lb.title='';
+      tb.style.opacity=''; tb.style.pointerEvents=''; tb.title='';
+    }else{
+      lb.style.opacity='0.35'; lb.style.pointerEvents='none'; lb.title='自己开播时不可点赞';
+      tb.style.opacity='0.35'; tb.style.pointerEvents='none'; tb.title='自己开播时不可打赏';
+    }
 
     /* 观众人数 */
     var h=this;
@@ -271,14 +282,15 @@ Engine.register({
     this.stats.story++;
     var lv=this.state.level, sc=this.state.scene;
     var ls=lv.id>=4?'无限制，可直白露骨。':lv.id>=3?'可暗示和挑逗。':'轻松健康。';
-    var hi=this.host?'\n主播：'+this.host.realName+'，人设：'+this.host.persona:'';
+    var hi=this.host?'主播：'+this.host.realName+'，人设：'+this.host.persona:'';
+    var persp=this.host?'用第三人称"她/他"描述主播':'用第二人称"你"描述主播（即用户自己）';
     this._msg('story','✨ 生成中...','_loading');
 
-    var sys='你是成人向直播内容生成器。虚构内容，成年人。等级：'+lv.label+' 场景：'+sc.label+hi+' 尺度：'+ls+'\n返回JSON数组，每个元素{"type":"类型","text":"内容"}。type: story(剧情粉),danmaku(弹幕白),tip(打赏金),gift(礼物金加粗),follow(关注绿)。6-12条混合。danmaku的text用"昵称: 内容"格式。先推进剧情再混合弹幕。只返回JSON数组。';
-    var msg=uin?'观众弹幕："'+uin+'"，推进剧情。':'直播刚开始，生成开场内容。';
+    var sys='你是成人向直播内容生成器。虚构内容，成年人。等级：'+lv.label+' 场景：'+sc.label+' '+hi+' 尺度：'+ls+' '+persp+'\n返回JSON数组：{"type":"类型","text":"内容"}。type: story(剧情粉字),danmaku(弹幕白字,text格式"昵称: 内容"),tip(打赏金字),gift(礼物金字加粗)。10-18条混合输出。剧情要详细，每条story至少2-3句话有画面感和互动细节。先推进剧情再混入弹幕。只返回JSON数组。';
+    var msg=uin?'观众弹幕："'+uin+'"，据此推进剧情并生成观众反应。':'直播开场，生成详细的开场画面和观众反应。';
 
     try{
-      var full=await Engine.services.aiChat({system:sys,messages:[{role:'user',content:msg}],options:{temperature:0.95,maxTokens:2000}});
+      var full=await Engine.services.aiChat({system:sys,messages:[{role:'user',content:msg}],options:{temperature:0.95,maxTokens:3500}});
       this._renderJson(full);
     }catch(e){ this._msg('story','⚠️ '+e.message); }
   },
@@ -338,20 +350,22 @@ Engine.register({
 
   /* ─── 右侧按钮 ─── */
   like(){
+    if(!this.host)return; // 自己开播不可点赞
     this.likes++; document.getElementById('lvc2').textContent=this.likes;
     var el=document.createElement('div'); el.className='live-like-heart'; el.textContent='❤️';
     var btn=document.getElementById('lvc2').parentElement;
     var r=btn.getBoundingClientRect();
     el.style.left=(r.left+r.width/2-12)+'px'; el.style.bottom=(window.innerHeight-r.top+10)+'px';
     document.body.appendChild(el); setTimeout(function(){el.remove();},1500);
-    if(this.likes%10===0) this.gen(); // 每10次点赞自动生成新内容
+    if(this.likes%20===0) this.gen();
   },
 
   showTip(){
+    if(!this.host){showToast('自己开播不可打赏');return;} // 自己开播不可打赏
     var ov=document.getElementById('lvso');
     var b=document.getElementById('lvsb');
     b.innerHTML=
-      '<div class="live-settle-title">🎁 打赏主播</div>'+
+      '<div class="live-settle-title">🎁 打赏 '+this._esc(this.host.remarkName||this.host.realName)+'</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;">'+
         [10,50,100,500].map(function(a){return '<button style="padding:12px;border:2px solid rgba(255,255,255,0.15);border-radius:10px;background:rgba(255,255,255,0.05);color:#FFD700;font-size:16px;font-weight:700;cursor:pointer;" onclick="document.getElementById(\'_tipAmt\').value='+a+'">'+a+' 🪙</button>';}).join('')+
       '</div>'+
@@ -371,7 +385,10 @@ Engine.register({
     saveData();
     document.getElementById('lvso').classList.remove('visible');
     this._msg('tip','打赏了 '+amt+' 🪙','我');
-    if(amt>=100)this.gen();
+    // 触发礼物特效
+    var hn=this.host?this.host.remarkName||this.host.realName:'主播';
+    this._gfx(hn+' 收到 '+amt+' 🪙');
+    if(amt>=50)this.gen();
   },
 
   share(){
@@ -382,6 +399,9 @@ Engine.register({
   },
 
   async genBg(){
+    var btn=document.getElementById('lv-img-btn');
+    if(btn.classList.contains('generating'))return;
+    btn.classList.add('generating'); btn.textContent='⏳';
     var lv=this.state.level, sc=this.state.scene;
     var hd=this.host?', '+(this.host.remarkName||this.host.realName)+', '+(this.host.persona||''):'';
     try{
@@ -389,6 +409,7 @@ Engine.register({
       document.getElementById('lvb').style.backgroundImage='url('+url+')';
       showToast('🎨 背景已更新');
     }catch(e){showToast('背景生成失败: '+e.message);}
+    btn.classList.remove('generating'); btn.textContent='🎨';
   },
 
   toggleBg(){ document.getElementById('lvs').classList.toggle('bg-only'); },
