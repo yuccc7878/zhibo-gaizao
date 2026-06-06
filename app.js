@@ -2738,8 +2738,16 @@ async function initApp() {
     if (db._currentScreen && db._currentScreen !== 'home-screen') {
         var scr = db._currentScreen;
         if (scr === 'chat-room-screen' && db._currentChatId && db._currentChatType) {
-            // 恢复聊天室
-            openChatRoom(db._currentChatId, db._currentChatType);
+            // 验证聊天是否仍然存在
+            var chat = db._currentChatType === 'private'
+                ? db.characters.find(function(c){return c.id===db._currentChatId;})
+                : db.groups.find(function(g){return g.id===db._currentChatId;});
+            if (chat) {
+                openChatRoom(db._currentChatId, db._currentChatType);
+            } else {
+                // 聊天已被删除，回主页
+                db._currentScreen='home-screen'; db._currentChatId=''; db._currentChatType='';
+            }
         } else {
             switchScreen(scr);
         }
