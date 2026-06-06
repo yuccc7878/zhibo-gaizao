@@ -167,7 +167,7 @@ Engine.register({
         <div class="live-wizard-title">选择直播等级</div>
         <div class="live-wizard-step">${step}</div>
       </div>
-      <div class="live-wizard-body">
+      <div class="live-wizard-body" id="lw-level-body">
         <div class="live-level-grid">
           ${this.LEVELS.map(l => `
             <div class="live-level-card${this.state.level?.id === l.id ? ' selected' : ''}" data-level="${l.id}">
@@ -181,23 +181,29 @@ Engine.register({
         </div>
       </div>
       <div class="live-wizard-footer">
-        <button class="live-wiz-btn-back" id="lw-cancel">取消</button>
-        <button class="live-wiz-btn-next" id="lw-next">下一步</button>
+        <button class="live-wiz-btn-back" data-action="lw-cancel">取消</button>
+        <button class="live-wiz-btn-next" data-action="lw-next">下一步</button>
       </div>`;
-    body.querySelectorAll('.live-level-card').forEach(el => {
-      el.onclick = () => {
-        body.querySelectorAll('.live-level-card').forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-      };
-    });
-    document.getElementById('lw-cancel').onclick = () => document.getElementById('live-overlay').classList.remove('visible');
-    document.getElementById('lw-next').onclick = () => {
-      const sel = body.querySelector('.live-level-card.selected');
-      if (!sel) return;
-      this.state.level = this.LEVELS.find(l => l.id === parseInt(sel.dataset.level));
-      this.wizardStep = 1;
-      this._renderStep();
-    };
+    // 事件委托
+    body.addEventListener('click', function(e) {
+      var card = e.target.closest('.live-level-card');
+      if (card) {
+        body.querySelectorAll('.live-level-card').forEach(function(c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
+        return;
+      }
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      if (btn.dataset.action === 'lw-cancel') {
+        document.getElementById('live-overlay').classList.remove('visible');
+      } else if (btn.dataset.action === 'lw-next') {
+        var sel = body.querySelector('.live-level-card.selected');
+        if (!sel) return;
+        this.state.level = this.LEVELS.find(function(l) { return l.id === parseInt(sel.dataset.level); });
+        this.wizardStep = 1;
+        this._renderStep();
+      }
+    }.bind(this));
   },
 
   _renderSceneSelect(body) {
@@ -220,37 +226,43 @@ Engine.register({
         `).join('')}
       </div>
       <div class="live-wizard-footer">
-        <button class="live-wiz-btn-back" id="lw-back">返回</button>
-        <button class="live-wiz-btn-next" id="lw-next">下一步</button>
+        <button class="live-wiz-btn-back" data-action="lw-back">返回</button>
+        <button class="live-wiz-btn-next" data-action="lw-next">下一步</button>
       </div>`;
-    body.querySelectorAll('.live-scene-item').forEach(el => {
-      el.onclick = () => {
-        body.querySelectorAll('.live-scene-item').forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-      };
-    });
-    document.getElementById('lw-back').onclick = () => { this.wizardStep = 0; this._renderStep(); };
-    document.getElementById('lw-next').onclick = () => {
-      const sel = body.querySelector('.live-scene-item.selected');
-      if (!sel) return;
-      const sid = sel.dataset.scene;
-      for (const cat of this.SCENE_CATEGORIES) {
-        const found = cat.scenes.find(s => s.id === sid);
-        if (found) { this.state.scene = found; break; }
+    body.addEventListener('click', function(e) {
+      var item = e.target.closest('.live-scene-item');
+      if (item) {
+        body.querySelectorAll('.live-scene-item').forEach(function(c) { c.classList.remove('selected'); });
+        item.classList.add('selected');
+        return;
       }
-      this.wizardStep = 2;
-      this._renderStep();
-    };
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      if (btn.dataset.action === 'lw-back') {
+        this.wizardStep = 0; this._renderStep();
+      } else if (btn.dataset.action === 'lw-next') {
+        var sel = body.querySelector('.live-scene-item.selected');
+        if (!sel) return;
+        var sid = sel.dataset.scene;
+        for (var ci = 0; ci < this.SCENE_CATEGORIES.length; ci++) {
+          var cat = this.SCENE_CATEGORIES[ci];
+          for (var si = 0; si < cat.scenes.length; si++) {
+            if (cat.scenes[si].id === sid) { this.state.scene = cat.scenes[si]; break; }
+          }
+          if (this.state.scene) break;
+        }
+        this.wizardStep = 2;
+        this._renderStep();
+      }
+    }.bind(this));
   },
 
   _renderPropSelect(body) {
-    // 主播列表tab：在道具前先选择主播
     if (this.currentTab === 'hosts' && !this.hostChar) {
       this._renderHostPicker(body);
       return;
     }
     const step = this.currentTab === 'hosts' ? '4/4' : '3/3';
-    const total = this.currentTab === 'hosts' ? '4' : '3';
     const shop = Engine.getModule('shop');
     const items = shop ? shop.getAllItems() : [];
     body.innerHTML = `
@@ -259,76 +271,78 @@ Engine.register({
         <div class="live-wizard-step">${step}</div>
       </div>
       <div class="live-wizard-body">
-        ${items.length === 0 ? '<div style="text-align:center;color:#999;padding:30px 0;">暂无可用道具</div>' : `
-          <div class="live-prop-grid">
-            ${items.map(p => {
-              const name = p.label.replace(/^(\p{Emoji_Presentation}|\p{Emoji}️?)/u, '');
-              return `<div class="live-prop-item${(this.state.props||[]).includes(p.id) ? ' selected' : ''}" data-id="${p.id}">${name}</div>`;
-            }).join('')}
-          </div>
-        `}
+        ${items.length === 0 ? '<div style="text-align:center;color:#999;padding:30px 0;">暂无可用道具</div>' : '<div class="live-prop-grid">' +
+          items.map(function(p) {
+            var name = p.label.replace(/^(\p{Emoji_Presentation}|\p{Emoji}️?)/u, '');
+            var sel = (this.state.props||[]).indexOf(p.id) >= 0;
+            return '<div class="live-prop-item' + (sel ? ' selected' : '') + '" data-id="' + p.id + '">' + name + '</div>';
+          }.bind(this)).join('') + '</div>'
+        }
       </div>
       <div class="live-wizard-footer">
-        <button class="live-wiz-btn-back" id="lw-back">返回</button>
-        <button class="live-wiz-btn-skip" id="lw-skip">跳过</button>
-        <button class="live-wiz-btn-next" id="lw-next">开始直播</button>
+        <button class="live-wiz-btn-back" data-action="lw-back">返回</button>
+        <button class="live-wiz-btn-skip" data-action="lw-skip">跳过</button>
+        <button class="live-wiz-btn-next" data-action="lw-next">开始直播</button>
       </div>`;
-    if (items.length > 0) {
-      body.querySelectorAll('.live-prop-item').forEach(el => {
-        el.onclick = () => {
-          el.classList.toggle('selected');
-          const pid = el.dataset.id;
-          this.state.props = this.state.props || [];
-          const idx = this.state.props.indexOf(pid);
-          if (idx >= 0) this.state.props.splice(idx, 1);
-          else this.state.props.push(pid);
-        };
-      });
-    }
-    document.getElementById('lw-back').onclick = () => { this.wizardStep = 1; this._renderStep(); };
-    document.getElementById('lw-skip').onclick = () => this.startStream();
-    document.getElementById('lw-next').onclick = () => this.startStream();
+    body.addEventListener('click', function(e) {
+      var prop = e.target.closest('.live-prop-item');
+      if (prop) {
+        prop.classList.toggle('selected');
+        var pid = prop.dataset.id;
+        if (!this.state.props) this.state.props = [];
+        var idx = this.state.props.indexOf(pid);
+        if (idx >= 0) this.state.props.splice(idx, 1);
+        else this.state.props.push(pid);
+        return;
+      }
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      if (btn.dataset.action === 'lw-back') { this.wizardStep = 1; this._renderStep(); }
+      else this.startStream();
+    }.bind(this));
   },
 
   _renderHostPicker(body) {
-    const chars = db.characters || [];
+    var chars = db.characters || [];
     body.innerHTML = `
       <div class="live-wizard-header">
         <div class="live-wizard-title">选择要观看的主播</div>
         <div class="live-wizard-step">3/4</div>
       </div>
       <div class="live-wizard-body">
-        ${chars.length === 0 ? '<div class="live-host-empty">暂无角色，请先创建QQ联系人</div>' : `
-          <div class="live-host-grid">
-            ${chars.map(c => `
-              <div class="live-host-card${this.hostChar?.id === c.id ? ' selected' : ''}" data-char-id="${c.id}">
-                <img src="${c.avatar}" class="live-host-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22><rect fill=%22%23f0f0f0%22 width=%2248%22 height=%2248%22/><text x=%2224%22 y=%2232%22 text-anchor=%22middle%22 font-size=%2224%22>👤</text></svg>'">
-                <div class="live-host-name">${c.remarkName || c.realName}</div>
-              </div>
-            `).join('')}
-          </div>
-        `}
+        ${chars.length === 0 ? '<div class="live-host-empty">暂无角色，请先创建QQ联系人</div>' : '<div class="live-host-grid">' +
+          chars.map(function(c) {
+            var sel = this.hostChar && this.hostChar.id === c.id;
+            var avatar = c.avatar || '';
+            return '<div class="live-host-card' + (sel ? ' selected' : '') + '" data-char-id="' + c.id + '">'
+              + '<img src="' + avatar.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '" class="live-host-avatar" onerror="this.outerHTML=\'<div class=live-host-avatar style=background:#eee;border-radius:50%;width:48px;height:48px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:24px;>👤</div>\'">'
+              + '<div class="live-host-name">' + (c.remarkName || c.realName || '?') + '</div></div>';
+          }.bind(this)).join('') + '</div>'
+        }
       </div>
       <div class="live-wizard-footer">
-        <button class="live-wiz-btn-back" id="lw-back">返回</button>
-        <button class="live-wiz-btn-next" id="lw-next">下一步（选道具）</button>
+        <button class="live-wiz-btn-back" data-action="lw-back">返回</button>
+        <button class="live-wiz-btn-next" data-action="lw-next">下一步（选道具）</button>
       </div>`;
-    if (chars.length > 0) {
-      body.querySelectorAll('.live-host-card').forEach(el => {
-        el.onclick = () => {
-          body.querySelectorAll('.live-host-card').forEach(c => c.classList.remove('selected'));
-          el.classList.add('selected');
-          this.hostChar = chars.find(c => c.id === el.dataset.charId);
-        };
-      });
-    }
-    document.getElementById('lw-back').onclick = () => { this.wizardStep = 1; this._renderStep(); };
-    document.getElementById('lw-next').onclick = () => {
-      if (!this.hostChar) return;
-      this.isViewerMode = true;
-      this.wizardStep = 2;
-      this._renderStep();
-    };
+    body.addEventListener('click', function(e) {
+      var card = e.target.closest('.live-host-card');
+      if (card) {
+        body.querySelectorAll('.live-host-card').forEach(function(c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
+        var cid = card.dataset.charId;
+        this.hostChar = (db.characters || []).find(function(ch) { return ch.id === cid; });
+        return;
+      }
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      if (btn.dataset.action === 'lw-back') { this.wizardStep = 1; this._renderStep(); }
+      else if (btn.dataset.action === 'lw-next') {
+        if (!this.hostChar) return;
+        this.isViewerMode = true;
+        this.wizardStep = 2;
+        this._renderStep();
+      }
+    }.bind(this));
   },
 
   _bindWizardTabs() {
