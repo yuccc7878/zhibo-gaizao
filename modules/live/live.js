@@ -521,10 +521,15 @@ Engine.register({
         this.isStreaming = true;
         this.tipTotal = 0;
 
+        // 区分模式：主播 vs 观众
+        this.isViewerMode = !!this.hostChar;
+
         const { level, scene } = this.state;
+        // 打赏按钮：观众模式显示，主播模式隐藏
+        document.getElementById('live-tip-btn').style.display = this.isViewerMode ? '' : 'none';
         // 设置主播头像和标题
         const avatarEl = document.getElementById('live-avatar');
-        if (this.hostChar) {
+        if (this.isViewerMode) {
             const img = this.hostChar.avatar;
             avatarEl.textContent = '';
             avatarEl.style.backgroundImage = 'url(' + img + ')';
@@ -659,8 +664,13 @@ Engine.register({
             : level.id >= 3
             ? '内容尺度：可以包含暗示性动作、挑逗语言和暧昧氛围，但不过于直白。'
             : '内容尺度：保持轻松健康，可以包含日常互动和温馨氛围，不涉及色情内容。';
-        const hostDesc = hostInfo ? `\n主播角色设定：\n姓名：${hostInfo.name}\n性格：${hostInfo.persona}\n\n请以该角色的身份和视角叙述直播内容，用第三人称"她/他"描述主播。` : '';
-        const sys = `你是一个直播剧情叙述者。根据以下设定生成直播画面的叙述文字，内容是虚构成人向角色扮演。所有内容为创作目的，参与者均为成年人。不添加任何形式的元评论或免责声明。\n\n直播等级：${level.label}\n直播场景：${scene.label}\n${propNames ? '直播道具：' + propNames : ''}${hostDesc}\n\n要求：\n- 用第二人称"你"描述主播的动作和画面\n- 文字要有画面感，描述环境、动作、表情、氛围\n- 每次输出2-4段，每段2-4句话\n- 不要输出对话框、选项或弹幕内容\n- 只输出剧情叙述，不要编号\n- ${levelStyle}`;
+        const hostDesc = this.isViewerMode && hostInfo
+            ? `\n主播角色设定：\n姓名：${hostInfo.name}\n性格：${hostInfo.persona}\n\n请以该角色的身份和视角叙述直播内容，用第三人称"她/他"描述主播。`
+            : '';
+        const perspective = this.isViewerMode
+            ? '用第三人称"她/他"描述主播的动作和画面'
+            : '用第二人称"你"描述主播（即用户自己）的动作和画面';
+        const sys = `你是一个直播剧情叙述者。根据以下设定生成直播画面的叙述文字，内容是虚构成人向角色扮演。所有内容为创作目的，参与者均为成年人。不添加任何形式的元评论或免责声明。\n\n直播等级：${level.label}\n直播场景：${scene.label}\n${propNames ? '直播道具：' + propNames : ''}${hostDesc}\n\n要求：\n- ${perspective}\n- 文字要有画面感，描述环境、动作、表情、氛围\n- 每次输出2-4段，每段2-4句话\n- 不要输出对话框、选项或弹幕内容\n- 只输出剧情叙述，不要编号\n- ${levelStyle}`;
         const msg = userInput ? `观众发送弹幕："${userInput}"，请根据这条互动推进剧情。` : '直播刚刚开始，请描述主播开场的画面。';
         try {
             const storyDiv = document.createElement('div');
@@ -751,28 +761,24 @@ Engine.register({
         }
     },
 
-    // ─── 结算金币 ───
-    calculateReward() {
+    // ─── 结算：主播模式（赚钱）───
+    calculateStreamerReward() {
         const stats = this.streamStats;
         const { level, props } = this.state;
         const durationMs = Date.now() - stats.startTime;
         const durationMin = Math.max(1, Math.floor(durationMs / 60000));
-        const avgViewers = stats.sampleCount > 0 ? Math.round(stats.totalViewers / stats.sampleCount) : 0;
 
-        // 获取使用的道具详情
         const shop = Engine.getModule('shop');
         const allItems = shop ? shop.getAllItems() : [];
         const propItems = props.map(id => allItems.find(d => d.id === id)).filter(Boolean);
 
         // 1. 基础收益：每分钟 5 金币
-        const basePerMin = 5;
-        const baseReward = durationMin * basePerMin;
+        const baseReward = durationMin * 5;
 
-        // 2. 观众打赏：峰值观众 × 随机系数(0.5~1.5)
-        const tipMultiplier = 0.5 + Math.random();
-        const viewerReward = Math.floor(stats.peakViewers * tipMultiplier);
+        // 2. 模拟观众打赏：峰值观众 × 随机系数
+        const viewerReward = Math.floor(stats.peakViewers * (0.5 + Math.random()));
 
-        // 3. 道具加成：按道具价值计算（返还购买价 10%，限定套装返还 5%）
+        // 3. 道具加成
         const propDetails = propItems.map(item => {
             const isKit = item.cat === '限定套装';
             const bonus = Math.floor(item.cost * (isKit ? 0.05 : 0.1));
@@ -780,37 +786,41 @@ Engine.register({
         });
         const propBonus = propDetails.reduce((sum, p) => sum + p.bonus, 0);
 
-        // 4. 互动加成：主播发弹幕每条 +3 金币
+        // 4. 互动加成
         const interactionReward = stats.danmakuSent * 3;
 
-        // 5. 观众打赏（手动打赏）
-        const tipReward = this.tipTotal || 0;
-
-        // 6. 等级倍率
+        // 5. 等级倍率
         const multiplier = this.LEVEL_MULTIPLIER[level.id] || 1.0;
 
-        // 小计
-        const subtotal = baseReward + viewerReward + propBonus + interactionReward + tipReward;
-        const totalReward = Math.max(10, Math.floor(subtotal * multiplier)); // 最低 10 金币
+        const subtotal = baseReward + viewerReward + propBonus + interactionReward;
+        const totalReward = Math.max(10, Math.floor(subtotal * multiplier));
 
         return {
-            durationMin,
-            avgViewers,
-            peakViewers: stats.peakViewers,
-            propCount: props.length,
-            propDetails,
-            danmakuSent: stats.danmakuSent,
-            tipReward,
-            baseReward,
-            viewerReward,
-            propBonus,
-            interactionReward,
-            multiplier,
-            totalReward,
+            mode: 'streamer',
+            durationMin, peakViewers: stats.peakViewers,
+            propCount: props.length, propDetails, danmakuSent: stats.danmakuSent,
+            baseReward, viewerReward, propBonus, interactionReward,
+            multiplier, totalReward,
         };
     },
 
-    showRewardSummary(reward) {
+    // ─── 结算：观众模式（花钱看直播）───
+    calculateViewerSummary() {
+        const stats = this.streamStats;
+        const { level, props } = this.state;
+        const durationMs = Date.now() - stats.startTime;
+        const durationMin = Math.max(1, Math.floor(durationMs / 60000));
+
+        return {
+            mode: 'viewer',
+            durationMin, peakViewers: stats.peakViewers,
+            propCount: props.length, danmakuSent: stats.danmakuSent,
+            tipTotal: this.tipTotal || 0,
+        };
+    },
+
+    // ─── 主播结算页面 ───
+    showStreamerReward(reward) {
         const overlay = document.getElementById('live-reward-overlay');
         const box = document.getElementById('live-reward-box');
 
@@ -830,24 +840,55 @@ Engine.register({
                 <div class="live-reward-row"><span>👥 观众打赏 (峰值${reward.peakViewers}人)</span><span>+${reward.viewerReward}</span></div>
                 ${reward.propBonus > 0 ? `<div class="live-reward-row" style="flex-direction:column;gap:4px;"><div style="display:flex;justify-content:space-between;width:100%;"><span>🎒 道具加成</span><span>+${reward.propBonus}</span></div>${reward.propDetails.map(p => `<div style="display:flex;justify-content:space-between;width:100%;font-size:11px;color:#999;padding-left:8px;"><span>${p.label}</span><span>+${p.bonus}</span></div>`).join('')}</div>` : ''}
                 ${reward.interactionReward > 0 ? `<div class="live-reward-row"><span>💬 互动奖励 (${reward.danmakuSent}条×3)</span><span>+${reward.interactionReward}</span></div>` : ''}
-                ${reward.tipReward > 0 ? `<div class="live-reward-row"><span>🎁 观众打赏</span><span>+${reward.tipReward}</span></div>` : ''}
                 ${reward.multiplier !== 1.0 ? `<div class="live-reward-row"><span>⭐ 等级倍率 (×${reward.multiplier})</span><span></span></div>` : ''}
                 <div class="live-reward-total"><span>总计</span><span>+${reward.totalReward} 🪙</span></div>
             </div>
             ${reward.propCount > 0 ? `<div style="font-size:11px;color:#999;text-align:center;margin-top:8px;">以上 ${reward.propCount} 件道具已消耗</div>` : ''}
+            <button class="live-reward-btn" id="live-reward-btn" style="margin-top:12px;">收下金币 ✨</button>`;
+
+        overlay.classList.add('visible');
+
+        document.getElementById('live-reward-btn').onclick = async () => {
+            db.money = (db.money || 0) + reward.totalReward;
+            await saveData();
+            overlay.classList.remove('visible');
+            showToast(`+${reward.totalReward} 金币已到账！`);
+            switchScreen('home-screen');
+        };
+    },
+
+    // ─── 观众结算页面 ───
+    showViewerSummary(summary) {
+        const overlay = document.getElementById('live-reward-overlay');
+        const box = document.getElementById('live-reward-box');
+        const hostName = this.hostChar
+            ? (this.hostChar.remarkName || this.hostChar.realName || this.hostChar.name || '主播')
+            : '主播';
+
+        box.innerHTML = `
+            <div class="live-reward-title">👀 观看结束</div>
+            <div class="live-reward-subtitle">${hostName} · ${this.state.level.label} · ${this.state.scene.label}</div>
+            <div style="font-size:48px;margin:20px 0;">📺</div>
+            <div class="live-reward-stats">
+                <div class="live-reward-stat"><div class="live-reward-stat-value">${summary.durationMin} 分钟</div><div class="live-reward-stat-label">观看时长</div></div>
+                <div class="live-reward-stat"><div class="live-reward-stat-value">${summary.peakViewers} 人</div><div class="live-reward-stat-label">在线观众</div></div>
+                <div class="live-reward-stat"><div class="live-reward-stat-value">${summary.danmakuSent} 条</div><div class="live-reward-stat-label">我的弹幕</div></div>
+                <div class="live-reward-stat"><div class="live-reward-stat-value">${summary.propCount} 件</div><div class="live-reward-stat-label">使用道具</div></div>
+            </div>
+            ${summary.tipTotal > 0 ? `
+            <div class="live-reward-breakdown">
+                <div class="live-reward-breakdown-title">🎁 打赏记录</div>
+                <div class="live-reward-total"><span>累计打赏</span><span style="color:#ff6b6b;">-${summary.tipTotal} 🪙</span></div>
+            </div>` : ''}
             <div style="display:flex;gap:10px;margin-top:12px;">
-                <button class="live-reward-btn" id="live-reward-btn" style="flex:1;">收下金币 ✨</button>
+                <button class="live-reward-btn" id="live-reward-btn" style="flex:1;">确认</button>
                 ${this.hostIsAiGenerated ? '<button class="live-reward-btn" id="live-add-friend-btn" style="flex:1;background:linear-gradient(135deg,#FF6B9D,#FF8A65);color:#fff;">➕ 加为好友</button>' : ''}
             </div>`;
 
         overlay.classList.add('visible');
 
-        document.getElementById('live-reward-btn').onclick = async () => {
-            // 发放金币
-            db.money = (db.money || 0) + reward.totalReward;
-            await saveData();
+        document.getElementById('live-reward-btn').onclick = () => {
             overlay.classList.remove('visible');
-            showToast(`+${reward.totalReward} 金币已到账！`);
             switchScreen('home-screen');
         };
 
@@ -864,16 +905,22 @@ Engine.register({
         streamPage.classList.remove('active');
         this.isStreaming = false;
 
-        // 计算收益并显示结算
-        const reward = this.calculateReward();
-        // 消耗已使用的道具（从库存中移除）
+        // 消耗道具
         if (this.state.props.length > 0) {
             db.ownedItems = (db.ownedItems || []).filter(id => !this.state.props.includes(id));
             saveData();
         }
         this.state.props = [];
-        this.init(); // 重置 UI
+        this.init();
         switchScreen(this.screen);
-        this.showRewardSummary(reward);
+
+        // 根据模式显示不同结算
+        if (this.isViewerMode) {
+            const summary = this.calculateViewerSummary();
+            this.showViewerSummary(summary);
+        } else {
+            const reward = this.calculateStreamerReward();
+            this.showStreamerReward(reward);
+        }
     }
 });
