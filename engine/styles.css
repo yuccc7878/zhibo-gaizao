@@ -704,9 +704,10 @@ body {
 /* 折叠面板 */
 .settings-collapse {
     border: 1px solid #f0f0f0; border-radius: 10px; margin-bottom: 12px;
-    overflow: hidden; transition: border-color 0.2s;
+    overflow: visible; transition: border-color 0.2s;
 }
 .settings-collapse[open] { border-color: #e0e0e0; }
+.settings-collapse[open] .settings-collapse-body { overflow-y: auto; max-height: 400px; }
 .settings-collapse-title {
     padding: 12px 14px; font-size: 13px; font-weight: 600; color: #555;
     cursor: pointer; display: flex; align-items: center; gap: 6px;
@@ -727,9 +728,9 @@ body {
     padding: 0 14px 14px; border-top: 1px solid #f5f5f5;
     padding-top: 12px;
 }
-.settings-collapse-body .form-group { margin-bottom: 14px; }
+.settings-collapse-body .form-group { margin-bottom: 10px; }
 .settings-collapse-body .form-group:last-child { margin-bottom: 0; }
-.settings-collapse-body textarea { font-size: 13px; }
+.settings-collapse-body .form-group textarea { height: 50px; min-height: 40px; font-size: 13px; }
 
 /* 专属世界书条目 */
 .builtin-wb-item {
@@ -767,7 +768,7 @@ body {
     border-radius: 6px; font-size: 12px; box-sizing: border-box;
     margin-bottom: 6px;
 }
-.builtin-wb-edit-form textarea { height: 60px; resize: vertical; }
+.builtin-wb-edit-form textarea { height: 50px; resize: vertical; min-height: 40px; }
 .builtin-wb-edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
 .builtin-wb-edit-actions button {
     padding: 4px 14px; border: none; border-radius: 6px;

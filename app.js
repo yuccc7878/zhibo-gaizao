@@ -441,6 +441,11 @@ function setupImportCard() {
         previewEl.style.display = 'none';
         errorEl.style.display = 'none';
         dropzone.style.display = '';
+        dropzone.innerHTML = `
+            <div class="import-dropzone-icon">📂</div>
+            <div class="import-dropzone-text">点击选择或拖拽 .png / .json 角色卡</div>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('import-card-file').click()" style="width:auto;padding:10px 20px;margin-top:8px;">选择文件</button>
+        `;
         previewEl.innerHTML = '';
         errorEl.innerHTML = '';
         window._lastImportedCard = null;
@@ -453,22 +458,33 @@ function setupImportCard() {
         previewEl.style.display = 'none';
         previewEl.innerHTML = '';
         errorEl.innerHTML = '';
+        // 加载中
+        dropzone.innerHTML = '<div style="padding:30px;text-align:center;color:#888;"><div style="font-size:28px;margin-bottom:8px;">⏳</div><div>正在解析角色卡...</div></div>';
+        dropzone.style.display = '';
 
         try {
+            console.log('[Import] 解析文件:', file.name, file.size);
             const card = await SillyTavernImporter.parseCardFile(file);
+            console.log('[Import] 解析成功:', card.name, 'V' + (card.spec || '?').replace('chara_card_v', ''));
             window._lastImportedCard = card;
             const wbEntries = SillyTavernImporter.extractBuiltinWorldBook(card.character_book);
             window._lastImportedWorldBooks = wbEntries;
+            dropzone.style.display = 'none';
             renderPreview(card, wbEntries);
         } catch (err) {
             console.error('[Import]', err);
             errorEl.style.display = '';
             errorEl.innerHTML = `
                 <div style="font-size:24px;margin-bottom:8px;">⚠️</div>
-                <div>${escHtml(err.message)}</div>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('import-select-btn').click()" style="margin-top:12px;width:auto;display:inline-block;padding:8px 20px;">重新选择</button>
+                <div style="font-size:13px;color:#e53935;word-break:break-word;">${escHtml(err.message)}</div>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('import-card-file').click()" style="margin-top:12px;width:auto;display:inline-block;padding:8px 20px;">重新选择</button>
             `;
-            dropzone.style.display = '';
+            // 恢复拖拽区（但不遮盖错误）
+            dropzone.innerHTML = `
+                <div class="import-dropzone-icon">📂</div>
+                <div class="import-dropzone-text">点击选择或拖拽 .png / .json 角色卡</div>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('import-card-file').click()" style="width:auto;padding:10px 20px;margin-top:8px;">选择文件</button>
+            `;
         }
     }
 
@@ -545,7 +561,7 @@ function setupImportCard() {
         const actions = document.createElement('div');
         actions.className = 'import-actions';
         actions.innerHTML = `
-            <button type="button" class="btn btn-secondary" onclick="document.getElementById('import-select-btn').click()">重新选择</button>
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('import-card-file').click()">重新选择</button>
             <button type="button" class="btn btn-primary" id="import-confirm-btn">✅ 确认导入</button>
         `;
         previewEl.appendChild(actions);
