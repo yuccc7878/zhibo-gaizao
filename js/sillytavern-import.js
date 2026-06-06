@@ -147,12 +147,12 @@ window.SillyTavernImporter = (() => {
   function tryParseJSON(str) {
     if (!str) return null;
     try {
-      // 清除 BOM (﻿)、零宽字符、首尾空白
-      // 清除 BOM (U+FEFF)、零宽字符、首尾空白
-      var cleaned = str.replace(/﻿/g, '').replace(/[​-‍﻿]/g, '').trim();
+      // 清除 BOM、零宽字符、首尾空白
+      var cleaned = str.replace(/^﻿/, '').replace(/[​-‍﻿]/g, '').trim();
       return JSON.parse(cleaned);
     } catch (e) {
-      return null;
+      // JSON 解析失败 -> 尝试 base64 解码（SillyTavern 部分卡片使用 base64）
+      try { return JSON.parse(atob(str.replace(/\s/g, ''))); } catch (e2) { return null; }
     }
   }
 
