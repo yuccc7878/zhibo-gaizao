@@ -171,12 +171,12 @@ const colorThemes = {
 };
 
 const defaultIcons = {
-    'chat-list-screen':   { name: 'QQ',    url: 'assets/icons/qq.png' },
-    'api-settings-screen':{ name: 'api',   url: 'assets/icons/设置.png' },
-    'wallpaper-screen':   { name: '壁纸',   url: 'assets/icons/主题.png' },
-    'world-book-screen':  { name: '世界书', url: 'assets/icons/备忘录.png' },
-    'customize-screen':   { name: '自定义', url: 'assets/icons/拨号.png' },
-    'font-settings-screen':{ name: '字体',  url: 'assets/icons/文件管理.png' },
+    'chat-list-screen':   { name: 'QQ',    url: 'assets/icons/nav/nav-qq.png' },
+    'api-settings-screen':{ name: 'api',   url: 'assets/icons/nav/nav-api.png' },
+    'wallpaper-screen':   { name: '壁纸',   url: 'assets/icons/nav/nav-wallpaper.png' },
+    'world-book-screen':  { name: '世界书', url: 'assets/icons/nav/nav-worldbook.png' },
+    'customize-screen':   { name: '自定义', url: 'assets/icons/nav/nav-customize.png' },
+    'font-settings-screen':{ name: '字体',  url: 'assets/icons/nav/nav-font.png' },
 };
 
 // --- 全局字体 ---

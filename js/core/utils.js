@@ -18,14 +18,14 @@ export const colorThemes = {
 };
 
 export const defaultIcons = {
-  'chat-list-screen':   { name: 'QQ',    url: 'https://i.postimg.cc/VvQB8dQT/chan-143.png' },
-  'api-settings-screen':{ name: 'api',   url: 'https://i.postimg.cc/50FqT8GL/chan-125.png' },
-  'wallpaper-screen':   { name: '壁纸',   url: 'https://i.postimg.cc/3wqFttL3/chan-90.png' },
-  'world-book-screen':  { name: '世界书', url: 'https://i.postimg.cc/prCWkrKT/chan-74.png' },
-  'customize-screen':   { name: '自定义', url: 'https://i.postimg.cc/vZVdC7gt/chan-133.png' },
-  'font-settings-screen':{ name: '字体',  url: 'https://i.postimg.cc/FzVtC0x4/chan-21.png' },
-  'day-mode-btn':       { name: '',       url: 'https://i.postimg.cc/Jz0tYqnT/chan-145.png' },
-  'night-mode-btn':     { name: '',       url: 'https://i.postimg.cc/htYvkdQK/chan-146.png' },
+  'chat-list-screen':   { name: 'QQ',    url: 'assets/icons/nav/nav-qq.png' },
+  'api-settings-screen':{ name: 'api',   url: 'assets/icons/nav/nav-api.png' },
+  'wallpaper-screen':   { name: '壁纸',   url: 'assets/icons/nav/nav-wallpaper.png' },
+  'world-book-screen':  { name: '世界书', url: 'assets/icons/nav/nav-worldbook.png' },
+  'customize-screen':   { name: '自定义', url: 'assets/icons/nav/nav-customize.png' },
+  'font-settings-screen':{ name: '字体',  url: 'assets/icons/nav/nav-font.png' },
+  'day-mode-btn':       { name: '',       url: 'assets/icons/nav/nav-day.png' },
+  'night-mode-btn':     { name: '',       url: 'assets/icons/nav/nav-night.png' },
 };
 
 // --- 基础工具 ---
