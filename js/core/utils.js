@@ -24,7 +24,6 @@ export const defaultIcons = {
   'world-book-screen':  { name: '世界书', url: 'https://i.postimg.cc/prCWkrKT/chan-74.png' },
   'customize-screen':   { name: '自定义', url: 'https://i.postimg.cc/vZVdC7gt/chan-133.png' },
   'font-settings-screen':{ name: '字体',  url: 'https://i.postimg.cc/FzVtC0x4/chan-21.png' },
-  'tutorial-screen':    { name: '教程',   url: 'https://i.postimg.cc/6QgNzCFf/chan-118.png' },
   'day-mode-btn':       { name: '',       url: 'https://i.postimg.cc/Jz0tYqnT/chan-145.png' },
   'night-mode-btn':     { name: '',       url: 'https://i.postimg.cc/htYvkdQK/chan-146.png' },
 };

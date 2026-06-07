@@ -13,7 +13,6 @@ import * as chatRoom from './ui/chatRoom.js';
 import * as chatList from './ui/chatList.js';
 import * as homeScreen from './ui/homeScreen.js';
 import * as settings from './ui/settings.js';
-import * as tutorial from './ui/tutorial.js';
 import * as wallpaper from './ui/wallpaper.js';
 import * as customize from './ui/customize.js';
 import * as fontSettings from './ui/fontSettings.js';
@@ -50,7 +49,6 @@ async function initApp() {
   dom['wallpaper-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">更换壁纸</h1></div><div class="placeholder"></div></header><main class="content"><div class="wallpaper-preview" id="wallpaper-preview"><span>当前壁纸预览</span></div><input type="file" id="wallpaper-upload" accept="image/*" style="display: none;"><label for="wallpaper-upload" class="btn btn-primary">从相册选择新壁纸</label></main>`;
   dom['font-settings-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">字体设置</h1></div><div class="placeholder"></div></header><main class="content"><form id="font-settings-form"><div class="form-group"><label for="font-url">字体链接 (ttf, woff, woff2)</label><input type="url" id="font-url" placeholder="https://.../font.ttf" required></div><p style="font-size:12px; color:#888; text-align:center;">示例: https://lf3-static.bytednsdoc.com/obj/eden-cn/jplptk/ljhwZthlaukjlkulzlp/portal/fonts/HarmonyOS_Sans_SC_Regular.woff2</p><button type="submit" class="btn btn-primary">应用字体</button><button type="button" class="btn btn-neutral" id="restore-default-font-btn" style="margin-top: 15px;">恢复默认字体</button></form></main>`;
   dom['customize-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">主屏幕自定义</h1></div><div class="placeholder"></div></header><main class="content"><form id="customize-form"></form><div style="margin-top:24px;padding:0 4px;"><button type="button" id="check-update-btn" class="btn btn-secondary" style="width:100%;padding:14px;font-size:15px;border-radius:12px;">🔄 检查更新</button><p style="font-size:12px;color:#999;text-align:center;margin-top:8px;">清除浏览器缓存并从仓库重新加载最新版本</p></div></main>`;
-  dom['tutorial-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">教程</h1></div><div class="placeholder"></div></header><main class="content" id="tutorial-content-area"></main>`;
 
   // 4. 同步 AI 配置到 AiService
   const activePreset = db.apiPresets?.find(p => p.id === db.activeApiPresetId);
@@ -63,7 +61,6 @@ async function initApp() {
   settings.init(dom, chatList.renderChatList, chatRoom.renderMessages);
   group.init(dom, chatList.renderChatList, chatRoom.renderMessages);
   homeScreen.init(dom);
-  tutorial.init(dom);
   wallpaper.init(dom);
   customize.init(dom);
   fontSettings.init(dom);

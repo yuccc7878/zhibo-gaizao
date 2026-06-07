@@ -78,7 +78,7 @@ const IDS = [
   'create-group-member-realname', 'create-group-member-nickname', 'create-group-member-persona',
   // 其他
   'toast-notification', 'font-settings-form', 'font-url', 'restore-default-font-btn',
-  'customize-form', 'tutorial-content-area', 'import-data-input',
+  'customize-form', 'import-data-input',
   // API 设置
   'add-api-preset-btn', 'api-preset-list', 'img-gen-settings-card', 'img-gen-edit-btn',
   'api-edit-back-btn', 'delete-api-preset-btn', 'api-edit-title',
@@ -92,7 +92,7 @@ const IDS = [
   'check-update-btn',
   // 屏幕（注入的 HTML）
   'api-settings-screen', 'api-edit-screen', 'wallpaper-screen',
-  'font-settings-screen', 'customize-screen', 'tutorial-screen',
+  'font-settings-screen', 'customize-screen',
 ];
 
 /**

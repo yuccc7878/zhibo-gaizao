@@ -6,6 +6,7 @@ import { getDb, saveData } from '../core/dataService.js';
 import { showToast, defaultIcons } from '../core/utils.js';
 
 let dom = null;
+let loadingBtn = false;
 
 export function init(_dom) {
   dom = _dom;
@@ -67,7 +68,7 @@ export function renderCustomizeForm() {
   // 要显示的屏幕列表（排除 home-screen、chat-room-screen）
   const screens = [
     'chat-list-screen', 'api-settings-screen', 'wallpaper-screen',
-    'world-book-screen', 'customize-screen', 'font-settings-screen', 'tutorial-screen',
+    'world-book-screen', 'customize-screen', 'font-settings-screen',
   ];
 
   screens.forEach(id => {
@@ -102,6 +103,72 @@ export function renderCustomizeForm() {
     label.appendChild(resetBtn);
     form.appendChild(label);
   });
+
+  // ─── 备份与导入 ───
+  const section = document.createElement('div');
+  section.style.cssText = 'margin-top:24px;padding-top:20px;border-top:2px solid #f0f0f0;';
+  section.innerHTML = '<h3 style="margin-bottom:16px;">数据管理</h3>';
+
+  const backupBtn = document.createElement('button');
+  backupBtn.type = 'button';
+  backupBtn.className = 'btn btn-primary';
+  backupBtn.textContent = '备份数据';
+  backupBtn.disabled = loadingBtn;
+  backupBtn.style.cssText = 'width:100%;padding:14px;font-size:15px;border-radius:12px;';
+  backupBtn.addEventListener('click', async () => {
+    if (loadingBtn) return;
+    loadingBtn = true;
+    try {
+      const blob = new Blob([JSON.stringify(db)]);
+      const cs = new CompressionStream('gzip');
+      const compressed = await new Response(blob.stream().pipeThrough(cs)).blob();
+      const url = URL.createObjectURL(compressed);
+      const a = document.createElement('a');
+      const now = new Date();
+      a.href = url;
+      a.download = `章鱼喷墨_备份数据_${now.toISOString().slice(0, 10)}_${now.toTimeString().slice(0, 8).replace(/:/g, '')}.ee`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(dom['toast-notification'], '聊天记录导出成功');
+    } catch (e) {
+      showToast(dom['toast-notification'], `导出失败: ${e.message}`);
+    }
+    loadingBtn = false;
+  });
+
+  const importLabel = document.createElement('label');
+  importLabel.className = 'btn btn-neutral';
+  importLabel.textContent = '导入数据';
+  importLabel.setAttribute('for', 'import-data-input');
+  importLabel.style.cssText = 'display:block;width:100%;padding:14px;font-size:15px;border-radius:12px;margin-top:12px;text-align:center;box-sizing:border-box;cursor:pointer;';
+
+  // 导入数据文件处理
+  const importInput = document.getElementById('import-data-input');
+  if (importInput) {
+    importInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (confirm('此操作将覆盖当前所有数据，确定要继续吗？')) {
+        try {
+          const ds = new DecompressionStream('gzip');
+          const json = await new Response(file.stream().pipeThrough(ds)).text();
+          await saveData(JSON.parse(json));
+          showToast(dom['toast-notification'], '数据已恢复，即将刷新');
+          window.location.reload();
+        } catch (err) {
+          showToast(dom['toast-notification'], `导入失败: ${err.message}`);
+        }
+      } else {
+        e.target.value = null;
+      }
+    });
+  }
+
+  section.appendChild(backupBtn);
+  section.appendChild(importLabel);
+  form.appendChild(section);
 }
 
 function updateIconInNav(screenId) {

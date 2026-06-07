@@ -117,7 +117,6 @@ const confirmInviteBtn = $('confirm-invite-btn');
 const createMemberForGroupModal = $('create-member-for-group-modal');
 const createMemberForGroupForm = $('create-member-for-group-form');
 let customizeForm = $('customize-form');
-let tutorialContentArea = $('tutorial-content-area');
 const groupRecipientSelectionModal = $('group-recipient-selection-modal');
 const groupRecipientSelectionList = $('group-recipient-selection-list');
 const confirmGroupRecipientBtn = $('confirm-group-recipient-btn');
@@ -275,7 +274,6 @@ function setupHomeScreen() {
     });
     document.querySelector('[data-target="world-book-screen"]').addEventListener('click', renderWorldBookList);
     document.querySelector('[data-target="customize-screen"]').addEventListener('click', renderCustomizeForm);
-    // tutorial-screen 入口已移至媒体模块
 }
 
 // --- 聊天列表 ---
@@ -2056,26 +2054,18 @@ function renderCustomizeForm() {
         const currentIcon = db.customIcons[id] || url;
         customizeForm.insertAdjacentHTML('beforeend', `<div class="icon-custom-item"><img src="${currentIcon}" alt="${name}" class="icon-preview" id="icon-preview-${id}"><div class="icon-details"><p>${name || '模式切换'}</p><input type="url" class="form-group" placeholder="粘贴新的图标URL" value="${db.customIcons[id] || ''}" data-id="${id}"></div><button type="button" class="reset-icon-btn" data-id="${id}">重置</button></div>`);
     });
-}
 
-// --- 教程 ---
-let loadingBtn = false;
-function setupTutorialApp() { tutorialContentArea.addEventListener('click', (e) => { const header = e.target.closest('.tutorial-header'); if (header) header.parentElement.classList.toggle('open'); }); }
+    // ─── 备份与导入 ───
+    const section = document.createElement('div');
+    section.style.cssText = 'margin-top:24px;padding-top:20px;border-top:2px solid #f0f0f0;';
+    section.innerHTML = '<h3 style="margin-bottom:16px;">数据管理</h3>';
 
-function renderTutorialContent() {
-    const tutorials = [
-        { title: '写在前面', imageUrls: ['https://i.postimg.cc/7PgyMG9S/image.jpg'] },
-        { title: '软件介绍', imageUrls: ['https://i.postimg.cc/VvsJRh6q/IMG-20250713-162647.jpg', 'https://i.postimg.cc/8P5FfxxD/IMG-20250713-162702.jpg', 'https://i.postimg.cc/3r94R3Sn/IMG-20250713-162712.jpg'] },
-        { title: '404', imageUrls: ['https://i.postimg.cc/x8scFPJW/IMG-20250713-162756.jpg', 'https://i.postimg.cc/pX6mfqtj/IMG-20250713-162809.jpg', 'https://i.postimg.cc/YScjV00q/IMG-20250713-162819.jpg', 'https://i.postimg.cc/13VfJw9j/IMG-20250713-162828.jpg'] },
-        { title: '404-群聊', imageUrls: ['https://i.postimg.cc/X7LSmRTJ/404.jpg'] }
-    ];
-    tutorialContentArea.innerHTML = '';
-    tutorials.forEach(t => {
-        const item = document.createElement('div'); item.className = 'tutorial-item';
-        item.innerHTML = `<div class="tutorial-header">${t.title}</div><div class="tutorial-content">${t.imageUrls.map(u => `<img src="${u}" alt="${t.title}教程图片">`).join('')}</div>`;
-        tutorialContentArea.appendChild(item);
-    });
-    const backupBtn = document.createElement('button'); backupBtn.className = 'btn btn-primary'; backupBtn.textContent = '备份数据'; backupBtn.disabled = loadingBtn;
+    let loadingBtn = false;
+    const backupBtn = document.createElement('button');
+    backupBtn.type = 'button';
+    backupBtn.className = 'btn btn-primary';
+    backupBtn.textContent = '备份数据';
+    backupBtn.style.cssText = 'width:100%;padding:14px;font-size:15px;border-radius:12px;';
     backupBtn.addEventListener('click', async () => {
         if (loadingBtn) return; loadingBtn = true;
         try {
@@ -2089,18 +2079,30 @@ function renderTutorialContent() {
         } catch (e) { showToast(`导出失败: ${e.message}`); }
         loadingBtn = false;
     });
-    const importLabel = document.createElement('label'); importLabel.className = 'btn btn-neutral'; importLabel.textContent = '导入数据'; importLabel.style.marginTop = '15px'; importLabel.style.display = 'block'; importLabel.setAttribute('for', 'import-data-input');
-    $('import-data-input').addEventListener('change', async (e) => {
-        const file = e.target.files[0]; if (!file) return;
-        if (confirm('此操作将覆盖当前所有数据，确定要继续吗？')) {
-            try {
-                const ds = new DecompressionStream('gzip');
-                const json = await new Response(file.stream().pipeThrough(ds)).text();
-                await saveData(JSON.parse(json)); showToast('数据已恢复，即将刷新'); window.location.reload();
-            } catch (err) { showToast(`导入失败: ${err.message}`); }
-        } else e.target.value = null;
-    });
-    tutorialContentArea.appendChild(backupBtn); tutorialContentArea.appendChild(importLabel);
+
+    const importLabel = document.createElement('label');
+    importLabel.className = 'btn btn-neutral';
+    importLabel.textContent = '导入数据';
+    importLabel.setAttribute('for', 'import-data-input');
+    importLabel.style.cssText = 'display:block;width:100%;padding:14px;font-size:15px;border-radius:12px;margin-top:12px;text-align:center;box-sizing:border-box;cursor:pointer;';
+
+    const importInput = document.getElementById('import-data-input');
+    if (importInput) {
+        importInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            if (confirm('此操作将覆盖当前所有数据，确定要继续吗？')) {
+                try {
+                    const ds = new DecompressionStream('gzip');
+                    const json = await new Response(file.stream().pipeThrough(ds)).text();
+                    await saveData(JSON.parse(json)); showToast('数据已恢复，即将刷新'); window.location.reload();
+                } catch (err) { showToast(`导入失败: ${err.message}`); }
+            } else e.target.value = null;
+        });
+    }
+
+    section.appendChild(backupBtn);
+    section.appendChild(importLabel);
+    customizeForm.appendChild(section);
 }
 
 // --- 群聊系统 ---
@@ -2698,14 +2700,12 @@ async function initApp() {
     $('wallpaper-screen').innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">更换壁纸</h1></div><div class="placeholder"></div></header><main class="content"><div class="wallpaper-preview" id="wallpaper-preview"><span>当前壁纸预览</span></div><input type="file" id="wallpaper-upload" accept="image/*" style="display: none;"><label for="wallpaper-upload" class="btn btn-primary">从相册选择新壁纸</label></main>`;
     $('font-settings-screen').innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">字体设置</h1></div><div class="placeholder"></div></header><main class="content"><form id="font-settings-form"><div class="form-group"><label for="font-url">字体链接 (ttf, woff, woff2)</label><input type="url" id="font-url" placeholder="https://.../font.ttf" required></div><p style="font-size:12px; color:#888; text-align:center;">示例: https://lf3-static.bytednsdoc.com/obj/eden-cn/jplptk/ljhwZthlaukjlkulzlp/portal/fonts/HarmonyOS_Sans_SC_Regular.woff2</p><button type="submit" class="btn btn-primary">应用字体</button><button type="button" class="btn btn-neutral" id="restore-default-font-btn" style="margin-top: 15px;">恢复默认字体</button></form></main>`;
     $('customize-screen').innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">主屏幕自定义</h1></div><div class="placeholder"></div></header><main class="content"><form id="customize-form"></form><div style="margin-top:24px;padding:0 4px;"><button type="button" id="check-update-btn" class="btn btn-secondary" style="width:100%;padding:14px;font-size:15px;border-radius:12px;">🔄 检查更新</button><p style="font-size:12px;color:#999;text-align:center;margin-top:8px;">清除浏览器缓存并从仓库重新加载最新版本</p></div></main>`;
-    $('tutorial-screen').innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">教程</h1></div><div class="placeholder"></div></header><main class="content" id="tutorial-content-area"></main>`;
 
     // 重新绑定缓存的 DOM 引用（注入后才存在）
     fontSettingsForm = $('font-settings-form');
     fontUrlInput = $('font-url');
     restoreDefaultFontBtn = $('restore-default-font-btn');
     customizeForm = $('customize-form');
-    tutorialContentArea = $('tutorial-content-area');
 
     // 设置各子系统
     applyGlobalFont(db.fontUrl);
@@ -2729,7 +2729,6 @@ async function initApp() {
     setupFontSettingsApp();
     setupGroupChatSystem();
     setupCustomizeApp();
-    setupTutorialApp();
 
     // 初始化所有 Engine 模块
     await Engine.initAll();

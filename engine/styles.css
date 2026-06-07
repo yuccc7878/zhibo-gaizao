@@ -925,28 +925,6 @@ label.btn-primary { color: var(--white-color) !important; }
     padding: 8px 10px; font-size: 12px; cursor: pointer; margin-left: 10px;
 }
 
-/* Tutorial */
-.tutorial-item {
-    margin-bottom: 15px; border: 1px solid #fce4ec; border-radius: 12px;
-    overflow: hidden; background-color: #fff8fa;
-}
-.tutorial-header {
-    padding: 12px 18px; font-weight: 600; color: var(--secondary-color);
-    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-}
-.tutorial-header::after {
-    content: '▼'; font-size: 12px; transition: transform 0.3s ease;
-}
-.tutorial-item.open .tutorial-header::after { transform: rotate(180deg); }
-.tutorial-content {
-    max-height: 0; overflow: hidden;
-    transition: max-height 0.5s ease-in-out, padding 0.5s ease; padding: 0 10px;
-}
-.tutorial-item.open .tutorial-content {
-    padding: 10px 10px; max-height: 5000px;
-}
-.tutorial-content img { width: 100%; height: auto; border-radius: 8px; display: block; }
-
 /* ═══ API 配置预设列表 ═══ */
 .api-preset-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
 .api-preset-card {
@@ -979,7 +957,7 @@ label.btn-primary { color: var(--white-color) !important; }
 .page-header,
 .shop-header-bar, .bili-header, .gacha-header, .games-header,
 #wallpaper-screen .app-header, #font-settings-screen .app-header,
-#customize-screen .app-header, #tutorial-screen .app-header {
+#customize-screen .app-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 10px 20px; background: var(--bg-header);
     backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);

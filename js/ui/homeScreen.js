@@ -6,7 +6,6 @@ import { getDb, saveData } from '../core/dataService.js';
 import { pad, defaultIcons } from '../core/utils.js';
 import { renderWorldBookList } from '../systems/worldBook.js';
 import { renderCustomizeForm } from './customize.js';
-import { renderTutorialContent } from './tutorial.js';
 
 let dom = null;
 
@@ -106,7 +105,6 @@ function setupHomeScreen() {
       <a href="#" class="app-icon" data-target="wallpaper-screen"><img src="${getIcon('wallpaper-screen')}" alt="壁纸" class="icon-img"><span class="app-name">${defaultIcons['wallpaper-screen']?.name || '壁纸'}</span></a>
       <a href="#" class="app-icon" data-target="world-book-screen"><img src="${getIcon('world-book-screen')}" alt="世界书" class="icon-img"><span class="app-name">${defaultIcons['world-book-screen']?.name || '世界书'}</span></a>
       <a href="#" class="app-icon" data-target="customize-screen"><img src="${getIcon('customize-screen')}" alt="自定义" class="icon-img"><span class="app-name">${defaultIcons['customize-screen']?.name || '自定义'}</span></a>
-      <a href="#" class="app-icon" data-target="tutorial-screen"><img src="${getIcon('tutorial-screen')}" alt="教程" class="icon-img"><span class="app-name">${defaultIcons['tutorial-screen']?.name || '教程'}</span></a>
     </div>
     <div class="dock">
       <a href="#" class="app-icon" id="day-mode-btn"><img src="${getIcon('day-mode-btn')}" alt="日间" class="icon-img"></a>
@@ -160,8 +158,5 @@ function setupHomeScreen() {
   });
   document.querySelector('[data-target="customize-screen"]')?.addEventListener('click', () => {
     renderCustomizeForm();
-  });
-  document.querySelector('[data-target="tutorial-screen"]')?.addEventListener('click', () => {
-    renderTutorialContent();
   });
 }
