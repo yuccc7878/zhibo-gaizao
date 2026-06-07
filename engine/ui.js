@@ -171,12 +171,12 @@ const colorThemes = {
 };
 
 const defaultIcons = {
-    'chat-list-screen':   { name: 'QQ',    url: 'assets/icons/nav/nav-qq.png' },
-    'api-settings-screen':{ name: 'api',   url: 'assets/icons/nav/nav-api.png' },
-    'wallpaper-screen':   { name: '壁纸',   url: 'assets/icons/nav/nav-wallpaper.png' },
-    'world-book-screen':  { name: '世界书', url: 'assets/icons/nav/nav-worldbook.png' },
-    'customize-screen':   { name: '自定义', url: 'assets/icons/nav/nav-customize.png' },
-    'font-settings-screen':{ name: '字体',  url: 'assets/icons/nav/nav-font.png' },
+    'chat-list-screen':   { name: 'QQ',    url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23fce4ec"/><text x="50" y="68" text-anchor="middle" font-size="48">💬</text></svg>' },
+    'api-settings-screen':{ name: 'api',   url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23fce4ec"/><text x="50" y="68" text-anchor="middle" font-size="48">🔑</text></svg>' },
+    'wallpaper-screen':   { name: '壁纸',   url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23fce4ec"/><text x="50" y="68" text-anchor="middle" font-size="48">🖼️</text></svg>' },
+    'world-book-screen':  { name: '世界书', url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23fce4ec"/><text x="50" y="68" text-anchor="middle" font-size="48">📖</text></svg>' },
+    'customize-screen':   { name: '自定义', url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23fce4ec"/><text x="50" y="68" text-anchor="middle" font-size="48">🎨</text></svg>' },
+    'font-settings-screen':{ name: '字体',  url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23fce4ec"/><text x="50" y="68" text-anchor="middle" font-size="48">🔤</text></svg>' },
 };
 
 // --- 全局字体 ---

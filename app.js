@@ -197,11 +197,11 @@ function setupHomeScreen() {
             <a href="#" class="app-icon" data-target="wallpaper-screen"><img src="${getIcon('wallpaper-screen')}" alt="Wallpaper" class="icon-img"><span class="app-name">${defaultIcons['wallpaper-screen'].name}</span></a>
             <a href="#" class="app-icon" data-target="world-book-screen"><img src="${getIcon('world-book-screen')}" alt="World Book" class="icon-img"><span class="app-name">${defaultIcons['world-book-screen'].name}</span></a>
             <a href="#" class="app-icon" data-target="customize-screen"><img src="${getIcon('customize-screen')}" alt="Customize" class="icon-img"><span class="app-name">${defaultIcons['customize-screen'].name}</span></a>
-            <a href="#" class="app-icon" id="media-home-btn"><img src="assets/icons/白天开关.png" alt="媒体" class="icon-img"><span class="app-name">媒体</span></a>
+            <a href="#" class="app-icon" id="media-home-btn"><img src="assets/icons/nav/nav-qq.png" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23fce4ec%22/><text x=%2250%22 y=%2268%22 text-anchor=%22middle%22 font-size=%2248%22>📰</text></svg>'" alt="媒体" class="icon-img"><span class="app-name">媒体</span></a>
         </div>
         <div class="dock">
             <a href="#" class="app-icon" data-target="font-settings-screen"><img src="${getIcon('font-settings-screen')}" alt="字体" class="icon-img"></a>
-            <a href="#" class="app-icon" id="active-world-dock-btn"><img src="assets/icons/浏览器.png" alt="激活世界" class="icon-img"></a>
+            <a href="#" class="app-icon" id="active-world-dock-btn"><img src="assets/icons/nav/nav-qq.png" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23fce4ec%22/><text x=%2250%22 y=%2268%22 text-anchor=%22middle%22 font-size=%2248%22>🌐</text></svg>'" alt="激活世界" class="icon-img"></a>
         </div>`;
 
     const MODULE_ICON_MAP = {
@@ -223,7 +223,7 @@ function setupHomeScreen() {
                     if (mod.id === 'media') {
                         return `<a href="#" class="app-icon" style="opacity:0.5;cursor:default;">
                             <div class="icon-img" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);box-shadow:0 4px 10px rgba(0,0,0,0.1);overflow:hidden;">
-                                <img src="${iconFile}" alt="${mod.name}" style="width:100%;height:100%;object-fit:cover;border-radius:15px;">
+                                <img src="${iconFile}" onerror="this.outerHTML='<span style=font-size:30px;>📰</span>'" alt="media" style="width:100%;height:100%;object-fit:cover;border-radius:15px;">
                             </div>
                             <span class="app-name">待开发</span>
                         </a>`;
@@ -240,7 +240,7 @@ function setupHomeScreen() {
                         </a>`;
                     }
                     const iconHtml = iconFile
-                        ? `<img src="${iconFile}" alt="${mod.name}" style="width:100%;height:100%;object-fit:cover;border-radius:15px;">`
+                        ? `<img src="${iconFile}" onerror="this.outerHTML='<span style=font-size:30px;>${mod.icon}</span>'" alt="${mod.name}" style="width:100%;height:100%;object-fit:cover;border-radius:15px;">`
                         : `<span style="font-size:30px;">${mod.icon}</span>`;
                     return `<a href="#" class="app-icon engine-module-btn" data-module="${mod.id}">
                         <div class="icon-img" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);box-shadow:0 4px 10px rgba(0,0,0,0.1);overflow:hidden;">${iconHtml}</div>
