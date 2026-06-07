@@ -4,7 +4,7 @@
 
 class DataStorage {
     constructor() {
-        this.db = new Dexie('章鱼喷墨机DB');
+        this.db = new Dexie('组装姬DB');
         this.db.version(1).stores({
             storage: 'key, value, timestamp'
         });
@@ -87,17 +87,17 @@ let db = {
 
 // 保存数据
 const saveData = async (data) => {
-    await dataStorage.saveData('章鱼喷墨机', data ? data : db);
+    await dataStorage.saveData('组装姬', data ? data : db);
     return Promise.resolve();
 };
 
 // 加载数据
 const loadData = async () => {
     const oldData = localStorage.getItem('gemini-chat-app-db');
-    let data = await dataStorage.getData('章鱼喷墨机');
+    let data = await dataStorage.getData('组装姬');
     if (oldData) {
         await saveData(JSON.parse(oldData));
-        data = await dataStorage.getData('章鱼喷墨机');
+        data = await dataStorage.getData('组装姬');
         localStorage.removeItem('gemini-chat-app-db');
     }
     if (data) db = data;
