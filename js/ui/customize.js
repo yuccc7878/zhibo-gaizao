@@ -126,7 +126,7 @@ export function renderCustomizeForm() {
       const a = document.createElement('a');
       const now = new Date();
       a.href = url;
-      a.download = `章鱼喷墨_备份数据_${now.toISOString().slice(0, 10)}_${now.toTimeString().slice(0, 8).replace(/:/g, '')}.ee`;
+      a.download = `组装姬_备份数据_${now.toISOString().slice(0, 10)}_${now.toTimeString().slice(0, 8).replace(/:/g, '')}.ee`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

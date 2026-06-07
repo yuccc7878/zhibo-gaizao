@@ -1,4 +1,4 @@
-// 章鱼喷墨机 - 本地开发服务器
+// 组装姬 - 本地开发服务器
 // 用法: node .vscode/serve.js [端口号]
 const http = require('http');
 const fs = require('fs');
@@ -25,9 +25,9 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
-  // 默认指向 章鱼喷墨机.html
+  // 默认指向 组装姬.html
   let filePath = req.url === '/'
-    ? path.join(ROOT, '章鱼喷墨机.html')
+    ? path.join(ROOT, '组装姬.html')
     : path.join(ROOT, decodeURIComponent(req.url));
 
   const ext = path.extname(filePath);
@@ -63,7 +63,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`\n  🐙 章鱼喷墨机 - 开发服务器`);
+  console.log(`\n  🐙 组装姬 - 开发服务器`);
   console.log(`  ───────────────────────────`);
   console.log(`  本地地址: http://localhost:${PORT}`);
   console.log(`  按 Ctrl+C 停止服务器\n`);

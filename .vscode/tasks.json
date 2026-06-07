@@ -21,7 +21,7 @@
         ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "章鱼喷墨机",
+          "beginsPattern": "组装姬",
           "endsPattern": "Ctrl\\+C"
         }
       },

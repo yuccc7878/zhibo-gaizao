@@ -24,7 +24,7 @@
 
 ```
 zhibo-gaizao/
-├── 章鱼喷墨机.html            ← 入口页面
+├── 组装姬.html            ← 入口页面
 │   ├── <script src="js/core/aiService.js">   ← ★ AI 服务（最先加载）
 │   ├── <script src="engine/db.js">           ← 数据库
 │   ├── <script src="engine/ui.js">           ← UI 工具
@@ -235,7 +235,7 @@ Engine.register({
 
 ### Step 3：在 HTML 中注册
 
-在 `章鱼喷墨机.html` 中添加：
+在 `组装姬.html` 中添加：
 
 ```html
 <!-- 1. 添加 screen（与其他 screen 并列） -->

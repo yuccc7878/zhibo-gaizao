@@ -2073,7 +2073,7 @@ function renderCustomizeForm() {
             const cs = new CompressionStream('gzip');
             const compressed = await new Response(blob.stream().pipeThrough(cs)).blob();
             const url = URL.createObjectURL(compressed); const a = document.createElement('a');
-            const now = new Date(); a.href = url; a.download = `章鱼喷墨_备份数据_${now.toISOString().slice(0, 10)}_${now.toTimeString().slice(0, 8).replace(/:/g, '')}.ee`;
+            const now = new Date(); a.href = url; a.download = `组装姬_备份数据_${now.toISOString().slice(0, 10)}_${now.toTimeString().slice(0, 8).replace(/:/g, '')}.ee`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
             showToast('聊天记录导出成功');
         } catch (e) { showToast(`导出失败: ${e.message}`); }

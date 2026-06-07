@@ -1,12 +1,12 @@
-# 章鱼喷墨机 - 直播改造版
+# 组装姬 - 直播改造版
 
-基于原版「章鱼喷墨机」聊天应用的**模块化引擎改造**，所有 AI 调用统一走 `AiService` 服务层。
+基于原版「组装姬」聊天应用的**模块化引擎改造**，所有 AI 调用统一走 `AiService` 服务层。
 
 ## 🏗️ 项目结构
 
 ```
 zhibo-gaizao/
-├── 章鱼喷墨机.html          # 主入口
+├── 组装姬.html          # 主入口
 ├── app.js                  # 聊天室核心逻辑
 │
 ├── js/core/
@@ -142,7 +142,7 @@ Engine.register({
 ```
 
 ```html
-<!-- 章鱼喷墨机.html -->
+<!-- 组装姬.html -->
 <div id="my-module-screen" class="screen"></div>
 <script src="modules/my-module/my-module.js"></script>
 ```
