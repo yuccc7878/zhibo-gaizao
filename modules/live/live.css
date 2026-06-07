@@ -315,21 +315,13 @@
 }
 .live-settle-btn:active { transform: scale(0.95); }
 
-/* ─── 背景切换 ─── */
-.live-bg-toggle-btn {
-  position: fixed; bottom: 68px; right: 0; z-index: 35;
-  width: 32px; height: 32px; background: rgba(0,0,0,0.3); border: none;
-  border-radius: 8px 0 0 8px; color: #fff; font-size: 13px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: right 0.3s, opacity 0.3s; opacity: 0.4;
-}
-.live-bg-toggle-btn:hover { opacity: 0.9; right: 0; }
-.live-bg-toggle-btn.tucked { right: -22px; }
-.live-bg-toggle-btn.tucked:hover { right: 0; }
+/* ─── 背景切换（已移入侧边按钮列） ─── */
+.live-bg-toggle-btn { font-size: 15px; opacity: 0.7; }
+.live-bg-toggle-btn:hover { opacity: 1; }
 
-/* 纯背景模式（隐藏所有 UI） */
+/* 纯背景模式（隐藏所有 UI，保留切换按钮） */
 .live-stream.bg-only .live-top-bar,
 .live-stream.bg-only .live-danmaku-wrap,
-.live-stream.bg-only .live-input-bar,
+.live-stream.bg-only .live-input-bar { opacity: 0; pointer-events: none; }
 .live-stream.bg-only .live-side-btns { opacity: 0; pointer-events: none; }
-.live-stream.bg-only .live-bg-toggle-btn { right: 0; opacity: 0.8; }
+.live-stream.bg-only .live-bg-toggle-btn { opacity: 1; pointer-events: auto; }

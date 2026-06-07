@@ -74,6 +74,7 @@ Engine.register({
         '</div>'+
         '<div class="live-danmaku-wrap"><div class="live-danmaku-list" id="lvl"></div></div>'+
         '<div class="live-side-btns">'+
+          '<button class="live-side-btn live-bg-toggle-btn" id="lvbg" onclick="Engine._lv.toggleBg()">👁️</button>'+
           '<button class="live-side-btn" id="lv-like-btn" onclick="Engine._lv.like()">❤️<span class="count" id="lvc2">0</span></button>'+
           '<button class="live-side-btn" id="lv-tip-btn" onclick="Engine._lv.showTip()">🎁</button>'+
           '<button class="live-side-btn" onclick="Engine._lv.share()">📤</button>'+
@@ -81,7 +82,6 @@ Engine.register({
         '</div>'+
         '<div class="live-input-bar"><input type="text" id="lvi" placeholder="说点什么..." onkeydown="if(event.key===\'Enter\')Engine._lv.send()"><button class="live-send-btn" onclick="Engine._lv.send()">发送</button></div>'+
         '<div class="live-gift-overlay" id="lvg"></div>'+
-        '<button class="live-bg-toggle-btn tucked" id="lvbg" onclick="Engine._lv.toggleBg()">👁️</button>'+
       '</div>'+
       '<div class="live-settle-overlay" id="lvso"><div class="live-settle-box" id="lvsb"></div></div>';
     Engine._lv = this;
