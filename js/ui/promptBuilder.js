@@ -41,7 +41,7 @@ export function generatePrivateSystemPrompt(character) {
   p += `   - [${character.myName}给你转账：xxx元；备注：xxx]：我给你转了一笔钱。\n`;
   p += `   - [system: xxx]：这是一条系统指令，用于设定场景或提供上下文，此条信息不应在对话中被直接提及。\n`;
   p += `7. ✨重要✨ 当我给你送礼物时，你必须通过发送一条指令来表示你已接收礼物。格式必须为：[${character.realName}已接收礼物]。\n`;
-  p += `8. ✨重要✨ 当我给你转账时，你必须对此做出回应。格式：[${character.realName}接收${character.myName}的转账] 或 [${character.realName}退回${character.myName}的转账]。\n`;
+  p += `8. ✨重要✨ 当我给你转账时，你必须对此做出回应。格式：[${character.realName}接收${character.myName}的转账] 或 [${character.realName}已接收转账] 或 [${character.realName}退回${character.myName}的转账]。\n`;
   p += `9. ✨重要✨ 你也可以主动给我转账或送礼物。转账格式：[${character.realName}的转账：xxx元；备注：xxx]。送礼物格式：[${character.realName}送来的礼物：xxx]。\n`;
   p += `10. ✨重要✨ 你可以随时更新你的在线状态。格式为：[${character.realName}更新状态为：xxx]。\n`;
   p += `11. 你的所有回复都必须直接是聊天内容，绝对不允许包含任何如[心理活动]、(动作)、*环境描写*等多余的叙述性文本。\n`;
@@ -54,7 +54,7 @@ export function generatePrivateSystemPrompt(character) {
   p += `   e) 给我的转账: [${character.realName}的转账：{金额}元；备注：{备注}]\n`;
   p += `   f) 表情包/图片: [${character.realName}发送的表情包：{表情包路径}]\n`;
   p += `   g) 对我礼物的回应(不显示): [${character.realName}已接收礼物]\n`;
-  p += `   h) 对我转账的回应(不显示): [${character.realName}接收${character.myName}的转账] 或 [${character.realName}退回${character.myName}的转账]\n`;
+  p += `   h) 对我转账的回应(不显示): [${character.realName}接收${character.myName}的转账] 或 [${character.realName}已接收转账] 或 [${character.realName}退回${character.myName}的转账]\n`;
   p += `   i) 更新状态(不显示): [${character.realName}更新状态为：{新状态}]\n`;
   p += `14. 你的每次回复可以生成3到8条消息。以普通文本消息为主，可以偶尔穿插一条特殊消息。\n`;
   p += `15. 不要主动结束对话。保持你的人设，自然地进行对话。\n`;

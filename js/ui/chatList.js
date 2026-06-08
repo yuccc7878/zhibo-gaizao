@@ -114,7 +114,7 @@ export function renderChatList() {
       if (!lastMessageText) {
         if (/\[.*?更新状态为/.test(lastMsg.content)) lastMessageText = '更新了状态';
         else if (/\[.*?的转账/.test(lastMsg.content)) lastMessageText = '有一笔转账';
-        else if (/\[.*?(?:送来的礼物|已接收礼物)/.test(lastMsg.content)) lastMessageText = '收到一个礼物';
+        else if (/\[.*?(?:送来的礼物|已接收礼物|已接收转账)/.test(lastMsg.content)) lastMessageText = '收到一个礼物';
         else lastMessageText = '[特殊消息]';
       }
     }
@@ -122,9 +122,10 @@ export function renderChatList() {
     const avatarClass = chat.type === 'group' ? 'group-avatar' : '';
     const itemName = chat.type === 'private' ? chat.remarkName : chat.name;
 
-    li.innerHTML = `<img src="${chat.avatar}" alt="${itemName}" class="chat-avatar ${avatarClass}">
+    li.innerHTML = `<img src="${chat.avatar}" alt="${itemName}" class="chat-avatar ${avatarClass}" onerror="this.outerHTML='<div class=chat-avatar style=background:#eee;border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:24px;>👤</div>'">
       <div class="item-details">
         <div class="item-details-row"><div class="item-name">${itemName}</div></div>
+        ${chat.type === 'private' && chat.realName ? `<div class="item-real-name">${chat.realName}</div>` : ''}
         <div class="item-preview-wrapper">
           <div class="item-preview">${lastMessageText}</div>
           ${chat.isPinned ? '<span class="pin-badge">置顶</span>' : ''}

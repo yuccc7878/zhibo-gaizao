@@ -277,42 +277,90 @@ Engine.register({
     await this.gen();
   },
 
-  /* ─── AI生成 ─── */
+  /* ─── AI生成（流式输出） ─── */
   async gen(uin){
     this.stats.story++;
     var lv=this.state.level, sc=this.state.scene;
     var ls=lv.id>=4?'无限制，可直白露骨。':lv.id>=3?'可暗示和挑逗。':'轻松健康。';
-    var hi=this.host?'主播：'+this.host.realName+'，人设：'+this.host.persona:'';
-    var persp=this.host?'用第三人称"她/他"描述主播':'用第二人称"你"描述主播（即用户自己）';
-    this._msg('story','✨ 生成中...','_loading');
+    var hi=this.host?','+this.host.realName+','+this.host.persona:'';
+    var persp=this.host?'用第三人称"她/他"':'用第二人称"你"';
+    this._msg('story','✨ 直播生成中...','_loading');
 
-    var sys='你是成人向直播内容生成器。虚构内容，成年人。等级：'+lv.label+' 场景：'+sc.label+' '+hi+' 尺度：'+ls+' '+persp+'\n返回JSON数组：{"type":"类型","text":"内容"}。type: story(剧情粉字),danmaku(弹幕白字,text格式"昵称: 内容"),tip(打赏金字),gift(礼物金字加粗)。15-25条混合输出。剧情要详细，每条story至少2-3句话有画面感和互动细节。先推进剧情再混入弹幕。只返回JSON数组。';
-    var msg=uin?'观众弹幕："'+uin+'"，据此推进剧情并生成观众反应。':'直播开场，生成详细的开场画面和观众反应。';
+    var sys='成人向直播生成器。等级：'+lv.label+' 场景：'+sc.label+' 尺度：'+ls+persp+hi+'\n每行一条消息：\n[STORY] 剧情（有画面感，长句）\n[DANMAKU] 昵称: 内容\n[TIP] 打赏\n[GIFT] 礼物\n[SUMMARY] 一句话概要总结本轮直播内容（用于分享）\n8-15条混合。先剧情再混弹幕。末尾必须输出[SUMMARY]行。';
+    var msg=uin?'观众说"'+uin+'"，据此推进。':'直播开场。';
 
     try{
-      var full=await Engine.services.aiChat({system:sys,messages:[{role:'user',content:msg}],options:{temperature:0.95,maxTokens:3500}});
-      this._renderJson(full);
+      this._streamBuffer='';
+      await Engine.services.aiChat({
+        system:sys,
+        messages:[{role:'user',content:msg}],
+        options:{temperature:0.9,maxTokens:1800},
+        onToken:function(chunk){
+          this._streamBuffer+=chunk;
+          this._flushStreamLines(false);
+        }.bind(this)
+      });
+      this._flushStreamLines(true);
     }catch(e){ this._msg('story','⚠️ '+e.message); }
   },
 
-  _renderJson(text){
-    var l=document.getElementById('lvl');
-    var ld=l.querySelector('._loading'); if(ld)ld.remove();
-    try{
-      var data=JSON.parse(text);
-      if(!Array.isArray(data))throw'!array';
-      var h=this;
-      data.forEach(function(d){
-        if(d.type==='danmaku'){
-          var p=d.text.split(/[：:]/); var u=p.length>1?p[0].trim():'观众'; var c=p.length>1?p.slice(1).join('：').trim():d.text;
-          h._msg('danmaku',c,u);
-        }else{ h._msg(d.type,d.text); }
-      });
-    }catch(e){
-      this._msg('story',text);
+  /* 流式缓冲：按行切分，解析完整行 */
+  _flushStreamLines(force){
+    var lines=this._streamBuffer.split('\n');
+    if(!force){
+      this._streamBuffer=lines.pop()||'';
+    }else{
+      this._streamBuffer='';
     }
-    this._scroll();
+    var h=this, hasNew=false;
+    lines.forEach(function(line){
+      line=line.trim();
+      if(!line)return;
+      h._parseStreamLine(line);
+      hasNew=true;
+    });
+    if(hasNew)this._scrollThrottled();
   },
+
+  /* 解析一行流式消息 */
+  _parseStreamLine(line){
+    var l=document.getElementById('lvl');
+    var ld=l&&l.querySelector('._loading');
+    if(ld)ld.remove();
+
+    var m;
+    m=line.match(/^\[SUMMARY\][\s:：]*(.+)/);
+    if(m){ this._lastSummary=m[1].trim(); return; } // 不显示，仅存为分享文本
+    m=line.match(/^\[STORY\][\s:：]*(.+)/);
+    if(m){ this._msg('story',m[1].trim()); return; }
+    m=line.match(/^\[DANMAKU\][\s:：]*(.+)/);
+    if(m){
+      var text=m[1].trim();
+      var p=text.split(/[：:]/);
+      var u=p.length>1?p[0].trim():'观众';
+      var c=p.length>1?p.slice(1).join('：').trim():text;
+      this._msg('danmaku',c,u); return;
+    }
+    m=line.match(/^\[TIP\][\s:：]*(.+)/);
+    if(m){ this._msg('tip',m[1].trim()); return; }
+    m=line.match(/^\[GIFT\][\s:：]*(.+)/);
+    if(m){ this._msg('gift',m[1].trim()); return; }
+    // 无Tag匹配时兜底显示
+    if(line) this._msg('story',line);
+  },
+
+  /* 节流滚动，避免高频流式更新卡顿 */
+  _scrollThrottled: (function(){
+    var timer=null;
+    return function(){
+      if(timer)return;
+      timer=requestAnimationFrame(function(){
+        timer=null;
+        var l=document.getElementById('lvl');
+        if(l)l.scrollTop=l.scrollHeight;
+      });
+    };
+  })(),
 
   /* ─── 消息 ─── */
   _msg(type,text,cls){
@@ -395,7 +443,7 @@ Engine.register({
     var h=this;
     var ln=this.state.level, sc=this.state.scene;
     var hn=this.host?(this.host.remarkName||this.host.realName):'我';
-    var txt='📺 直播分享：'+hn+' · '+ln.label+' · '+sc.label+'\n快来直播间看看吧！';
+    var txt='📺 '+hn+'：'+(this._lastSummary||ln.label+' · '+sc.label);
     var chars=db.characters||[], grps=db.groups||[];
     var ov=document.getElementById('lvso');
     var b=document.getElementById('lvsb');

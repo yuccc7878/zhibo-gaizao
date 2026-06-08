@@ -111,6 +111,13 @@ export function openChatRoom(chatId, type) {
   utils.updateCustomBubbleStyle(chatId, hasCustomCss ? chat.customBubbleCss : '', !!hasCustomCss);
 
   renderMessages();
+
+  // 如果AI正在后台生成，保持typing indicator显示
+  if (state.isGenerating) {
+    dom['typing-indicator'].textContent = `"${remarkName}"正在输入中...`;
+    dom['typing-indicator'].style.display = 'block';
+    dom['get-reply-btn'].disabled = true;
+  }
 }
 
 // ─── 消息渲染 ──────────────────────────
@@ -204,6 +211,7 @@ export function createMessageBubbleElement(message) {
     avatar.className = 'msg-avatar';
     avatar.src = avatarUrl;
     avatar.addEventListener('click', (e) => { e.stopPropagation(); });
+    avatar.onerror = function(){ this.outerHTML = '<div class=msg-avatar style=background:#eee;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;>👤</div>'; };
     bubbleRow.appendChild(avatar);
   }
 
@@ -305,7 +313,7 @@ export function createMessageBubbleElement(message) {
       bubble.style.fontSize = '13px';
       bubble.style.textAlign = 'center';
       bubble.innerHTML = '📢 ' + statusText;
-    } else if (/\[.*?(?:已接收礼物|接收.*?的转账|退回.*?的转账)\]/g.test(message.content)) {
+    } else if (/\[.*?(?:已接收礼物|已接收转账|接收.*?的转账|退回.*?的转账)\]/g.test(message.content)) {
       bubble.style.backgroundColor = '#f9f9f9';
       bubble.style.color = '#999';
       bubble.style.fontSize = '12px';
@@ -336,7 +344,7 @@ export function createMessageBubbleElement(message) {
   // TTS 朗读按钮（仅接收到的文本消息）
   if (!isSent && message.content && !hasImage
       && !message.transferStatus && !message.giftStatus
-      && !/\[.*?(?:更新状态|已接收礼物|接收.*转账|退回.*转账|system)/.test(message.content)) {
+      && !/\[.*?(?:更新状态|已接收礼物|已接收转账|接收.*转账|退回.*转账|system)/.test(message.content)) {
     const speakBtn = document.createElement('button');
     speakBtn.className = 'tts-speak-btn';
     speakBtn.textContent = '🔊';
@@ -754,11 +762,24 @@ async function handleAiResponse(fullResponse, chat) {
       if (match) {
         try {
           const imageUrl = await generateImage(match[1].trim());
+          // 将URL转base64固化，避免退出聊天重新加载丢失
+          let persistentUrl = imageUrl;
+          try {
+            const imgResp = await fetch(imageUrl);
+            const imgBlob = await imgResp.blob();
+            persistentUrl = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(imgBlob);
+            });
+          } catch (imgErr) {
+            console.warn('[AiImg] 转base64失败，保留原URL:', imgErr);
+          }
           const imgMsg = {
             id: 'msg_' + Date.now() + '_' + Math.random(),
             role: 'assistant',
-            content: imageUrl,
-            parts: [{ type: 'text', text: 'AI生成的图片' }, { type: 'image', data: imageUrl }],
+            content: persistentUrl,
+            parts: [{ type: 'text', text: 'AI生成的图片' }, { type: 'image', data: persistentUrl }],
             timestamp: Date.now(),
           };
           if (state.currentChatType === 'group') {

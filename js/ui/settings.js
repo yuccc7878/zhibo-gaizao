@@ -277,6 +277,7 @@ function loadSettingsToSidebar() {
   if (!c) return;
 
   dom['setting-char-avatar-preview'].src = c.avatar;
+  dom['setting-char-real-name'].value = c.realName || '';
   dom['setting-char-remark'].value = c.remarkName;
   dom['setting-char-persona'].value = c.persona;
   dom['setting-my-avatar-preview'].src = c.myAvatar;
@@ -303,6 +304,7 @@ async function saveSettingsFromSidebar() {
   if (!c) return;
 
   c.avatar = dom['setting-char-avatar-preview'].src;
+  c.realName = dom['setting-char-real-name'].value;
   c.remarkName = dom['setting-char-remark'].value;
   c.persona = dom['setting-char-persona'].value;
   c.myAvatar = dom['setting-my-avatar-preview'].src;

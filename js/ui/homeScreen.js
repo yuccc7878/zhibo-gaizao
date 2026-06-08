@@ -105,12 +105,16 @@ function setupHomeScreen() {
       <a href="#" class="app-icon" data-target="wallpaper-screen"><img src="${getIcon('wallpaper-screen')}" alt="壁纸" class="icon-img"><span class="app-name">${defaultIcons['wallpaper-screen']?.name || '壁纸'}</span></a>
       <a href="#" class="app-icon" data-target="world-book-screen"><img src="${getIcon('world-book-screen')}" alt="世界书" class="icon-img"><span class="app-name">${defaultIcons['world-book-screen']?.name || '世界书'}</span></a>
       <a href="#" class="app-icon" data-target="customize-screen"><img src="${getIcon('customize-screen')}" alt="自定义" class="icon-img"><span class="app-name">${defaultIcons['customize-screen']?.name || '自定义'}</span></a>
-    </div>
-    <div class="dock">
+    </div>`;
+
+  // Dock（固定在屏幕底部）
+  const homeDock = document.getElementById('home-dock');
+  if (homeDock) {
+    homeDock.innerHTML = `
       <a href="#" class="app-icon" id="day-mode-btn"><img src="${getIcon('day-mode-btn')}" alt="日间" class="icon-img"></a>
       <a href="#" class="app-icon" id="night-mode-btn"><img src="${getIcon('night-mode-btn')}" alt="夜间" class="icon-img"></a>
-      <a href="#" class="app-icon" data-target="font-settings-screen"><img src="${getIcon('font-settings-screen')}" alt="字体" class="icon-img"></a>
-    </div>`;
+      <a href="#" class="app-icon" data-target="font-settings-screen"><img src="${getIcon('font-settings-screen')}" alt="字体" class="icon-img"></a>`;
+  }
 
   // 第二页：模块中心
   const modules = window.Engine?.getAllModules?.() || [];
