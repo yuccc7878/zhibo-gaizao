@@ -121,7 +121,7 @@ Engine.register({
             '<div class="live-level-info"><div class="live-level-name">'+l.label+'</div><div class="live-level-desc">'+l.desc+'</div></div></div>';
         }).join('')+
       '</div></div>'+
-      '<div class="live-wizard-footer"><button class="live-wiz-btn-back" onclick="document.getElementById(\'lvo\').classList.remove(\'visible\')">取消</button><button class="live-wiz-btn-next" onclick="Engine._lv._goLev()">下一步</button></div>';
+      '<div class="live-wizard-footer"><button class="live-wiz-btn-back" onclick="document.getElementById(\'lvo\').classList.remove(\'visible\');switchScreen(\'home-screen\')">取消</button><button class="live-wiz-btn-next" onclick="Engine._lv._goLev()">下一步</button></div>';
   },
   _pickLev(id,el){
     document.querySelectorAll('#lvc .live-level-card').forEach(function(c){c.classList.remove('selected');});

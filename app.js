@@ -227,6 +227,7 @@ function setupHomeScreen() {
             <div class="right-page-grid">
                 ${modules.map(mod => {
                     const iconFile = MODULE_ICON_MAP[mod.id];
+                    if (mod.id === 'shop' || mod.id === 'live') return '';
                     // 媒体模块已移至主页，模块中心显示"待开发"
                     if (mod.id === 'media') {
                         return `<a href="#" class="app-icon" style="opacity:0.5;cursor:default;">

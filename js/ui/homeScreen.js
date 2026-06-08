@@ -123,6 +123,7 @@ function setupHomeScreen() {
       <div class="right-page-title">模块中心</div>
       <div class="right-page-grid">
         ${modules.map(mod => {
+          if (mod.id === 'shop' || mod.id === 'live') return '';
           if (mod.id === 'album') {
             const albumMod = window.Engine?.getModule?.('album');
             const coverUrl = albumMod && typeof albumMod.getCoverUrl === 'function' ? albumMod.getCoverUrl() : null;
