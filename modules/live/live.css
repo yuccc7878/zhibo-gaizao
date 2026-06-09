@@ -1,9 +1,8 @@
 /* ========================================
-   Live Stream Module — 抖音风格直播 v2
-   参考抖音直播室 UI 布局
+   Live Stream Module — 抖音风格直播
    ======================================== */
 
-/* ─── 直播引导（设置向导） ─── */
+/* ─── 直播引导 ─── */
 .live-overlay {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.5); display: flex; align-items: center;
@@ -21,7 +20,7 @@
 }
 .live-wizard-title { font-size: 17px; font-weight: 700; color: #333; }
 .live-wizard-step { font-size: 12px; color: #aaa; margin-top: 2px; }
-.live-wizard-body { padding: 16px 20px; overflow-y: auto; flex: 1; min-height: 0; max-height: 50vh; }
+.live-wizard-body { padding: 16px 20px; overflow-y: auto; flex: 1; min-height: 0; max-height: 50vh; -webkit-overflow-scrolling: touch; }
 
 /* 等级选择 */
 .live-level-grid { display: flex; flex-direction: column; gap: 8px; }
@@ -32,7 +31,9 @@
 }
 .live-level-card:hover { border-color: #ddd; background: #fafafa; }
 .live-level-card.selected { border-color: var(--primary-color); background: #fff0f5; }
-.live-level-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.live-level-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
 .live-level-info { flex: 1; }
 .live-level-name { font-size: 14px; font-weight: 600; color: #333; }
 .live-level-desc { font-size: 11px; color: #999; margin-top: 2px; }
@@ -45,7 +46,10 @@
 }
 .live-scene-category summary::-webkit-details-marker { display: none; }
 .live-scene-category[open] { border-color: #e0e0e0; }
-.live-scene-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 12px 12px; }
+.live-scene-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  padding: 0 12px 12px;
+}
 .live-scene-item {
   padding: 10px 4px; border: 2px solid #eee; border-radius: 10px;
   text-align: center; font-size: 12px; color: #333; cursor: pointer;
@@ -80,13 +84,17 @@
 .live-wiz-btn-skip { background: #f5f5f5; color: #999; font-size: 12px; }
 
 /* 主播选择 */
-.live-host-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid #f0f0f0; }
+.live-host-tabs {
+  display: flex; gap: 0; margin-bottom: 16px;
+  border-bottom: 2px solid #f0f0f0;
+}
 .live-host-tab {
   flex: 1; padding: 10px; border: none; background: none;
   font-size: 13px; font-weight: 600; color: #999; cursor: pointer;
   border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;
 }
 .live-host-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+
 .live-host-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
 .live-host-card {
   padding: 14px 6px; text-align: center; border: 2px solid #eee;
@@ -98,187 +106,110 @@
   width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
   margin: 0 auto 6px; display: block; background: #f0f0f0;
 }
-.live-host-name { font-size: 12px; font-weight: 600; color: #333; }
-.live-host-empty { text-align: center; color: #999; padding: 24px 0; font-size: 13px; }
+.live-host-name { font-size: 12px; font-weight: 600; color: #333; line-height: 1.3; }
+.live-host-empty {
+  grid-column: 1/-1; text-align: center; color: #999; padding: 24px 0; font-size: 13px;
+}
 
-/* ═══════════════════════════════════════
-   直播主界面 — 抖音风格
-   ═══════════════════════════════════════ */
-
-/* 全屏直播容器 */
+/* ─── 直播主界面 ─── */
 .live-stream {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   z-index: 50; display: none; flex-direction: column;
   background: #111; color: #fff;
-  font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
 }
 .live-stream.active { display: flex; }
 
-/* 全屏背景（视频/图片垫底） */
+/* 全屏背景 */
 .live-bg {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   background-size: cover; background-position: center;
   z-index: 0;
 }
 
-/* ─── 顶栏（主播信息 + 控制） ─── */
+/* 顶栏 */
 .live-top-bar {
   position: relative; z-index: 10;
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 12px 16px; flex-shrink: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+  padding: 8px 12px; flex-shrink: 0;
+  background: linear-gradient(rgba(0,0,0,0.5), transparent);
 }
-
-/* 主播头像 */
 .live-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   background-size: cover; background-position: center;
   background-color: var(--primary-color);
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; flex-shrink: 0;
-  border: 2px solid rgba(255,255,255,0.3);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  font-size: 14px; flex-shrink: 0;
 }
-
-/* 主播信息区 */
-.live-host-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.live-host-name-text {
-  font-size: 14px; font-weight: 700;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-}
-.live-host-tags { display: flex; gap: 4px; flex-wrap: wrap; }
-
-/* 标签 */
+.live-host-info { flex: 1; min-width: 0; }
+.live-host-name-text { font-size: 13px; font-weight: 700; }
+.live-host-tags { display: flex; gap: 4px; margin-top: 1px; }
 .live-tag {
-  font-size: 10px; padding: 1px 6px; border-radius: 3px;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(4px);
+  font-size: 9px; padding: 1px 5px; border-radius: 4px;
+  background: rgba(255,255,255,0.2);
 }
-.live-tag.hot { background: #fe2c55; } /* 抖音红 */
-
-/* 观众数 + 直播小红点 */
+.live-tag.hot { background: #ff4444; }
 .live-stat {
   font-size: 11px; display: flex; align-items: center; gap: 4px;
-  color: rgba(255,255,255,0.85); white-space: nowrap;
-  background: rgba(0,0,0,0.25);
-  padding: 3px 10px 3px 6px;
-  border-radius: 20px;
-  backdrop-filter: blur(4px);
+  color: rgba(255,255,255,0.8); white-space: nowrap;
 }
-.live-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #fe2c55; animation: livePulse 1.5s infinite;
-}
+.live-dot { width: 5px; height: 5px; border-radius: 50%; background: #ff4444; animation: livePulse 1.5s infinite; }
 @keyframes livePulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-
-/* 结束按钮 */
 .live-close-btn {
-  background: rgba(255,255,255,0.12); border: none; color: #fff;
-  padding: 5px 12px; border-radius: 16px; font-size: 12px; cursor: pointer;
-  backdrop-filter: blur(4px); transition: background 0.2s;
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
 }
-.live-close-btn:hover { background: rgba(255,255,255,0.2); }
-.live-close-btn:active { transform: scale(0.95); }
 
-/* ─── 弹幕区（抖音风格：右下角往上叠） ─── */
+/* 弹幕区 — 从下往上叠，透明底叠在背景上 */
 .live-danmaku-wrap {
   position: relative; z-index: 5;
   flex: 1; display: flex; flex-direction: column;
   justify-content: flex-end; overflow: hidden;
   padding: 0 12px 8px;
-  /* 底部渐变透明 */
-  background: linear-gradient(transparent 20%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.35) 100%);
+  background: linear-gradient(transparent 25%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.45) 100%);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
 .live-danmaku-list {
   overflow-y: auto; display: flex; flex-direction: column;
-  gap: 6px; padding: 8px 0;
+  gap: 4px; padding: 4px 0;
   scroll-behavior: smooth;
-  /* 顶部渐隐 */
-  -webkit-mask-image: linear-gradient(transparent 2%, #000 12%, #000 95%, transparent);
-  mask-image: linear-gradient(transparent 2%, #000 12%, #000 95%, transparent);
+  -webkit-mask-image: linear-gradient(transparent, #000 8px, #000 95%, transparent);
+  mask-image: linear-gradient(transparent, #000 8px, #000 95%, transparent);
 }
-.live-danmaku-list::-webkit-scrollbar { display: none; }
-
-/* 消息气泡 — 抖音弹幕风（半透明浮层） */
 .live-msg {
-  font-size: 13px; line-height: 1.4; padding: 5px 12px;
-  border-radius: 18px; animation: msgSlideIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
-  word-break: break-word; width: fit-content; max-width: 85%;
-  background: rgba(0,0,0,0.35);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  font-size: 13px; line-height: 1.5; padding: 3px 8px;
+  border-radius: 6px; animation: msgIn 0.25s ease;
+  word-break: break-word;
+  background: rgba(0,0,0,0.15);
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
-/* 不同类型的颜色 */
-.live-msg-story {
-  color: #ff80ab;
-  background: rgba(0,0,0,0.3);
-  border-radius: 18px 18px 18px 4px;
-}
-.live-msg-danmaku {
-  color: #fff;
-  background: rgba(0,0,0,0.25);
-  border-radius: 18px 18px 18px 4px;
-}
-/* 自己发的弹幕靠右 */
-.live-msg-danmaku.\31 {
-  align-self: flex-end;
-  background: rgba(254,44,85,0.6);
-  border-radius: 18px 18px 4px 18px;
-}
-.live-msg-tip {
-  color: #FFD700; font-weight: 500;
-  background: rgba(255,215,0,0.1);
-  align-self: center;
-}
+.live-msg-story { color: #ff80ab; }
+.live-msg-danmaku { color: #fff; }
+.live-msg-tip { color: #FFD700; }
 .live-msg-gift {
-  color: #FFD700; font-size: 14px; font-weight: 700;
-  text-align: center;
-  background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,165,0,0.1));
-  padding: 6px 16px; align-self: center;
-  border: 1px solid rgba(255,215,0,0.2);
+  color: #FFD700; font-size: 15px; font-weight: 700;
+  text-align: center; background: rgba(255,215,0,0.08);
+  padding: 6px 8px;
 }
 .live-msg-follow { color: #69F0AE; }
 
-/* 入场动画 */
-@keyframes msgSlideIn {
-  from { opacity: 0; transform: translateX(-20px) scale(0.9); }
-  to   { opacity: 1; transform: translateX(0) scale(1); }
-}
+@keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ─── 右侧竖排按钮（抖音风格） ─── */
+/* 右侧竖排按钮 */
 .live-side-btns {
-  position: absolute; right: 10px; bottom: 64px; z-index: 15;
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  position: absolute; right: 8px; bottom: 60px; z-index: 15;
+  display: flex; flex-direction: column; gap: 10px;
 }
 .live-side-btn {
-  width: 44px; height: 44px; border-radius: 50%; border: none;
-  background: rgba(0,0,0,0.3); color: #fff; font-size: 20px;
+  width: 40px; height: 40px; border-radius: 50%; border: none;
+  background: rgba(0,0,0,0.3); color: #fff; font-size: 18px;
   cursor: pointer; display: flex; align-items: center;
-  justify-content: center; position: relative;
-  transition: transform 0.15s, background 0.2s;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  justify-content: center; transition: transform 0.15s, background 0.15s;
+  backdrop-filter: blur(4px);
 }
-.live-side-btn:active { transform: scale(0.82); }
-.live-side-btn:hover { background: rgba(0,0,0,0.45); }
-
-/* 按钮下方的计数标签（抖音风格） */
-.live-side-btn .count {
-  position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
-  font-size: 10px; color: rgba(255,255,255,0.8);
-  background: none; width: auto; height: auto;
-  font-weight: 400; white-space: nowrap;
-}
-/* 点赞爱心数字特殊处理 — 通过 JS 显示的 lvc2 */
-#lvc2 {
-  bottom: -16px; font-size: 10px; color: rgba(255,255,255,0.8) !important;
-}
-
+.live-side-btn:active { transform: scale(0.85); }
 .live-side-btn.generating {
   animation: imgGenSpin 0.8s linear infinite;
-  background: rgba(254,44,85,0.5);
+  background: rgba(255,100,100,0.5);
 }
 @keyframes imgGenSpin {
   0% { transform: rotate(0deg); }
@@ -286,106 +217,109 @@
   75% { transform: rotate(-10deg); }
   100% { transform: rotate(0deg); }
 }
+.live-side-btn .count {
+  position: absolute; top: -4px; right: -4px;
+  background: #ff4444; color: #fff; font-size: 9px;
+  width: 16px; height: 16px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
 
-/* ─── 底部输入栏（抖音浮层风格） ─── */
+/* 底部输入栏 */
 .live-input-bar {
   position: relative; z-index: 10;
   display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px 12px; flex-shrink: 0;
-  background: linear-gradient(0deg, rgba(0,0,0,0.5) 0%, transparent 100%);
+  padding: 8px 12px; flex-shrink: 0;
+  background: rgba(0,0,0,0.4);
 }
 .live-input-bar input {
-  flex: 1; padding: 9px 16px; border: none; border-radius: 20px;
-  background: rgba(255,255,255,0.15); color: #fff; font-size: 13px; outline: none;
-  backdrop-filter: blur(8px);
-  transition: background 0.2s;
+  flex: 1; padding: 8px 14px; border: none; border-radius: 18px;
+  background: rgba(255,255,255,0.12); color: #fff; font-size: 13px; outline: none;
 }
-.live-input-bar input:focus { background: rgba(255,255,255,0.22); }
-.live-input-bar input::placeholder { color: rgba(255,255,255,0.4); }
+.live-input-bar input::placeholder { color: rgba(255,255,255,0.35); }
 .live-send-btn {
-  width: 36px; height: 36px; border: none; border-radius: 50%;
-  background: linear-gradient(135deg, #fe2c55, #ff6b8a); color: #fff;
-  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: transform 0.15s, opacity 0.2s; flex-shrink: 0;
+  padding: 8px 16px; border: none; border-radius: 18px;
+  background: var(--primary-color); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
 }
-.live-send-btn:active { transform: scale(0.85); }
 
-/* ─── 礼物动画（增强版） ─── */
+/* ─── 礼物动画 ─── */
 .live-gift-overlay {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   z-index: 30; pointer-events: none; overflow: hidden;
 }
 .live-gift-banner {
   position: absolute; top: 35%; left: 50%; transform: translateX(-50%);
-  font-size: 24px; font-weight: 800; color: #FFD700;
-  text-shadow: 0 0 30px rgba(255,215,0,0.6), 0 2px 8px rgba(0,0,0,0.5);
+  font-size: 22px; font-weight: 800; color: #FFD700;
+  text-shadow: 0 0 20px rgba(255,215,0,0.5), 0 2px 8px rgba(0,0,0,0.5);
   text-align: center; animation: giftBanner 3s ease forwards;
   white-space: nowrap;
 }
 @keyframes giftBanner {
-  0% { opacity: 0; transform: translateX(-50%) scale(0.4) translateY(30px); }
-  12% { opacity: 1; transform: translateX(-50%) scale(1.1) translateY(0); }
-  22% { transform: translateX(-50%) scale(1) translateY(0); }
-  70% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-50%) scale(1.3) translateY(-40px); }
+  0% { opacity: 0; transform: translateX(-50%) scale(0.5) translateY(20px); }
+  15% { opacity: 1; transform: translateX(-50%) scale(1.2) translateY(0); }
+  25% { transform: translateX(-50%) scale(1) translateY(0); }
+  75% { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) scale(1.5) translateY(-30px); }
 }
 .live-gift-emoji {
-  position: absolute; font-size: 24px; animation: giftFloat 2.8s ease-out forwards; pointer-events: none;
+  position: absolute; font-size: 24px; animation: giftFloat 2.5s ease-out forwards; pointer-events: none;
 }
 @keyframes giftFloat {
-  0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(0.3); }
-  15% { opacity: 1; transform: translateY(-15px) rotate(8deg) scale(1.2); }
-  100% { opacity: 0; transform: translateY(-220px) rotate(-25deg) scale(0.6); }
+  0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(0.5); }
+  20% { opacity: 1; transform: translateY(-20px) rotate(10deg) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-200px) rotate(-20deg) scale(0.8); }
 }
 
-/* 点赞飘心（从小变大再飘走） */
+/* 点赞飘心 */
 .live-like-heart {
-  position: absolute; font-size: 28px;
-  animation: heartFloat 1.6s ease-out forwards;
+  position: absolute; font-size: 24px; animation: heartFloat 1.5s ease-out forwards;
   pointer-events: none; z-index: 20;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 @keyframes heartFloat {
-  0% { opacity: 1; transform: translateY(0) scale(0.4) rotate(-8deg); }
-  30% { opacity: 1; transform: translateY(-30px) scale(1.1) rotate(4deg); }
-  100% { opacity: 0; transform: translateY(-130px) scale(0.7) rotate(-8deg); }
+  0% { opacity: 1; transform: translateY(0) scale(0.5) rotate(-5deg); }
+  50% { opacity: 1; transform: translateY(-60px) scale(1.2) rotate(5deg); }
+  100% { opacity: 0; transform: translateY(-120px) scale(0.8) rotate(-5deg); }
+}
+
+/* 加载 */
+.live-loading {
+  text-align: center; padding: 40px 0; color: rgba(255,255,255,0.4); font-size: 13px;
 }
 
 /* ─── 结算弹窗 ─── */
 .live-settle-overlay {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.65); display: flex; align-items: center;
+  background: rgba(0,0,0,0.6); display: flex; align-items: center;
   justify-content: center; z-index: 200; opacity: 0; pointer-events: none;
   transition: opacity 0.3s;
 }
 .live-settle-overlay.visible { opacity: 1; pointer-events: auto; }
 .live-settle-box {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
   border-radius: 20px; padding: 28px 24px; width: 86%; max-width: 320px;
   text-align: center; color: #fff;
   animation: settlePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
 }
 @keyframes settlePop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .live-settle-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-.live-settle-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 20px; }
+.live-settle-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
 .live-settle-coin { font-size: 44px; font-weight: 800; color: #FFD700; margin-bottom: 20px; text-shadow: 0 0 20px rgba(255,215,0,0.4); }
 .live-settle-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
 .live-settle-stat { background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 8px; }
 .live-settle-stat-val { font-size: 18px; font-weight: 700; }
-.live-settle-stat-lbl { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+.live-settle-stat-lbl { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 2px; }
 .live-settle-btn {
   width: 100%; padding: 14px; border: none; border-radius: 14px;
-  background: linear-gradient(135deg, #fe2c55, #ff6b8a); color: #fff;
-  font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.15s;
+  background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a1a2e;
+  font-size: 16px; font-weight: 700; cursor: pointer;
 }
 .live-settle-btn:active { transform: scale(0.95); }
 
-/* ─── 辅助 ─── */
-.live-bg-toggle-btn { font-size: 16px; opacity: 0.7; }
+/* ─── 背景切换（已移入侧边按钮列） ─── */
+.live-bg-toggle-btn { font-size: 15px; opacity: 0.7; }
 .live-bg-toggle-btn:hover { opacity: 1; }
 
-/* 纯背景模式（隐藏所有 UI） */
+/* 纯背景模式（隐藏所有 UI，保留切换按钮） */
 .live-stream.bg-only .live-top-bar,
 .live-stream.bg-only .live-danmaku-wrap,
 .live-stream.bg-only .live-input-bar { opacity: 0; pointer-events: none; }

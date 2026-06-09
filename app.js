@@ -901,7 +901,7 @@ function createMessageBubbleElement(message) {
         bubbleElement = document.createElement('div'); bubbleElement.className = 'gift-card';
         if (giftStatus === 'received') bubbleElement.classList.add('received');
         const giftText = groupGiftMatch ? (isSent ? `你送给 ${groupGiftMatch[2]} 的礼物` : `${groupGiftMatch[1]} 送给 ${groupGiftMatch[2]} 的礼物`) : '您有一份礼物～';
-        bubbleElement.innerHTML = `<img src="https://i.postimg.cc/rp0Yg31K/chan-75.png" alt="gift" class="gift-card-icon"><div class="gift-card-text">${giftText}</div><div class="gift-card-received-stamp">已查收</div>`;
+        bubbleElement.innerHTML = `<img src="assets/icons/礼物.jpg" alt="gift" class="gift-card-icon"><div class="gift-card-text">${giftText}</div><div class="gift-card-received-stamp">已查收</div>`;
         const descDiv = document.createElement('div'); descDiv.className = 'gift-card-description';
         descDiv.textContent = groupGiftMatch ? groupGiftMatch[3].trim() : match[1].trim();
         wrapper.appendChild(descDiv);
@@ -1671,7 +1671,15 @@ async function generateImageForMessage(msgId, prompt, chat) {
         }
         placeholder.outerHTML = `<img src="${persistentUrl}" alt="AI配图" class="ai-generated-image" style="max-width:100%;max-height:300px;border-radius:8px;margin-top:6px;">`;
         const msg = chat.history.find(m => m.id === msgId);
-        if (msg) { msg.imageUrl = persistentUrl; msg.pendingImagePrompt = undefined; }
+        if (msg) {
+            msg.imageUrl = persistentUrl;
+            msg.pendingImagePrompt = undefined;
+            msg.type = 'ai_image';
+            if (!msg.parts) msg.parts = [];
+            if (!msg.parts.some(p => p.type === 'image')) {
+                msg.parts.push({ type: 'image', data: persistentUrl });
+            }
+        }
         await saveData();
     } catch (err) {
         console.error('[AiImg] 生成失败:', err);

@@ -331,7 +331,7 @@
     let imageUrl = '';
 
     if (imgUrl.includes('pollinations')) {
-      const encoded = encodeURIComponent(prompt + ', anime style, high quality');
+      const encoded = encodeURIComponent(prompt);
       imageUrl = imgUrl.replace(/\/+$/, '') + '/' + encoded + '?width=768&height=1024&nologo=true';
       try {
         const resp = await fetch(imageUrl, { method: 'GET', signal: AbortSignal.timeout(30000) });
@@ -350,14 +350,15 @@
     }
 
     const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + imgKey };
+    const size = options.imageSize || '768x1024';
     const resp = await fetch(imgUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify({
         model: imgModel,
         prompt: prompt,
-        image_size: options.imageSize || '768x1024',
-        batch_size: 1,
+        size: size,
+        n: 1,
       }),
     });
 
