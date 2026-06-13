@@ -1961,7 +1961,10 @@ function setupFontSettingsApp() {
 }
 
 // --- 世界书 ---
+let worldBookButtonsCreated = false;
+
 function setupWorldBookApp() {
+    if (worldBookButtonsCreated) return;
     // AI 生成世界书按钮
     const aiWbBtn = document.createElement('button');
     aiWbBtn.className = 'action-btn';
