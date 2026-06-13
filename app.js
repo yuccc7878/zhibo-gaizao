@@ -2009,7 +2009,7 @@ function setupWorldBookApp() {
             
             const reader = new FileReader();
             reader.onload = async (event) => {
-                const content = event.target.result;
+                const fileContent = event.target.result;
                 const db = getDb();
                 if (!db.worldBooks) db.worldBooks = [];
                 let imported = 0;
@@ -2017,7 +2017,7 @@ function setupWorldBookApp() {
                 try {
                     if (file.name.endsWith('.json')) {
                         // JSON格式：支持单条或数组
-                        let data = JSON.parse(content);
+                        let data = JSON.parse(fileContent);
                         if (!Array.isArray(data)) data = [data];
                         
                         for (const entry of data) {
@@ -2039,7 +2039,7 @@ function setupWorldBookApp() {
                         db.worldBooks.push({
                             id: 'wb_' + Date.now(),
                             name: name,
-                            content: content,
+                            content: fileContent,
                             position: 'before'
                         });
                         imported = 1;
