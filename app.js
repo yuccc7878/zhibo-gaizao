@@ -1977,6 +1977,79 @@ function setupWorldBookApp() {
             else { header.appendChild(group); }
         }
         group.appendChild(aiWbBtn);
+    
+    // 添加导入按钮
+    const importWbBtn = document.createElement('button');
+    importWbBtn.className = 'action-btn';
+    importWbBtn.textContent = '📥';
+    importWbBtn.title = '导入世界书';
+    group.appendChild(importWbBtn);
+    
+    // 隐藏的文件输入
+    const importWbInput = document.createElement('input');
+    importWbInput.type = 'file';
+    importWbInput.accept = '.txt,.json';
+    importWbInput.style.display = 'none';
+    document.body.appendChild(importWbInput);
+    
+    // 导入按钮点击事件
+    importWbBtn.addEventListener('click', () => {
+        importWbInput.click();
+    });
+    
+    // 文件选择处理
+    importWbInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const content = event.target.result;
+            const db = getDb();
+            if (!db.worldBooks) db.worldBooks = [];
+            let imported = 0;
+            
+            try {
+                if (file.name.endsWith('.json')) {
+                    // JSON格式：支持单条或数组
+                    let data = JSON.parse(content);
+                    if (!Array.isArray(data)) data = [data];
+                    
+                    for (const entry of data) {
+                        const name = entry.name || entry.title || '未命名条目';
+                        const entryContent = entry.content || entry.text || entry.description || '';
+                        if (entryContent) {
+                            db.worldBooks.push({
+                                id: 'wb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                name: name,
+                                content: entryContent,
+                                position: 'before'
+                            });
+                            imported++;
+                        }
+                    }
+                } else {
+                    // TXT格式：文件名作为标题，内容作为正文
+                    const name = file.name.replace(/\.(txt|json)$/, '');
+                    db.worldBooks.push({
+                        id: 'wb_' + Date.now(),
+                        name: name,
+                        content: content,
+                        position: 'before'
+                    });
+                    imported = 1;
+                }
+                
+                await saveData();
+                renderWorldBookList();
+                showToast(`✅ 成功导入 ${imported} 条世界书`);
+            } catch (err) {
+                showToast('❌ 导入失败：' + err.message);
+            }
+            importWbInput.value = '';
+        };
+        reader.readAsText(file);
+    });
     }
     aiWbBtn.addEventListener('click', () => {
         document.getElementById('ai-wb-keywords').value = '';
