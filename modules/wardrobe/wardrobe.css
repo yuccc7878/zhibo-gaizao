@@ -261,7 +261,30 @@
     color: #fff;
     font-size: 20px;
     font-weight: 700;
-    margin-bottom: 16px;
+}
+
+.wardrobe-drawer-close {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.wardrobe-drawer-close:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.1);
+}
+
+.wardrobe-drawer-close:active {
+    transform: scale(0.95);
 }
 
 /* 抽屉Tab */

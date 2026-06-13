@@ -55,7 +55,10 @@ Engine.register({
                 <!-- 右侧抽屉面板 -->
                 <div class="wardrobe-drawer" id="wardrobe-drawer">
                     <div class="wardrobe-drawer-header">
-                        <h2 class="wardrobe-drawer-title">✨ 选择衣物</h2>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <h2 class="wardrobe-drawer-title" style="margin: 0;">✨ 选择衣物</h2>
+                            <button class="wardrobe-drawer-close" id="wardrobe-drawer-close" title="关闭">✕</button>
+                        </div>
                         <div class="wardrobe-tabs" id="wardrobe-tabs">
                             <button class="wardrobe-tab active" data-tab="hair">💇 发型</button>
                             <button class="wardrobe-tab" data-tab="tops">👕 上衣</button>
@@ -170,8 +173,15 @@ Engine.register({
     _bindEvents() {
         const self = this;
         // 抽屉开关
+        // 返回主页按钮
+        document.querySelector('.wardrobe-back-btn').addEventListener('click', () => {
+            switchScreen('home-screen');
+        });
+        // 抽屉开关
         document.getElementById('wardrobe-drawer-toggle').addEventListener('click', () => self._toggleDrawer());
         document.getElementById('wardrobe-drawer-overlay').addEventListener('click', () => self._toggleDrawer());
+        // 抽屉内关闭按钮
+        document.getElementById('wardrobe-drawer-close').addEventListener('click', () => self._toggleDrawer());
         // 标签切换
         document.getElementById('wardrobe-tabs').addEventListener('click', (e) => {
             const tab = e.target.closest('.wardrobe-tab');
