@@ -282,7 +282,9 @@ function setupHomeScreen() {
         updateActiveWorldStatus();
         $('active-world-modal').classList.add('visible');
     });
-    document.querySelector('[data-target="world-book-screen"]').addEventListener('click', renderWorldBookList);
+    document.querySelector('[data-target="world-book-screen"]').addEventListener('click', () => {
+        setTimeout(() => { setupWorldBookApp(); renderWorldBookList(); }, 100);
+    });
     document.querySelector('[data-target="customize-screen"]').addEventListener('click', renderCustomizeForm);
 }
 
