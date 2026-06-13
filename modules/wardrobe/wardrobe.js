@@ -1,75 +1,80 @@
 /* ========================================
    Module: Wardrobe (衣帽间)
-   独立换装系统模块 - v2
+   独立换装系统模块 - v3 抽屉式布局
    ======================================== */
-
 Engine.register({
     id: 'wardrobe',
     name: '衣帽间',
     icon: '👗',
     screen: 'wardrobe-screen',
     order: 7,
-
-    // 人偶画布尺寸（原始像素画 111x291，放大 1.5 倍）
-    DOLL_W: 166,
-    DOLL_H: 436,
+    // 人偶画布尺寸
+    DOLL_W: 220,
+    DOLL_H: 580,
     SCALE: 1.5,
-
-    // 各类衣物默认定位偏移（基于原始 111x291 画布，乘以 SCALE）
-    // 格式: [left, top, width, height]（-1 表示自动）
+    // 各类衣物默认定位偏移
     CLOTHING_OFFSETS: {
         'hair':     { left: 15, top: -20, width: 120, height: 160 },
         'tops':     { left: 15, top: 80,  width: 120, height: 120 },
         'bottoms':  { left: 20, top: 195, width: 110, height: 100 },
         'fullbody': { left: 10, top: 75,  width: 130, height: 260 },
     },
-
     init() {
         const screen = document.getElementById(this.screen);
         screen.innerHTML = `
             <div class="wardrobe-container">
-                <div class="wardrobe-header">
-                    <button class="back-btn" data-target="home-screen">‹</button>
-                    <div class="title-container"><h1 class="title">👗 衣帽间</h1></div>
-                    <div class="wardrobe-tools">
-                        <button class="wardrobe-tool-btn" id="wardrobe-upload-btn" title="导入服装">📥</button>
-                        <button class="wardrobe-tool-btn" id="wardrobe-download" title="下载人偶">💾</button>
-                        <button class="wardrobe-tool-btn" id="wardrobe-reset" title="重置">🔄</button>
+                <!-- 左上角返回按钮 -->
+                <button class="wardrobe-back-btn" data-target="home-screen" title="返回主页">‹</button>
+                
+                <!-- 标题 -->
+                <h1 class="wardrobe-title">👗 衣帽间</h1>
+                
+                <!-- 右上角工具按钮 -->
+                <div class="wardrobe-tools">
+                    <button class="wardrobe-tool-btn" id="wardrobe-upload-btn" title="导入服装">📥</button>
+                    <button class="wardrobe-tool-btn" id="wardrobe-download" title="下载人偶">💾</button>
+                    <button class="wardrobe-tool-btn" id="wardrobe-reset" title="重置">🔄</button>
+                </div>
+                
+                <!-- 全屏居中人物展示区 -->
+                <div class="wardrobe-doll-section">
+                    <div class="wardrobe-doll-area" id="wardrobe-doll-area">
+                        <img id="wardrobe-skintone" src="modules/wardrobe/base/Skintone/full/Anime Base Doll.png" alt="body">
+                        <div id="wardrobe-avi-area"></div>
                     </div>
                 </div>
-
-                <div class="wardrobe-body">
-                    <div class="wardrobe-doll-section">
-                        <div class="wardrobe-doll-area" id="wardrobe-doll-area">
-                            <img id="wardrobe-skintone" src="modules/wardrobe/base/Skintone/full/European 01 by Lotte V.png" alt="body">
-                            <div id="wardrobe-avi-area"></div>
+                
+                <!-- 抽屉开关按钮 -->
+                <button class="wardrobe-drawer-toggle" id="wardrobe-drawer-toggle" title="打开衣柜">
+                    <span>👚</span>
+                </button>
+                
+                <!-- 抽屉遮罩 -->
+                <div class="wardrobe-drawer-overlay" id="wardrobe-drawer-overlay"></div>
+                
+                <!-- 右侧抽屉面板 -->
+                <div class="wardrobe-drawer" id="wardrobe-drawer">
+                    <div class="wardrobe-drawer-header">
+                        <h2 class="wardrobe-drawer-title">✨ 选择衣物</h2>
+                        <div class="wardrobe-tabs" id="wardrobe-tabs">
+                            <button class="wardrobe-tab active" data-tab="hair">💇 发型</button>
+                            <button class="wardrobe-tab" data-tab="tops">👕 上衣</button>
+                            <button class="wardrobe-tab" data-tab="bottoms">👖 下装</button>
+                            <button class="wardrobe-tab" data-tab="fullbody">👗 全身</button>
                         </div>
-                        <div class="wardrobe-doll-hint">💡 穿戴后可拖拽调整位置</div>
                     </div>
-
-                    <div class="wardrobe-skin-section">
-                        <div class="wardrobe-section-title">🎨 肤色</div>
-                        <div class="wardrobe-skin-grid" id="wardrobe-skin-grid"></div>
+                    <div class="wardrobe-drawer-content">
+                        <div class="wardrobe-tab-panels" id="wardrobe-tab-panels">
+                            <div class="wardrobe-tab-panel active" data-panel="hair"></div>
+                            <div class="wardrobe-tab-panel" data-panel="tops"></div>
+                            <div class="wardrobe-tab-panel" data-panel="bottoms"></div>
+                            <div class="wardrobe-tab-panel" data-panel="fullbody"></div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="wardrobe-pieces-area">
-                    <div class="wardrobe-tabs" id="wardrobe-tabs">
-                        <button class="wardrobe-tab active" data-tab="hair">💇 发型</button>
-                        <button class="wardrobe-tab" data-tab="tops">👕 上衣</button>
-                        <button class="wardrobe-tab" data-tab="bottoms">👖 下装</button>
-                        <button class="wardrobe-tab" data-tab="fullbody">👗 全身</button>
-                    </div>
-                    <div class="wardrobe-tab-panels" id="wardrobe-tab-panels">
-                        <div class="wardrobe-tab-panel active" data-panel="hair"></div>
-                        <div class="wardrobe-tab-panel" data-panel="tops"></div>
-                        <div class="wardrobe-tab-panel" data-panel="bottoms"></div>
-                        <div class="wardrobe-tab-panel" data-panel="fullbody"></div>
+                    <div class="wardrobe-drawer-footer">
+                        <div class="wardrobe-hint">拖拽衣物到人偶 · 点击即可穿戴</div>
                     </div>
                 </div>
-
-                <div class="wardrobe-hint">拖拽衣物到人偶 · 点击缩略图换肤色 · 📥 导入自己的服装</div>
-
                 <!-- 上传弹窗 -->
                 <div id="wardrobe-upload-modal" class="wardrobe-modal-overlay">
                     <div class="wardrobe-modal">
@@ -96,99 +101,77 @@ Engine.register({
                     </div>
                 </div>
             </div>`;
-
         this._customItems = [];
         this._uploadCategory = 'tops';
         this._uploadFiles = [];
-        this._placedItems = []; // 已穿戴的衣物
-
-        // 清理旧版自定义衣物（全量替换素材后无需保留旧数据）
+        this._placedItems = [];
+        this._drawerOpen = false;
         try { Dexie.delete('wardrobe-custom'); } catch (_) {}
-
         this._loadCustomItems().then(() => {
-            this._buildSkinGrid();
             this._buildClothingPanels();
             this._bindEvents();
         });
     },
-
     open() {
         switchScreen(this.screen);
     },
-
+    /* ══════════════════════════════════════
+       抽屉控制
+       ══════════════════════════════════════ */
+    _toggleDrawer() {
+        this._drawerOpen = !this._drawerOpen;
+        const drawer = document.getElementById('wardrobe-drawer');
+        const overlay = document.getElementById('wardrobe-drawer-overlay');
+        const toggle = document.getElementById('wardrobe-drawer-toggle');
+        if (this._drawerOpen) {
+            drawer.classList.add('open');
+            overlay.classList.add('open');
+            toggle.querySelector('span').textContent = '✕';
+        } else {
+            drawer.classList.remove('open');
+            overlay.classList.remove('open');
+            toggle.querySelector('span').textContent = '👚';
+        }
+    },
     /* ══════════════════════════════════════
        构建 UI
        ══════════════════════════════════════ */
-
-    _buildSkinGrid() {
-        const grid = document.getElementById('wardrobe-skin-grid');
-        const skins = [
-            'Afro-Asian 01', 'Afro-Asian 02', 'Afro-Asian 03',
-            'Eurasian 01', 'Eurasian-Native 01', 'Eurasian-Native 02',
-            'Eurasian-Native 03', 'Eurasian-Native 04',
-            'European 01', 'European 02',
-            'Fantasy (Blue)', 'Fantasy (Green)', 'Fantasy (Pure white)',
-            'Fantasy (Purple)', 'Fantasy (Red)'
-        ];
-        grid.innerHTML = skins.map(s =>
-            `<a href="#" class="wardrobe-skin-thumb" data-skin="${s}">
-                <img src="modules/wardrobe/base/Skintone/thumbnails/${s} by Lotte V.png" alt="${s}">
-            </a>`
-        ).join('');
-    },
-
     _buildClothingPanels() {
         const categories = {
-            hair: ['棕短发', '棕马尾', '橙卷发', '橙短发', '浅金卷', '红棕卷', '红马尾', '金星发'],
-            tops: ['牛仔外套', '红帽衫', '条纹衫', '格子衫', '牛仔衣', '运动衫',
-                   '条纹短袖', '橙色外套', '深蓝夹克', '红格衬衫', '红色连帽',
-                   '绿色夹克', '花朵外套', '蓝色卫衣'],
-            bottoms: ['工装长裤', '条纹长裤', '格纹短裙', '牛仔短裤', '牛仔长裤',
-                      '百褶短裙', '碎花短裙', '运动短裤'],
-            fullbody: ['彩点裙', '波点裙', '工装服', '运动服',
-                       '星空裙', '月光裙', '枫糖裙', '樱花裙',
-                       '浅海裙', '甜心裙', '草莓裙', '薄荷裙']
+            hair: ['黑长直', '金色双马尾', '粉色双丸子', '银白短发', '棕色大波浪', '蓝色高马尾', '紫色高马尾', '橙色波波头'],
+            tops: ['水手服', 'JK制服', '粉色卫衣', '洛丽塔上衣', '米色卫衣', '绿色卫衣', '开衫毛衣', '蓝色夹克', '黑色吊带', '白色吊带', '粉色露肩', '红色旗袍'],
+            bottoms: ['粉色百褶裙', '蓝色牛仔裤', '牛仔短裤', '运动长裤', '军绿工装裤', '洛丽塔裙', '紫色蓬蓬裙', '粉色短裙', '紫色阔腿裤', '蓝色背带裤'],
+            fullbody: ['粉色公主裙', '女仆装', '白色婚纱', '红色礼服', 'JK连衣裙', '紫色和服', '蓝色和服', '紫白和服', '樱花和服', '粉色浴衣', '紫色哥特裙', '黑红哥特裙', '粉色吊带裙', '粉色睡衣', '白色睡衣']
         };
-
         const folderMap = { hair: 'Hair', tops: 'Tops', bottoms: 'Bottoms', fullbody: 'Full-body' };
-
         for (const [key, items] of Object.entries(categories)) {
             const panel = document.querySelector(`[data-panel="${key}"]`);
             let html = items.map(name => {
                 const folder = folderMap[key];
                 const displayName = name;
-                return `<img src="modules/wardrobe/images/${folder}/${name}.png"
-                             alt="${displayName}" title="${displayName}"
-                             class="wardrobe-piece" data-category="${key}">`;
+                return `<div class="wardrobe-piece" data-category="${key}">
+                    <img src="modules/wardrobe/images/${folder}/${name}.png" alt="${displayName}" title="${displayName}">
+                </div>`;
             }).join('');
-
             const custom = this._customItems.filter(i => i.category === key);
             if (custom.length) {
                 html += custom.map(item =>
-                    `<img src="${item.dataUrl}" alt="${item.name}" title="${item.name}（自定义·右键删除）"
-                          class="wardrobe-piece wardrobe-piece-custom" data-category="${key}" data-custom-id="${item.id}">`
+                    `<div class="wardrobe-piece wardrobe-piece-custom" data-category="${key}" data-custom-id="${item.id}">
+                        <img src="${item.dataUrl}" alt="${item.name}" title="${item.name}（自定义·右键删除）">
+                    </div>`
                 ).join('');
             }
             panel.innerHTML = html;
         }
     },
-
     /* ══════════════════════════════════════
        事件绑定
        ══════════════════════════════════════ */
-
     _bindEvents() {
         const self = this;
-
-        // 肤色切换
-        document.getElementById('wardrobe-skin-grid').addEventListener('click', (e) => {
-            const thumb = e.target.closest('.wardrobe-skin-thumb');
-            if (!thumb) return;
-            e.preventDefault();
-            const skin = thumb.dataset.skin;
-            document.getElementById('wardrobe-skintone').src = `modules/wardrobe/base/Skintone/full/${skin} by Lotte V.png`;
-        });
-
+        // 抽屉开关
+        document.getElementById('wardrobe-drawer-toggle').addEventListener('click', () => self._toggleDrawer());
+        document.getElementById('wardrobe-drawer-overlay').addEventListener('click', () => self._toggleDrawer());
         // 标签切换
         document.getElementById('wardrobe-tabs').addEventListener('click', (e) => {
             const tab = e.target.closest('.wardrobe-tab');
@@ -198,26 +181,22 @@ Engine.register({
             tab.classList.add('active');
             document.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.add('active');
         });
-
         // 拖拽衣物到人偶
         this._initDragDrop();
-
         // 工具按钮
         document.getElementById('wardrobe-download').addEventListener('click', () => self._downloadDoll());
         document.getElementById('wardrobe-reset').addEventListener('click', () => self._resetDoll());
-
         // 上传
         this._bindUploadEvents();
-
         // 右键删除自定义
         document.getElementById('wardrobe-tab-panels').addEventListener('contextmenu', (e) => {
-            const img = e.target.closest('.wardrobe-piece-custom');
-            if (!img) return;
+            const piece = e.target.closest('.wardrobe-piece-custom');
+            if (!piece) return;
             e.preventDefault();
-            if (confirm(`删除「${img.alt}」？`)) self._removeCustomItem(img.dataset.customId);
+            const img = piece.querySelector('img');
+            if (img && confirm(`删除「${img.alt}」？`)) self._removeCustomItem(piece.dataset.customId);
         });
     },
-
     _bindUploadEvents() {
         const self = this;
         const modal = document.getElementById('wardrobe-upload-modal');
@@ -225,7 +204,6 @@ Engine.register({
         const preview = document.getElementById('wardrobe-upload-preview');
         const nameInput = document.getElementById('wardrobe-upload-name');
         const confirmBtn = document.getElementById('wardrobe-upload-confirm');
-
         document.getElementById('wardrobe-upload-btn').addEventListener('click', () => {
             self._uploadFiles = [];
             fileInput.value = '';
@@ -234,10 +212,8 @@ Engine.register({
             confirmBtn.disabled = true;
             modal.classList.add('visible');
         });
-
         document.getElementById('wardrobe-upload-cancel').addEventListener('click', () => modal.classList.remove('visible'));
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('visible'); });
-
         document.getElementById('wardrobe-choose-file').addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
@@ -251,7 +227,6 @@ Engine.register({
             reader.readAsDataURL(files[0]);
             confirmBtn.disabled = false;
         });
-
         document.querySelectorAll('.wardrobe-cat-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.wardrobe-cat-btn').forEach(b => b.classList.remove('active'));
@@ -259,44 +234,36 @@ Engine.register({
                 self._uploadCategory = btn.dataset.cat;
             });
         });
-
         confirmBtn.addEventListener('click', () => self._handleUpload());
     },
-
     /* ══════════════════════════════════════
-       拖拽系统（核心改进）
+       拖拽系统
        ══════════════════════════════════════ */
-
     _initDragDrop() {
         const self = this;
         const panels = document.getElementById('wardrobe-tab-panels');
         const dollArea = document.getElementById('wardrobe-doll-area');
-
         let dragClone = null, dragSrc = null, dragCategory = null;
-
         const getPos = (e) => {
             if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
             if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
             return { x: e.clientX, y: e.clientY };
         };
-
-        // 从衣物列表拖出
         const onStart = (e) => {
-            const img = e.target.closest('.wardrobe-piece');
+            const piece = e.target.closest('.wardrobe-piece');
+            if (!piece) return;
+            const img = piece.querySelector('img');
             if (!img) return;
             dragSrc = img;
-            dragCategory = img.dataset.category || 'tops';
-
+            dragCategory = piece.dataset.category || 'tops';
             dragClone = document.createElement('img');
             dragClone.src = img.src;
-            dragClone.style.cssText = `position:fixed;z-index:9999;pointer-events:none;opacity:0.85;width:56px;height:56px;object-fit:contain;image-rendering:pixelated;border:2px solid rgba(100,180,255,0.8);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.4);`;
+            dragClone.style.cssText = `position:fixed;z-index:9999;pointer-events:none;opacity:0.85;width:56px;height:56px;object-fit:contain;image-rendering:pixelated;border:2px solid rgba(102,126,234,0.8);border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.4);`;
             document.body.appendChild(dragClone);
-
             const p = getPos(e);
             dragClone.style.left = (p.x - 28) + 'px';
             dragClone.style.top = (p.y - 28) + 'px';
         };
-
         const onMove = (e) => {
             if (!dragClone) return;
             e.preventDefault();
@@ -304,7 +271,6 @@ Engine.register({
             dragClone.style.left = (p.x - 28) + 'px';
             dragClone.style.top = (p.y - 28) + 'px';
         };
-
         const onEnd = (e) => {
             if (!dragClone || !dragSrc) { cleanup(); return; }
             const p = getPos(e);
@@ -314,22 +280,21 @@ Engine.register({
             }
             cleanup();
         };
-
         const cleanup = () => {
             if (dragClone) { dragClone.remove(); dragClone = null; }
             dragSrc = null;
         };
-
         // 点击穿戴
         panels.addEventListener('click', (e) => {
-            const img = e.target.closest('.wardrobe-piece');
+            const piece = e.target.closest('.wardrobe-piece');
+            if (!piece) return;
+            const img = piece.querySelector('img');
             if (!img) return;
-            const cat = img.dataset.category || 'tops';
+            const cat = piece.dataset.category || 'tops';
             const rect = dollArea.getBoundingClientRect();
             const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 3 };
             self._placeItem(img.src, img.alt, cat, center, rect);
         });
-
         panels.addEventListener('touchstart', onStart, { passive: true });
         document.addEventListener('touchmove', onMove, { passive: false });
         document.addEventListener('touchend', onEnd);
@@ -337,361 +302,253 @@ Engine.register({
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onEnd);
     },
-
     /* ── 放置衣物到人偶上 ── */
     _placeItem(src, alt, category, pointerPos, dollRect) {
         const dollArea = document.getElementById('wardrobe-doll-area');
-
-        // 同类衣物替换（同 category 只保留一个，同名则移除）
         const existingSameName = dollArea.querySelector(`.wardrobe-placed[data-alt="${alt}"]`);
         if (existingSameName) {
             existingSameName.remove();
             this._placedItems = this._placedItems.filter(i => i.alt !== alt);
             return;
         }
-
-        // 获取该类别的默认偏移
         const offset = this.CLOTHING_OFFSETS[category] || this.CLOTHING_OFFSETS['tops'];
-
-        // 计算相对于 dollArea 的位置
         const relX = pointerPos.x - dollRect.left - offset.width / 2;
         const relY = pointerPos.y - dollRect.top - offset.height / 2;
-
-        // 限制在区域内
         const finalLeft = Math.max(0, Math.min(relX, dollRect.width - offset.width));
         const finalTop = Math.max(0, Math.min(relY, dollRect.height - offset.height));
-
         const el = document.createElement('img');
         el.src = src;
         el.alt = alt;
         el.className = 'wardrobe-placed';
+        el.dataset.alt = alt;
+        el.dataset.category = category;
         el.style.cssText = `
             position: absolute;
             left: ${finalLeft}px;
             top: ${finalTop}px;
             width: ${offset.width}px;
             height: ${offset.height}px;
-            object-fit: contain;
             image-rendering: pixelated;
-            z-index: ${10 + this._placedItems.length};
-            cursor: move;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
+            -webkit-user-drag: none;
         `;
+        this._makeDraggable(el, dollArea);
         dollArea.appendChild(el);
-        this._placedItems.push({ el, alt, category });
-
-        // 使已放置的衣物可拖拽调整位置
-        this._makeDraggable(el);
+        this._placedItems.push({ src, alt, category, el });
     },
-
-    /* ── 已放置衣物：拖拽移动 + 缩放 + 选中 ── */
-    _makeDraggable(el) {
+    _makeDraggable(el, container) {
         const self = this;
-        let startX, startY, origLeft, origTop, isDragging = false;
-        let selected = false;
-        let pinchStartDist = 0, pinchStartW = 0, pinchStartH = 0;
-
+        let isDragging = false, startX, startY, startLeft, startTop;
         const getPos = (e) => {
-            if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            if (e.touches) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
             return { x: e.clientX, y: e.clientY };
         };
-
-        const getTouchDist = (e) => {
-            if (!e.touches || e.touches.length < 2) return 0;
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            return Math.sqrt(dx * dx + dy * dy);
-        };
-
-        const selectItem = () => {
-            // 取消其他选中
-            document.querySelectorAll('.wardrobe-placed.selected').forEach(e => {
-                e.classList.remove('selected');
-                e.style.outline = 'none';
-            });
-            selected = true;
-            el.classList.add('selected');
-            el.style.outline = '2px solid rgba(100,180,255,0.9)';
-            el.style.outlineOffset = '-1px';
-            self._showResizeSlider(el);
-        };
-
-        const deselectItem = () => {
-            selected = false;
-            el.classList.remove('selected');
-            el.style.outline = 'none';
-            self._hideResizeSlider();
-        };
-
-        // ── 触摸事件 ──
-        el.addEventListener('touchstart', (e) => {
-            e.stopPropagation();
-            if (e.touches.length === 2) {
-                // 双指 = 缩放
-                isDragging = false;
-                pinchStartDist = getTouchDist(e);
-                pinchStartW = el.offsetWidth;
-                pinchStartH = el.offsetHeight;
-                return;
-            }
+        const onStart = (e) => {
             isDragging = true;
-            el.style.cursor = 'grabbing';
             const p = getPos(e);
-            startX = p.x; startY = p.y;
-            origLeft = parseInt(el.style.left) || 0;
-            origTop = parseInt(el.style.top) || 0;
-        }, { passive: false });
-
-        document.addEventListener('touchmove', (e) => {
-            // 双指缩放
-            if (pinchStartDist > 0 && e.touches.length === 2) {
-                e.preventDefault();
-                const dist = getTouchDist(e);
-                const scale = dist / pinchStartDist;
-                const newW = Math.max(30, Math.min(pinchStartW * scale, 300));
-                const newH = Math.max(30, Math.min(pinchStartH * scale, 400));
-                el.style.width = newW + 'px';
-                el.style.height = newH + 'px';
-                self._updateResizeSliderValue(el);
-                return;
-            }
+            startX = p.x;
+            startY = p.y;
+            startLeft = parseFloat(el.style.left);
+            startTop = parseFloat(el.style.top);
+            el.style.zIndex = '10';
+            e.preventDefault();
+        };
+        const onMove = (e) => {
             if (!isDragging) return;
             e.preventDefault();
             const p = getPos(e);
-            const dx = p.x - startX, dy = p.y - startY;
-            const parent = el.parentElement;
-            el.style.left = Math.max(0, Math.min(origLeft + dx, parent.offsetWidth - el.offsetWidth)) + 'px';
-            el.style.top = Math.max(0, Math.min(origTop + dy, parent.offsetHeight - el.offsetHeight)) + 'px';
-        }, { passive: false });
-
-        document.addEventListener('touchend', (e) => {
-            if (pinchStartDist > 0 && e.touches.length < 2) {
-                pinchStartDist = 0;
-                selectItem();
-                return;
-            }
-            if (!isDragging) return;
-            isDragging = false;
-            el.style.cursor = 'move';
-            selectItem();
-        });
-
-        // ── 鼠标事件 ──
-        el.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-            isDragging = true;
-            el.style.cursor = 'grabbing';
-            startX = e.clientX; startY = e.clientY;
-            origLeft = parseInt(el.style.left) || 0;
-            origTop = parseInt(el.style.top) || 0;
-        });
-
-        const onMouseMove = (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const dx = e.clientX - startX, dy = e.clientY - startY;
-            const parent = el.parentElement;
-            el.style.left = Math.max(0, Math.min(origLeft + dx, parent.offsetWidth - el.offsetWidth)) + 'px';
-            el.style.top = Math.max(0, Math.min(origTop + dy, parent.offsetHeight - el.offsetHeight)) + 'px';
+            const dx = p.x - startX;
+            const dy = p.y - startY;
+            const rect = container.getBoundingClientRect();
+            const w = parseFloat(el.style.width);
+            const h = parseFloat(el.style.height);
+            let newLeft = Math.max(0, Math.min(startLeft + dx, rect.width - w));
+            let newTop = Math.max(0, Math.min(startTop + dy, rect.height - h));
+            el.style.left = newLeft + 'px';
+            el.style.top = newTop + 'px';
         };
-
-        const onMouseUp = () => {
-            if (!isDragging) return;
+        const onEnd = () => {
             isDragging = false;
-            el.style.cursor = 'move';
-            selectItem();
+            el.style.zIndex = '';
         };
-
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-
-        // 点击空白处取消选中
-        document.getElementById('wardrobe-doll-area').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('wardrobe-doll-area') ||
-                e.target === document.getElementById('wardrobe-skintone')) {
-                deselectItem();
-            }
-        });
-
-        // 双击移除
-        el.addEventListener('dblclick', (e) => {
-            e.stopPropagation();
-            deselectItem();
+        el.addEventListener('mousedown', onStart);
+        el.addEventListener('touchstart', onStart, { passive: false });
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchend', onEnd);
+        // 双击删除
+        el.addEventListener('dblclick', () => {
             el.remove();
             self._placedItems = self._placedItems.filter(i => i.el !== el);
         });
-    },
-
-    /* ── 缩放滑块 UI ── */
-    _resizeSliderEl: null,
-
-    _showResizeSlider(targetEl) {
-        const self = this;
-        if (!this._resizeSliderEl) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'wardrobe-resize-popup';
-            wrapper.innerHTML = `
-                <div class="wardrobe-resize-row">
-                    <span class="wardrobe-resize-label">🔍</span>
-                    <input type="range" class="wardrobe-resize-slider" min="30" max="300" value="100" step="5">
-                    <span class="wardrobe-resize-val">100%</span>
-                </div>
-                <div class="wardrobe-resize-row">
-                    <button class="wardrobe-resize-btn" data-scale="0.5">小</button>
-                    <button class="wardrobe-resize-btn" data-scale="1">中</button>
-                    <button class="wardrobe-resize-btn" data-scale="1.5">大</button>
-                    <button class="wardrobe-resize-btn" data-scale="2.5">特大</button>
-                </div>`;
-            document.getElementById('wardrobe-doll-area').appendChild(wrapper);
-            this._resizeSliderEl = wrapper;
-
-            // 滑块事件
-            const slider = wrapper.querySelector('.wardrobe-resize-slider');
-            slider.addEventListener('input', () => {
-                self._applyResize(targetEl, parseInt(slider.value));
-            });
-
-            // 预设按钮
-            wrapper.querySelectorAll('.wardrobe-resize-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const scale = parseFloat(btn.dataset.scale);
-                    self._applyResize(targetEl, scale * 100);
-                    slider.value = scale * 100;
-                });
-            });
+        // 滚轮缩放 - 鼠标滚轮放大缩小衣物（桌面端）
+        el.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var delta = e.deltaY > 0 ? 0.9 : 1.1;
+            var currentW = parseFloat(el.style.width);
+            var currentH = parseFloat(el.style.height);
+            var newW = Math.max(30, Math.min(currentW * delta, 500));
+            var newH = Math.max(30, Math.min(currentH * delta, 800));
+            var rect = container.getBoundingClientRect();
+            var centerX = parseFloat(el.style.left) + currentW / 2;
+            var centerY = parseFloat(el.style.top) + currentH / 2;
+            el.style.width = newW + 'px';
+            el.style.height = newH + 'px';
+            el.style.left = Math.max(0, Math.min(centerX - newW / 2, rect.width - newW)) + 'px';
+            el.style.top = Math.max(0, Math.min(centerY - newH / 2, rect.height - newH)) + 'px';
+        }, { passive: false });
+        
+        // ========== 移动端触摸手势支持 ==========
+        var touchStartDist = 0;
+        var touchStartW = 0, touchStartH = 0;
+        var touchStartLeft = 0, touchStartTop = 0;
+        var isPinching = false;
+        
+        // 计算两指距离
+        function getTouchDistance(touches) {
+            var dx = touches[0].clientX - touches[1].clientX;
+            var dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
         }
-
-        // 更新当前值
-        this._resizeSliderEl._targetEl = targetEl;
-        this._updateResizeSliderValue(targetEl);
-        this._resizeSliderEl.style.display = 'flex';
+        
+        // 触摸开始
+        el.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            el.style.zIndex = '10';
+            
+            if (e.touches.length === 2) {
+                // 双指 - 开始缩放
+                isPinching = true;
+                touchStartDist = getTouchDistance(e.touches);
+                touchStartW = parseFloat(el.style.width);
+                touchStartH = parseFloat(el.style.height);
+                touchStartLeft = parseFloat(el.style.left);
+                touchStartTop = parseFloat(el.style.top);
+            } else if (e.touches.length === 1 && !isPinching) {
+                // 单指 - 开始拖拽（已在上方拖拽逻辑处理）
+            }
+        }, { passive: false });
+        
+        // 触摸移动
+        el.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (e.touches.length === 2 && isPinching) {
+                // 双指缩放
+                var currentDist = getTouchDistance(e.touches);
+                var scale = currentDist / touchStartDist;
+                var rect = container.getBoundingClientRect();
+                var newW = Math.max(30, Math.min(touchStartW * scale, 500));
+                var newH = Math.max(30, Math.min(touchStartH * scale, 800));
+                
+                // 保持中心点不变
+                var centerX = touchStartLeft + touchStartW / 2;
+                var centerY = touchStartTop + touchStartH / 2;
+                el.style.width = newW + 'px';
+                el.style.height = newH + 'px';
+                el.style.left = Math.max(0, Math.min(centerX - newW / 2, rect.width - newW)) + 'px';
+                el.style.top = Math.max(0, Math.min(centerY - newH / 2, rect.height - newH)) + 'px';
+            }
+        }, { passive: false });
+        
+        // 触摸结束
+        el.addEventListener('touchend', function(e) {
+            if (e.touches.length < 2) {
+                isPinching = false;
+            }
+            if (e.touches.length === 0) {
+                el.style.zIndex = '';
+            }
+        });
     },
-
-    _hideResizeSlider() {
-        if (this._resizeSliderEl) {
-            this._resizeSliderEl.style.display = 'none';
-        }
-    },
-
-    _updateResizeSliderValue(el) {
-        if (!this._resizeSliderEl) return;
-        const w = el.offsetWidth;
-        const cat = this._placedItems.find(i => i.el === el)?.category || 'tops';
-        const baseW = (this.CLOTHING_OFFSETS[cat] || this.CLOTHING_OFFSETS['tops']).width;
-        const pct = Math.round((w / baseW) * 100);
-        this._resizeSliderEl.querySelector('.wardrobe-resize-slider').value = pct;
-        this._resizeSliderEl.querySelector('.wardrobe-resize-val').textContent = pct + '%';
-    },
-
-    _applyResize(el, pct) {
-        const cat = this._placedItems.find(i => i.el === el)?.category || 'tops';
-        const base = this.CLOTHING_OFFSETS[cat] || this.CLOTHING_OFFSETS['tops'];
-        const scale = pct / 100;
-        el.style.width = Math.round(base.width * scale) + 'px';
-        el.style.height = Math.round(base.height * scale) + 'px';
-        if (this._resizeSliderEl) {
-            this._resizeSliderEl.querySelector('.wardrobe-resize-val').textContent = Math.round(pct) + '%';
-        }
-    },
-
-    /* ── 重置 ── */
-    _resetDoll() {
-        document.getElementById('wardrobe-doll-area').querySelectorAll('.wardrobe-placed').forEach(el => el.remove());
-        this._placedItems = [];
-        document.getElementById('wardrobe-skintone').src = 'modules/wardrobe/base/Skintone/full/European 01 by Lotte V.png';
-    },
-
     /* ══════════════════════════════════════
-       IndexedDB 自定义衣物
+       工具函数
        ══════════════════════════════════════ */
-
-    _getDb() { return new Dexie('wardrobe-custom'); },
-
+    _resetDoll() {
+        const dollArea = document.getElementById('wardrobe-doll-area');
+        dollArea.querySelectorAll('.wardrobe-placed').forEach(el => el.remove());
+        this._placedItems = [];
+    },
+    _downloadDoll() {
+        const dollArea = document.getElementById('wardrobe-doll-area');
+        const canvas = document.createElement('canvas');
+        canvas.width = this.DOLL_W;
+        canvas.height = this.DOLL_H;
+        const ctx = canvas.getContext('2d');
+        const images = [];
+        const baseImg = document.getElementById('wardrobe-skintone');
+        images.push({ el: baseImg, x: (this.DOLL_W - baseImg.naturalWidth * 1.3) / 2, y: (this.DOLL_H - baseImg.naturalHeight * 1.3) / 2, scale: 1.3 });
+        const placed = Array.from(dollArea.querySelectorAll('.wardrobe-placed'));
+        placed.forEach(img => {
+            images.push({ el: img, x: parseFloat(img.style.left), y: parseFloat(img.style.top), scale: 1 });
+        });
+        const loadAndDraw = (idx) => {
+            if (idx >= images.length) {
+                const link = document.createElement('a');
+                link.download = 'wardrobe-doll.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                return;
+            }
+            const item = images[idx];
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                ctx.drawImage(img, item.x, item.y, img.width * item.scale, img.height * item.scale);
+                loadAndDraw(idx + 1);
+            };
+            img.src = item.el.src;
+        };
+        loadAndDraw(0);
+    },
     async _loadCustomItems() {
         try {
-            const db = this._getDb();
-            db.version(1).stores({ items: 'id,category,name' });
-            this._customItems = await db.items.toArray();
-        } catch (e) {
+            const db = await this._openDB();
+            this._customItems = await db.getAll('clothes');
+        } catch (_) {
             this._customItems = [];
         }
     },
-
-    async _saveCustomItem(item) {
-        try {
-            const db = this._getDb();
-            db.version(1).stores({ items: 'id,category,name' });
-            await db.items.put(item);
-            this._customItems.push(item);
-        } catch (e) { console.error('[Wardrobe] save failed:', e); }
-    },
-
-    async _removeCustomItem(id) {
-        try {
-            const db = this._getDb();
-            db.version(1).stores({ items: 'id,category,name' });
-            await db.items.delete(id);
-            this._customItems = this._customItems.filter(i => i.id !== id);
-            this._buildClothingPanels();
-            showToast('已删除');
-        } catch (e) { console.error('[Wardrobe] remove failed:', e); }
-    },
-
     async _handleUpload() {
-        const files = this._uploadFiles;
-        const category = this._uploadCategory;
-        if (!files.length) return;
-        const btn = document.getElementById('wardrobe-upload-confirm');
-        btn.disabled = true;
-        btn.textContent = '处理中...';
-        let count = 0;
-        for (const file of files) {
+        const nameInput = document.getElementById('wardrobe-upload-name');
+        const modal = document.getElementById('wardrobe-upload-modal');
+        for (const file of this._uploadFiles) {
+            const dataUrl = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+            const name = nameInput.value.trim() || file.name.replace(/\.[^/.]+$/, '');
+            const item = { id: Date.now() + Math.random(), name, category: this._uploadCategory, dataUrl };
             try {
-                const dataUrl = await new Promise((res, rej) => {
-                    const r = new FileReader();
-                    r.onload = () => res(r.result);
-                    r.onerror = rej;
-                    r.readAsDataURL(file);
-                });
-                const nameInput = document.getElementById('wardrobe-upload-name');
-                const name = (files.length === 1 && nameInput.value.trim()) ? nameInput.value.trim() : file.name.replace(/\.(png|jpg|jpeg|webp)$/i, '');
-                await this._saveCustomItem({ id: 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), category, name, dataUrl, timestamp: Date.now() });
-                count++;
-            } catch (e) { console.warn('upload fail:', file.name, e); }
+                const db = await this._openDB();
+                await db.add('clothes', item);
+                this._customItems.push(item);
+            } catch (_) {}
         }
         this._buildClothingPanels();
-        document.getElementById('wardrobe-upload-modal').classList.remove('visible');
-        showToast(`已添加 ${count} 件服装！`);
-        btn.textContent = '添加';
+        modal.classList.remove('visible');
     },
-
-    /* ══════════════════════════════════════
-       导出
-       ══════════════════════════════════════ */
-
-    _downloadDoll() {
-        const dollArea = document.getElementById('wardrobe-doll-area');
-        if (typeof html2canvas === 'undefined') { showToast('html2canvas 未加载'); return; }
-
-        // 临时隐藏拖拽边框
-        dollArea.querySelectorAll('.wardrobe-placed').forEach(el => { el.style.outline = 'none'; });
-
-        html2canvas(dollArea, {
-            backgroundColor: null, allowTaint: true, useCORS: true,
-            scale: 2, imageSmoothingEnabled: false,
-        }).then(canvas => {
-            canvas.toBlob(blob => {
-                try {
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = 'my_doll.png';
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                    showToast('已保存！');
-                } catch (e) { showToast('导出失败'); }
-            });
-        }).catch(e => showToast('截图失败'));
-    }
+    async _removeCustomItem(id) {
+        try {
+            const db = await this._openDB();
+            await db.delete('clothes', Number(id));
+            this._customItems = this._customItems.filter(i => i.id !== Number(id));
+            this._buildClothingPanels();
+        } catch (_) {}
+    },
+    _openDB() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open('wardrobe-custom', 1);
+            req.onupgradeneeded = e => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('clothes')) db.createObjectStore('clothes', { keyPath: 'id' });
+            };
+            req.onsuccess = e => resolve(e.target.result);
+            req.onerror = reject;
+        });
+    },
 });

@@ -55,7 +55,7 @@ Engine.register({
   init(){
     var s = document.getElementById(this.screen);
     s.innerHTML =
-      '<div class="live-overlay" id="lvo">'+
+      '<div class="live-overlay" id="lvo" onclick="if(event.target.id===\'lvo\'){document.getElementById(\'lvo\').classList.remove(\'visible\');switchScreen(\'home-screen\');}">'+
         '<div class="live-wizard">'+
           '<div class="live-host-tabs">'+
             '<button class="live-host-tab active" data-tab="self" onclick="Engine._lv.switchTab(\'self\')">🙋 自己开播</button>'+
@@ -167,7 +167,7 @@ Engine.register({
     b.innerHTML=
       '<div class="live-wizard-header"><div class="live-wizard-title">选择道具（多选）</div><div class="live-wizard-step">'+stepTxt+'</div></div>'+
       '<div class="live-wizard-body">'+
-        (items.length===0?'<div style="text-align:center;color:#999;padding:30px 0;">暂无可选道具<br><small>需要先在商店购买道具</small></div>':
+        (items.length===0?'<div class="live-empty-state">暂无可选道具<br><small>需要先在商店购买道具</small></div>':
           '<div class="live-prop-grid">'+items.map(function(p){
             var n=p.label.replace(/^(\p{Emoji_Presentation}|\p{Emoji}️?)/u,'')||p.label;
             var s=(this.state.props||[]).indexOf(p.id)>=0;

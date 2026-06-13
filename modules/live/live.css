@@ -7,9 +7,17 @@
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.5); display: flex; align-items: center;
   justify-content: center; z-index: 100; opacity: 0; pointer-events: none;
-  transition: opacity 0.25s;
+  transition: opacity 0.25s; cursor: pointer;
 }
 .live-overlay.visible { opacity: 1; pointer-events: auto; }
+.live-overlay::before {
+  content: '× 点击空白处关闭';
+  position: absolute; top: 20px; right: 20px;
+  color: rgba(255,255,255,0.7); font-size: 12px;
+  opacity: 0; transition: opacity 0.2s;
+}
+.live-overlay.visible::before { opacity: 1; }
+.live-wizard { cursor: default; pointer-events: auto; }
 .live-wizard {
   background: #fff; border-radius: 20px; width: 88%; max-width: 360px;
   max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
@@ -20,7 +28,7 @@
 }
 .live-wizard-title { font-size: 17px; font-weight: 700; color: #333; }
 .live-wizard-step { font-size: 12px; color: #aaa; margin-top: 2px; }
-.live-wizard-body { padding: 16px 20px; overflow-y: auto; flex: 1; min-height: 0; max-height: 50vh; -webkit-overflow-scrolling: touch; }
+.live-wizard-body { padding: 16px 20px; overflow-y: auto; flex: 1; min-height: 160px; max-height: 50vh; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
 
 /* 等级选择 */
 .live-level-grid { display: flex; flex-direction: column; gap: 8px; }
@@ -107,8 +115,12 @@
   margin: 0 auto 6px; display: block; background: #f0f0f0;
 }
 .live-host-name { font-size: 12px; font-weight: 600; color: #333; line-height: 1.3; }
+.live-empty-state {
+  flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column;
+  text-align: center; color: #999; padding: 30px 0; min-height: 120px; gap: 8px;
+}
 .live-host-empty {
-  grid-column: 1/-1; text-align: center; color: #999; padding: 24px 0; font-size: 13px;
+  grid-column: 1/-1; text-align: center; color: #999; padding: 40px 0; font-size: 13px; min-height: 120px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;
 }
 
 /* ─── 直播主界面 ─── */
@@ -141,16 +153,18 @@
   font-size: 14px; flex-shrink: 0;
 }
 .live-host-info { flex: 1; min-width: 0; }
-.live-host-name-text { font-size: 13px; font-weight: 700; }
+.live-host-name-text { font-size: 13px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
 .live-host-tags { display: flex; gap: 4px; margin-top: 1px; }
 .live-tag {
   font-size: 9px; padding: 1px 5px; border-radius: 4px;
-  background: rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 .live-tag.hot { background: #ff4444; }
 .live-stat {
   font-size: 11px; display: flex; align-items: center; gap: 4px;
-  color: rgba(255,255,255,0.8); white-space: nowrap;
+  color: rgba(255,255,255,0.9); white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 .live-dot { width: 5px; height: 5px; border-radius: 50%; background: #ff4444; animation: livePulse 1.5s infinite; }
 @keyframes livePulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
@@ -179,7 +193,8 @@
   font-size: 13px; line-height: 1.5; padding: 3px 8px;
   border-radius: 6px; animation: msgIn 0.25s ease;
   word-break: break-word;
-  background: rgba(0,0,0,0.15);
+  background: rgba(0,0,0,0.35);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8), 0 0 3px rgba(0,0,0,0.6);
   flex-shrink: 0;
 }
 .live-msg-story { color: #ff80ab; }
@@ -187,8 +202,9 @@
 .live-msg-tip { color: #FFD700; }
 .live-msg-gift {
   color: #FFD700; font-size: 15px; font-weight: 700;
-  text-align: center; background: rgba(255,215,0,0.08);
+  text-align: center; background: rgba(0,0,0,0.4);
   padding: 6px 8px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.7);
 }
 .live-msg-follow { color: #69F0AE; }
 
@@ -323,5 +339,5 @@
 .live-stream.bg-only .live-top-bar,
 .live-stream.bg-only .live-danmaku-wrap,
 .live-stream.bg-only .live-input-bar { opacity: 0; pointer-events: none; }
-.live-stream.bg-only .live-side-btns { opacity: 0; pointer-events: none; }
-.live-stream.bg-only .live-bg-toggle-btn { opacity: 1; pointer-events: auto; }
+.live-stream.bg-only .live-side-btn:not(.live-bg-toggle-btn) { opacity: 0; pointer-events: none; }
+.live-stream.bg-only .live-bg-toggle-btn { opacity: 1; pointer-events: auto; z-index: 100; }
