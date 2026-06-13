@@ -347,51 +347,24 @@ Engine.register({
     },
     _makeDraggable(el, container) {
         const self = this;
-        let isDragging = false, startX, startY, startLeft, startTop;
-        const getPos = (e) => {
-            if (e.touches) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            return { x: e.clientX, y: e.clientY };
-        };
-        const onStart = (e) => {
-            isDragging = true;
-            const p = getPos(e);
-            startX = p.x;
-            startY = p.y;
-            startLeft = parseFloat(el.style.left);
-            startTop = parseFloat(el.style.top);
-            el.style.zIndex = '10';
-            e.preventDefault();
-        };
-        const onMove = (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const p = getPos(e);
-            const dx = p.x - startX;
-            const dy = p.y - startY;
-            const rect = container.getBoundingClientRect();
-            const w = parseFloat(el.style.width);
-            const h = parseFloat(el.style.height);
-            let newLeft = Math.max(0, Math.min(startLeft + dx, rect.width - w));
-            let newTop = Math.max(0, Math.min(startTop + dy, rect.height - h));
-            el.style.left = newLeft + 'px';
-            el.style.top = newTop + 'px';
-        };
-        const onEnd = () => {
-            isDragging = false;
-            el.style.zIndex = '';
-        };
-        el.addEventListener('mousedown', onStart);
-        el.addEventListener('touchstart', onStart, { passive: false });
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('mouseup', onEnd);
-        document.addEventListener('touchend', onEnd);
         // 双击删除
         el.addEventListener('dblclick', () => {
             el.remove();
             self._placedItems = self._placedItems.filter(i => i.el !== el);
         });
-        // 滚轮缩放 - 鼠标滚轮放大缩小衣物（桌面端）
+        
+        // ========== 统一手势处理：拖拽 + 缩放 ==========
+        var isDragging = false, isPinching = false;
+        var startX, startY, startLeft, startTop;
+        var touchStartDist = 0, touchStartW = 0, touchStartH = 0, touchStartL = 0, touchStartT = 0;
+        
+        function getTouchDistance(touches) {
+            var dx = touches[0].clientX - touches[1].clientX;
+            var dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // 滚轮缩放（桌面端）
         el.addEventListener('wheel', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -409,42 +382,34 @@ Engine.register({
             el.style.top = Math.max(0, Math.min(centerY - newH / 2, rect.height - newH)) + 'px';
         }, { passive: false });
         
-        // ========== 移动端触摸手势支持 ==========
-        var touchStartDist = 0;
-        var touchStartW = 0, touchStartH = 0;
-        var touchStartLeft = 0, touchStartTop = 0;
-        var isPinching = false;
-        
-        // 计算两指距离
-        function getTouchDistance(touches) {
-            var dx = touches[0].clientX - touches[1].clientX;
-            var dy = touches[0].clientY - touches[1].clientY;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-        
         // 触摸开始
         el.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
             el.style.zIndex = '10';
             
             if (e.touches.length === 2) {
                 // 双指 - 开始缩放
                 isPinching = true;
+                isDragging = false;
                 touchStartDist = getTouchDistance(e.touches);
                 touchStartW = parseFloat(el.style.width);
                 touchStartH = parseFloat(el.style.height);
-                touchStartLeft = parseFloat(el.style.left);
-                touchStartTop = parseFloat(el.style.top);
-            } else if (e.touches.length === 1 && !isPinching) {
-                // 单指 - 开始拖拽（已在上方拖拽逻辑处理）
+                touchStartL = parseFloat(el.style.left);
+                touchStartT = parseFloat(el.style.top);
+            } else if (e.touches.length === 1) {
+                // 单指 - 开始拖拽
+                isDragging = true;
+                isPinching = false;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                startLeft = parseFloat(el.style.left);
+                startTop = parseFloat(el.style.top);
             }
+            e.preventDefault();
         }, { passive: false });
         
         // 触摸移动
         el.addEventListener('touchmove', function(e) {
             e.preventDefault();
-            e.stopPropagation();
             
             if (e.touches.length === 2 && isPinching) {
                 // 双指缩放
@@ -453,25 +418,53 @@ Engine.register({
                 var rect = container.getBoundingClientRect();
                 var newW = Math.max(30, Math.min(touchStartW * scale, 500));
                 var newH = Math.max(30, Math.min(touchStartH * scale, 800));
-                
-                // 保持中心点不变
-                var centerX = touchStartLeft + touchStartW / 2;
-                var centerY = touchStartTop + touchStartH / 2;
+                var centerX = touchStartL + touchStartW / 2;
+                var centerY = touchStartT + touchStartH / 2;
                 el.style.width = newW + 'px';
                 el.style.height = newH + 'px';
                 el.style.left = Math.max(0, Math.min(centerX - newW / 2, rect.width - newW)) + 'px';
                 el.style.top = Math.max(0, Math.min(centerY - newH / 2, rect.height - newH)) + 'px';
+            } else if (e.touches.length === 1 && isDragging) {
+                // 单指拖拽
+                var dx = e.touches[0].clientX - startX;
+                var dy = e.touches[0].clientY - startY;
+                var rect = container.getBoundingClientRect();
+                var w = parseFloat(el.style.width);
+                var h = parseFloat(el.style.height);
+                el.style.left = Math.max(0, Math.min(startLeft + dx, rect.width - w)) + 'px';
+                el.style.top = Math.max(0, Math.min(startTop + dy, rect.height - h)) + 'px';
             }
         }, { passive: false });
         
         // 触摸结束
         el.addEventListener('touchend', function(e) {
-            if (e.touches.length < 2) {
-                isPinching = false;
-            }
-            if (e.touches.length === 0) {
-                el.style.zIndex = '';
-            }
+            if (e.touches.length < 2) isPinching = false;
+            if (e.touches.length < 1) isDragging = false;
+            if (e.touches.length === 0) el.style.zIndex = '';
+        });
+        
+        // 鼠标拖拽（桌面端）
+        el.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = parseFloat(el.style.left);
+            startTop = parseFloat(el.style.top);
+            el.style.zIndex = '10';
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging || isPinching) return;
+            var dx = e.clientX - startX;
+            var dy = e.clientY - startY;
+            var rect = container.getBoundingClientRect();
+            var w = parseFloat(el.style.width);
+            var h = parseFloat(el.style.height);
+            el.style.left = Math.max(0, Math.min(startLeft + dx, rect.width - w)) + 'px';
+            el.style.top = Math.max(0, Math.min(startTop + dy, rect.height - h)) + 'px';
+        });
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            el.style.zIndex = '';
         });
     },
     /* ══════════════════════════════════════
