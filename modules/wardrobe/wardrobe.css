@@ -36,7 +36,7 @@
 .wardrobe-back-btn {
     top: 20px;
     left: 20px;
-    z-index: 100;
+    z-index: 200;
     width: 48px;
     height: 48px;
     background: rgba(255,255,255,0.2);
@@ -80,7 +80,7 @@
 .wardrobe-tools {
     top: 20px;
     right: 20px;
-    z-index: 100;
+    z-index: 200;
     display: flex;
     gap: 10px;
 }
@@ -185,7 +185,7 @@
 .wardrobe-drawer-toggle {
     right: 20px;
     transform: translateY(-50%);
-    z-index: 80;
+    z-index: 200;
     width: 56px;
     height: 56px;
     background: rgba(255,255,255,0.25);
