@@ -1,0 +1,233 @@
+/* ========================================
+   HomeScreen - 主屏幕模块
+   ======================================== */
+
+import { getDb, saveData } from '../core/dataService.js';
+import { pad, defaultIcons } from '../core/utils.js';
+import { renderWorldBookList } from '../systems/worldBook.js';
+import { renderCustomizeForm } from './customize.js';
+
+let dom = null;
+
+export function init(_dom) {
+  dom = _dom;
+  setupHomeScreen();
+}
+
+// ─── 时钟 ─────────────────────────────
+
+function updateClock() {
+  const now = new Date();
+  const timeDisplay = document.getElementById('time-display');
+  const dateDisplay = document.getElementById('date-display');
+  if (timeDisplay) timeDisplay.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  if (dateDisplay) dateDisplay.textContent = `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日`;
+}
+
+// ─── 壁纸（应用到所有页面） ────────────
+
+function applyWallpaper(url) {
+  if (!url) url = '';
+  document.querySelectorAll('.screen').forEach(s => {
+    if (s.id !== 'chat-room-screen') s.style.backgroundImage = url ? `url(${url})` : 'none';
+  });
+}
+
+// ─── 滑动导航 ─────────────────────────
+
+function setupSwipeNavigation() {
+  const container = document.getElementById('page-swipe-container');
+  const indicators = document.getElementById('page-indicators');
+  if (!container || !indicators) return;
+  let curPage = 0;
+  const totalPages = 2;
+  let startX = 0, startY = 0, deltaX = 0;
+  let isDragging = false, isScrolling = null;
+
+  function goToPage(page) {
+    curPage = Math.max(0, Math.min(page, totalPages - 1));
+    container.style.transform = `translateX(-${curPage * 100}%)`;
+    indicators.querySelectorAll('.dot').forEach((dot, i) => dot.classList.toggle('active', i === curPage));
+  }
+
+  container.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    deltaX = 0; isDragging = true; isScrolling = null;
+    container.classList.add('dragging');
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    deltaX = e.touches[0].clientX - startX;
+    const deltaY = e.touches[0].clientY - startY;
+    if (isScrolling === null && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5))
+      isScrolling = Math.abs(deltaY) > Math.abs(deltaX);
+    if (isScrolling) return;
+    const atStart = curPage === 0 && deltaX > 0;
+    const atEnd = curPage === totalPages - 1 && deltaX < 0;
+    const resistance = (atStart || atEnd) ? 0.3 : 1;
+    container.style.transform = `translateX(${-curPage * 100 + (deltaX * resistance / container.offsetWidth * 100)}%)`;
+  }, { passive: true });
+
+  container.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false; container.classList.remove('dragging');
+    if (isScrolling) { goToPage(curPage); return; }
+    const threshold = container.offsetWidth * 0.2;
+    if (deltaX < -threshold && curPage < totalPages - 1) goToPage(curPage + 1);
+    else if (deltaX > threshold && curPage > 0) goToPage(curPage - 1);
+    else goToPage(curPage);
+  }, { passive: true });
+
+  indicators.querySelectorAll('.dot').forEach(dot => {
+    dot.addEventListener('click', () => goToPage(parseInt(dot.dataset.page)));
+  });
+}
+
+// ─── 模块图标映射 ─────────────────────
+
+const MODULE_ICON_MAP = {
+  shop: 'assets/icons/商店.png',
+  live: 'assets/icons/直播.png',
+  gacha: 'assets/icons/电话.png',
+  wardrobe: 'assets/icons/摇一摇.png',
+  media: 'assets/icons/白天开关.png',
+  games: 'assets/icons/夜间开关.png',
+};
+
+// ─── SVG fallback ─────────────────────
+
+function iconFallback(modName) {
+  return `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23fce4ec%22/><text x=%2250%22 y=%2268%22 text-anchor=%22middle%22 font-size=%2248%22>${encodeURIComponent(modName || '📱')}</text></svg>`;
+}
+
+// ─── 激活世界状态 ─────────────────────
+
+export function updateActiveWorldStatus() {
+  const el = document.getElementById('active-world-status');
+  if (!el) return;
+  const running = window.activeWorld?.isRunning?.();
+  const db = getDb();
+  el.textContent = running ? '🟢 运行中' : (db.activeWorldEnabled ? '⏸ 等待启动...' : '⚪ 已暂停');
+}
+
+// ─── 主页设置 ─────────────────────────
+
+function setupHomeScreen() {
+  const db = getDb();
+  const getIcon = (id) => (db.customIcons || {})[id] || defaultIcons[id]?.url || '';
+
+  const homePageMain = document.getElementById('home-page-main');
+  const homePageRight = document.getElementById('home-page-right');
+  if (!homePageMain || !homePageRight) return;
+
+  // ── 第一页：应用网格 ──
+  homePageMain.innerHTML = `
+    <div class="time-widget"><div class="time" id="time-display"></div><div class="date" id="date-display"></div></div>
+    <div class="app-grid">
+      <a href="#" class="app-icon" data-target="chat-list-screen"><img src="${getIcon('chat-list-screen')}" onerror="this.src='${iconFallback('💬')}'" alt="QQ" class="icon-img"><span class="app-name">${defaultIcons['chat-list-screen']?.name || 'QQ'}</span></a>
+      <a href="#" class="app-icon" data-target="api-settings-screen"><img src="${getIcon('api-settings-screen')}" onerror="this.src='${iconFallback('🔑')}'" alt="API" class="icon-img"><span class="app-name">${defaultIcons['api-settings-screen']?.name || 'API设置'}</span></a>
+      <a href="#" class="app-icon" data-target="wallpaper-screen"><img src="${getIcon('wallpaper-screen')}" onerror="this.src='${iconFallback('🖼️')}'" alt="壁纸" class="icon-img"><span class="app-name">${defaultIcons['wallpaper-screen']?.name || '壁纸'}</span></a>
+      <a href="#" class="app-icon" data-target="world-book-screen"><img src="${getIcon('world-book-screen')}" onerror="this.src='${iconFallback('📖')}'" alt="世界书" class="icon-img"><span class="app-name">${defaultIcons['world-book-screen']?.name || '世界书'}</span></a>
+      <a href="#" class="app-icon" data-target="customize-screen"><img src="${getIcon('customize-screen')}" onerror="this.src='${iconFallback('🎨')}'" alt="自定义" class="icon-img"><span class="app-name">${defaultIcons['customize-screen']?.name || '自定义'}</span></a>
+      <a href="#" class="app-icon" id="media-home-btn"><img src="assets/icons/白天开关.png" onerror="this.src='${iconFallback('📰')}'" alt="媒体" class="icon-img"><span class="app-name">媒体</span></a>
+    </div>`;
+
+  // ── Dock（底部固定栏：商店/字体/激活世界/直播/衣柜）──
+  const homeDock = document.getElementById('home-dock');
+  if (homeDock) {
+    homeDock.innerHTML = `
+      <a href="#" class="app-icon engine-module-btn" data-module="shop"><img src="assets/icons/商店.png" onerror="this.src='${iconFallback('🛒')}'" alt="商店" class="icon-img"></a>
+      <a href="#" class="app-icon" id="active-world-dock-btn"><img src="assets/icons/浏览器.png" onerror="this.src='${iconFallback('🌐')}'" alt="激活世界" class="icon-img"></a>
+      <a href="#" class="app-icon engine-module-btn" data-module="live"><img src="assets/icons/直播.png" onerror="this.src='${iconFallback('📺')}'" alt="直播" class="icon-img"></a>
+      <a href="#" class="app-icon engine-module-btn" data-module="wardrobe"><img src="assets/icons/摇一摇.png" onerror="this.src='${iconFallback('👗')}'" alt="衣柜" class="icon-img"></a>`;
+  }
+
+  // ── 第二页：模块中心 ──
+  const modules = window.Engine?.getAllModules?.() || [];
+  homePageRight.innerHTML = `
+    <div class="right-page-empty">
+      <div class="right-page-title">模块中心</div>
+      <div class="right-page-grid">
+        ${modules.map(mod => {
+          const iconFile = MODULE_ICON_MAP[mod.id];
+          // 商店和直播已移至 Dock，模块中心不重复
+          if (mod.id === 'shop' || mod.id === 'live') return '';
+          // 媒体已移至主页，模块中心显示"待开发"
+          if (mod.id === 'media') {
+            return `<a href="#" class="app-icon" style="opacity:0.5;cursor:default;">
+              <div class="icon-img" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);box-shadow:0 4px 10px rgba(0,0,0,0.1);overflow:hidden;">
+                <img src="${iconFile || ''}" onerror="this.outerHTML='<span style=font-size:30px;>📰</span>'" alt="media" style="width:100%;height:100%;object-fit:cover;border-radius:15px;">
+              </div>
+              <span class="app-name">待开发</span>
+            </a>`;
+          }
+          // 相册：有封面时用用户图片
+          if (mod.id === 'album') {
+            const albumMod = window.Engine?.getModule?.('album');
+            const coverUrl = albumMod && typeof albumMod.getCoverUrl === 'function' ? albumMod.getCoverUrl() : null;
+            const iconContent = coverUrl
+              ? `<img src="${coverUrl}" alt="相册" style="width:100%;height:100%;object-fit:cover;border-radius:15px;">`
+              : `<span style="font-size:48px;">📷</span>`;
+            return `<a href="#" class="app-icon engine-module-btn album-module-btn" data-module="album">
+              <div class="icon-img album-icon-img" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);box-shadow:0 4px 10px rgba(0,0,0,0.1);overflow:hidden;">${iconContent}</div>
+              <span class="app-name">${mod.name}</span>
+            </a>`;
+          }
+          // 其他模块：用自定义图标 + onerror fallback
+          const iconHtml = iconFile
+            ? `<img src="${iconFile}" onerror="this.outerHTML='<span style=font-size:30px;>${mod.icon}</span>'" alt="${mod.name}" style="width:100%;height:100%;object-fit:cover;border-radius:15px;">`
+            : `<span style="font-size:30px;">${mod.icon}</span>`;
+          return `<a href="#" class="app-icon engine-module-btn" data-module="${mod.id}">
+            <div class="icon-img" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.85);box-shadow:0 4px 10px rgba(0,0,0,0.1);overflow:hidden;">${iconHtml}</div>
+            <span class="app-name">${mod.name}</span>
+          </a>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  // ── 绑定事件 ──
+
+  // 模块中心按钮
+  homePageRight.querySelectorAll('.engine-module-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.preventDefault(); window.Engine?.openModule(btn.dataset.module); });
+  });
+
+  // Dock 模块按钮
+  homeDock?.querySelectorAll('.engine-module-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.preventDefault(); window.Engine?.openModule(btn.dataset.module); });
+  });
+
+  // 媒体主页入口
+  document.getElementById('media-home-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.Engine?.openModule('media');
+  });
+
+  // 激活世界设置弹窗
+  const activeWorldBtn = document.getElementById('active-world-dock-btn');
+  if (activeWorldBtn) {
+    activeWorldBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const db = getDb();
+      document.getElementById('active-world-enabled').checked = db.activeWorldEnabled || false;
+      document.getElementById('active-world-interval').value = db.activeWorldInterval || 5;
+      document.getElementById('active-world-scope').value = db.activeWorldScope || 'both';
+      updateActiveWorldStatus();
+      document.getElementById('active-world-modal').classList.add('visible');
+    });
+  }
+
+  // 子页面导航时刷新列表
+  document.querySelector('[data-target="world-book-screen"]')?.addEventListener('click', () => {
+    renderWorldBookList();
+  });
+  document.querySelector('[data-target="customize-screen"]')?.addEventListener('click', () => {
+    renderCustomizeForm();
+  });
+
+  setupSwipeNavigation();
+  updateClock();
+  setInterval(updateClock, 60000);
+  applyWallpaper(db.wallpaper);
+}

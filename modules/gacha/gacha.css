@@ -1,0 +1,144 @@
+/* ========================================
+   Module: Gacha (角色生成器) - CSS
+   ======================================== */
+
+
+/* 主内容区 */
+.gacha-content {
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    align-items: center; padding: 20px;
+}
+
+/* 摇一摇按钮 */
+.gacha-shake-area {
+    display: flex; flex-direction: column; align-items: center;
+    margin-bottom: 24px;
+}
+.gacha-shake-btn {
+    width: 120px; height: 120px; border-radius: 50%; border: none;
+    background: linear-gradient(135deg, #FF6B9D, #FF8A65, #FFD54F);
+    color: #fff; font-size: 48px; cursor: pointer;
+    box-shadow: 0 8px 30px rgba(255,107,157,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+}
+.gacha-shake-btn::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+    animation: gachaGlow 2s ease-in-out infinite;
+}
+@keyframes gachaGlow {
+    0%,100% { transform: translate(-30%,-30%); }
+    50% { transform: translate(10%,10%); }
+}
+.gacha-shake-btn:hover { transform: scale(1.05); box-shadow: 0 12px 40px rgba(255,107,157,0.5); }
+.gacha-shake-btn:active { transform: scale(0.95); }
+.gacha-shake-btn.shaking { animation: gachaShake 0.5s ease-in-out; }
+@keyframes gachaShake {
+    0%,100% { transform: rotate(0deg); }
+    20% { transform: rotate(-15deg); }
+    40% { transform: rotate(15deg); }
+    60% { transform: rotate(-10deg); }
+    80% { transform: rotate(10deg); }
+}
+.gacha-shake-hint {
+    font-size: 14px; color: #999; margin-top: 12px;
+}
+.gacha-shake-count {
+    font-size: 12px; color: #ccc; margin-top: 4px;
+}
+
+/* 筛选标签 */
+.gacha-filters {
+    display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; justify-content: center;
+}
+.gacha-filter {
+    padding: 6px 14px; border: 1px solid #eee; border-radius: 20px;
+    font-size: 12px; color: #666; cursor: pointer; background: #fff;
+    transition: all 0.2s;
+}
+.gacha-filter:hover { border-color: var(--primary-color); }
+.gacha-filter.active { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+
+/* 生成结果 */
+.gacha-results {
+    width: 100%; display: flex; flex-direction: column; gap: 14px;
+}
+
+/* 角色卡片 */
+.gacha-card {
+    background: #fff; border-radius: 16px; padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    display: flex; gap: 14px; position: relative;
+    animation: gachaCardIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes gachaCardIn { from { transform: translateY(20px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+.gacha-card-avatar {
+    width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
+    flex-shrink: 0; border: 3px solid #f0f0f0;
+}
+.gacha-card-info { flex: 1; min-width: 0; }
+.gacha-card-name {
+    font-size: 16px; font-weight: 700; color: var(--text-color);
+    margin-bottom: 4px;
+}
+.gacha-card-persona {
+    font-size: 12px; color: #888; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.gacha-card-actions {
+    display: flex; gap: 8px; margin-top: 10px;
+}
+.gacha-card-btn {
+    padding: 6px 14px; border: none; border-radius: 10px;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: transform 0.15s;
+}
+.gacha-card-btn:active { transform: scale(0.95); }
+.gacha-card-btn.add { background: var(--primary-color); color: #fff; }
+.gacha-card-btn.reroll { background: #f0f0f0; color: #666; }
+
+/* 加载动画 */
+.gacha-loading {
+    display: flex; flex-direction: column; align-items: center; padding: 40px 0;
+    color: #999; font-size: 14px;
+}
+.gacha-loading-dots { display: flex; gap: 6px; margin-bottom: 12px; }
+.gacha-loading-dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--primary-color); animation: dotBounce 1.2s infinite;
+}
+.gacha-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.gacha-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
+
+/* 许愿区 */
+.gacha-wish-area {
+    width: 100%; margin-bottom: 16px;
+}
+.gacha-wish-title {
+    font-size: 13px; font-weight: 600; color: var(--text-color);
+    margin-bottom: 8px; text-align: center;
+}
+.gacha-wish-list {
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+}
+.gacha-wish-chip {
+    padding: 5px 12px; border: 1px solid #e8e8e8; border-radius: 16px;
+    font-size: 12px; color: #666; background: #fff; cursor: pointer;
+    transition: all 0.2s; user-select: none;
+}
+.gacha-wish-chip:hover {
+    border-color: var(--primary-color); color: var(--primary-color);
+}
+.gacha-wish-chip.active {
+    background: linear-gradient(135deg, #FF6B9D, #FF8A65);
+    color: #fff; border-color: transparent;
+    box-shadow: 0 2px 8px rgba(255,107,157,0.3);
+}
+.gacha-wish-custom {
+    margin-top: 8px; padding: 0 4px;
+}

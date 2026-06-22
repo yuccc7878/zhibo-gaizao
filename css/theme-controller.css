@@ -1,0 +1,347 @@
+/* ========================================
+   Theme Controller
+   通过 .theme-purple / .theme-white 控制主题
+   ======================================== */
+
+/* ─── 默认：粉紫主题激活，白色主题隐藏 ─── */
+
+/* 粉紫主题 CSS（当 .theme-purple 时生效） */
+.theme-purple ~ link[href*="chat-room-dark"],
+.theme-purple ~ link[href*="module-theme"] {
+    /* CSS 无法控制 link 标签，用 JS 处理 */
+}
+
+/* ─── 粉紫主题：商店 ─── */
+.theme-purple #shop-screen {
+    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+}
+.theme-white #shop-screen {
+    background: #fff !important;
+}
+
+/* ─── 粉紫主题：聊天室 ─── */
+.theme-purple #chat-room-screen {
+    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+}
+.theme-white #chat-room-screen {
+    background: #f5f5f5 !important;
+}
+
+/* ─── 粉紫主题：其他模块 ─── */
+.theme-purple #album-screen,
+.theme-purple #bilibili-screen,
+.theme-purple #gacha-screen,
+.theme-purple #games-screen,
+.theme-purple #media-screen,
+.theme-purple #live-screen {
+    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+}
+.theme-white #album-screen,
+.theme-white #bilibili-screen,
+.theme-white #gacha-screen,
+.theme-white #games-screen,
+.theme-white #media-screen,
+.theme-white #live-screen {
+    background: #f5f5f5 !important;
+}
+
+/* ─── 粉紫主题：头部栏 ─── */
+.theme-purple .shop-header-bar,
+.theme-purple #chat-room-screen .chat-header,
+.theme-purple #chat-room-screen .chat-header-bar,
+.theme-purple .album-header,
+.theme-purple .bili-header,
+.theme-purple .gacha-header,
+.theme-purple .games-header,
+.theme-purple .media-header {
+    background: rgba(255,255,255,0.12) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+}
+.theme-white .shop-header-bar,
+.theme-white #chat-room-screen .chat-header,
+.theme-white #chat-room-screen .chat-header-bar,
+.theme-white .album-header,
+.theme-white .bili-header,
+.theme-white .gacha-header,
+.theme-white .games-header,
+.theme-white .media-header {
+    background: rgba(255,255,255,0.85) !important;
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid #eee !important;
+}
+
+/* ─── 粉紫主题：标题文字 ─── */
+.theme-purple .shop-title,
+.theme-purple #chat-room-screen .chat-header .title,
+.theme-purple #chat-room-screen .chat-header-bar .title,
+.theme-purple .album-header .title,
+.theme-purple .bili-header .title,
+.theme-purple .gacha-header .title,
+.theme-purple .games-header .title,
+.theme-purple .media-header .title {
+    color: #fff !important;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+}
+.theme-white .shop-title,
+.theme-white #chat-room-screen .chat-header .title,
+.theme-white #chat-room-screen .chat-header-bar .title,
+.theme-white .album-header .title,
+.theme-white .bili-header .title,
+.theme-white .gacha-header .title,
+.theme-white .games-header .title,
+.theme-white .media-header .title {
+    color: #333 !important;
+    text-shadow: none !important;
+}
+
+/* ─── 粉紫主题：返回按钮 ─── */
+.theme-purple .shop-header-bar .back-btn,
+.theme-purple #chat-room-screen .chat-header .back-btn,
+.theme-purple #chat-room-screen .chat-header-bar .back-btn,
+.theme-purple .album-header .back-btn,
+.theme-purple .bili-header .back-btn,
+.theme-purple .gacha-header .back-btn,
+.theme-purple .games-header .back-btn,
+.theme-purple .media-header .back-btn {
+    color: #fff !important;
+}
+.theme-white .shop-header-bar .back-btn,
+.theme-white #chat-room-screen .chat-header .back-btn,
+.theme-white #chat-room-screen .chat-header-bar .back-btn,
+.theme-white .album-header .back-btn,
+.theme-white .bili-header .back-btn,
+.theme-white .gacha-header .back-btn,
+.theme-white .games-header .back-btn,
+.theme-white .media-header .back-btn {
+    color: var(--primary-color) !important;
+}
+
+/* ─── 粉紫主题：气泡 ─── */
+.theme-purple .message-bubble.sent {
+    background: rgba(255,255,255,0.2) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.25) !important;
+}
+.theme-purple .message-bubble.received {
+    background: rgba(255,255,255,0.12) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+}
+.theme-white .message-bubble.sent {
+    background: #95ec69 !important;
+    color: #000 !important;
+    border: none !important;
+}
+.theme-white .message-bubble.received {
+    background: #fff !important;
+    color: #333 !important;
+    border: none !important;
+}
+
+/* ─── 粉紫主题：输入栏 ─── */
+.theme-purple .message-input-area {
+    background: rgba(255,255,255,0.12) !important;
+    backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(255,255,255,0.15) !important;
+}
+.theme-purple .message-input-area input {
+    background: rgba(255,255,255,0.12) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+}
+.theme-purple .message-input-area .icon-btn {
+    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+}
+.theme-white .message-input-area {
+    background: rgba(255,255,255,0.85) !important;
+    backdrop-filter: blur(10px) !important;
+    border-top: 1px solid #eee !important;
+}
+.theme-white .message-input-area input {
+    background: #f0f0f0 !important;
+    color: #333 !important;
+    border: none !important;
+}
+.theme-white .message-input-area .icon-btn {
+    background: var(--primary-color) !important;
+}
+
+/* ─── 粉紫主题：卡片 ─── */
+.theme-purple .bili-video-card,
+.theme-purple .game-card,
+.theme-purple .media-card,
+.theme-purple .shop-card {
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important;
+}
+.theme-white .bili-video-card,
+.theme-white .game-card,
+.theme-white .media-card,
+.theme-white .shop-card {
+    background: #fff !important;
+    border: none !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+}
+
+/* ─── 粉紫主题：卡片文字 ─── */
+.theme-purple .bili-video-title,
+.theme-purple .game-card .game-name,
+.theme-purple .media-card .media-title,
+.theme-purple .shop-card-label {
+    color: #fff !important;
+}
+.theme-white .bili-video-title,
+.theme-white .game-card .game-name,
+.theme-white .media-card .media-title,
+.theme-white .shop-card-label {
+    color: #333 !important;
+}
+
+/* ─── 粉紫主题：Tab ─── */
+.theme-purple .shop-tab {
+    background: rgba(255,255,255,0.06) !important;
+    color: rgba(255,255,255,0.5) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+.theme-purple .shop-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+}
+.theme-white .shop-tab {
+    background: transparent !important;
+    color: #999 !important;
+    border-bottom: 3px solid transparent !important;
+}
+.theme-white .shop-tab.active {
+    background: transparent !important;
+    color: var(--primary-color) !important;
+    border-bottom-color: var(--primary-color) !important;
+}
+
+/* ─── 粉紫主题：弹窗 ─── */
+.theme-purple .shop-overlay,
+.theme-purple #send-gift-modal {
+    background: rgba(0,0,0,0.5) !important;
+}
+.theme-white .shop-overlay,
+.theme-white #send-gift-modal {
+    background: rgba(0,0,0,0.4) !important;
+}
+.theme-purple .shop-modal {
+    background: linear-gradient(135deg, #1e2a3a 0%, #151d2a 100%) !important;
+}
+.theme-white .shop-modal {
+    background: #fff !important;
+}
+.theme-purple .shop-modal-name,
+.theme-purple .shop-modal-desc {
+    color: rgba(255,255,255,0.9) !important;
+}
+.theme-white .shop-modal-name { color: #333 !important; }
+.theme-white .shop-modal-desc { color: #888 !important; }
+
+/* ─── 粉紫主题：购买按钮 ─── */
+.theme-purple .shop-btn-buy {
+    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+}
+.theme-white .shop-btn-buy {
+    background: var(--primary-color) !important;
+}
+
+/* ─── 粉紫主题：返回按钮统一风格 ─── */
+.theme-purple .back-btn,
+.theme-purple .wardrobe-back-btn {
+    background: rgba(255,255,255,0.15) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255,255,255,0.25) !important;
+    border-radius: 50% !important;
+    color: #fff !important;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+    transition: all 0.3s !important;
+}
+.theme-purple .back-btn:hover,
+.theme-purple .wardrobe-back-btn:hover {
+    background: rgba(255,255,255,0.25) !important;
+    transform: scale(1.05) !important;
+}
+.theme-white .back-btn {
+    background: none !important;
+    border: none !important;
+    color: var(--primary-color) !important;
+    font-size: 24px !important;
+    font-weight: bold !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+}
+
+/* ─── 粉紫主题：头部标题渐变 ─── */
+.theme-purple .shop-title {
+    background: linear-gradient(135deg, #fff, #f093fb) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+.theme-white .shop-title {
+    background: none !important;
+    -webkit-text-fill-color: var(--text-color) !important;
+}
+
+/* ─── 粉紫主题：金币显示 ─── */
+.theme-purple .shop-coins {
+    background: rgba(255,255,255,0.15) !important;
+    border: 1px solid rgba(255,255,255,0.25) !important;
+}
+.theme-white .shop-coins {
+    background: rgba(255,215,0,0.1) !important;
+    border: 1px solid rgba(255,215,0,0.2) !important;
+}
+
+/* ─── 粉紫主题：文字颜色通用 ─── */
+.theme-purple .sender-name { color: rgba(255,255,255,0.5) !important; }
+.theme-purple .typing-indicator { color: rgba(255,255,255,0.4) !important; }
+.theme-purple .message-time { color: rgba(255,255,255,0.3) !important; }
+.theme-purple .shop-section-title { color: rgba(255,255,255,0.25) !important; }
+.theme-purple .shop-card-desc { color: rgba(255,255,255,0.3) !important; }
+.theme-purple .shop-card-price { color: #ffd700 !important; }
+.theme-purple #shop-money { color: #ffd700 !important; }
+
+.theme-white .sender-name { color: #999 !important; }
+.theme-white .typing-indicator { color: #aaa !important; }
+.theme-white .message-time { color: #aaa !important; }
+.theme-white .shop-section-title { color: #999 !important; }
+.theme-white .shop-card-desc { color: #999 !important; }
+.theme-white .shop-card-price { color: #ff9800 !important; }
+.theme-white #shop-money { color: #ff9800 !important; }
+
+/* ─── 粉紫主题：头像边框 ─── */
+.theme-purple .msg-avatar {
+    border: 2px solid rgba(255,255,255,0.25) !important;
+}
+.theme-white .msg-avatar {
+    border: none !important;
+}
+
+/* ─── 粉紫主题：表情栏 ─── */
+.theme-purple #sticker-bar {
+    background: rgba(255,255,255,0.12) !important;
+    border-top: 1px solid rgba(255,255,255,0.1) !important;
+}
+.theme-white #sticker-bar {
+    background: rgba(255,255,255,0.7) !important;
+    border-top: 1px solid #eee !important;
+}

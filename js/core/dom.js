@@ -1,0 +1,114 @@
+/* ========================================
+   DOM 缓存 - 集中管理元素引用
+   ======================================== */
+
+const IDS = [
+  // 主屏幕
+  'home-screen',
+  // 聊天列表
+  'chat-list-container', 'no-chats-placeholder', 'add-chat-btn',
+  'add-char-modal', 'add-char-modal-window', 'add-char-form', 'char-real-name', 'char-remark-name', 'my-name-for-char',
+  'import-tab-panel', 'import-dropzone', 'import-card-file', 'import-select-btn', 'import-preview', 'import-error', 
+  // 聊天室
+  'chat-room-screen', 'chat-room-header-default', 'chat-room-header-select',
+  'cancel-multi-select-btn', 'multi-select-title',
+  'chat-room-title', 'chat-room-status-text',
+  'message-area', 'message-input-default', 'message-input',
+  'send-message-btn', 'get-reply-btn', 'typing-indicator',
+  'chat-settings-btn', 'chat-settings-sidebar', 'chat-settings-form',
+  'message-edit-bar', 'message-edit-input', 'save-edit-btn', 'cancel-edit-btn',
+  'multi-select-bar', 'select-count', 'delete-selected-btn',
+  // 表情
+  'sticker-toggle-btn', 'sticker-modal', 'sticker-grid-container',
+  'add-new-sticker-btn', 'add-sticker-modal', 'add-sticker-modal-title',
+  'add-sticker-form', 'sticker-edit-id', 'sticker-preview',
+  'sticker-name', 'sticker-url-input', 'sticker-file-upload',
+  'sticker-actionsheet', 'edit-sticker-btn', 'delete-sticker-btn',
+  // 语音
+  'voice-message-btn', 'send-voice-modal', 'send-voice-form',
+  'voice-text-input', 'voice-duration-preview',
+  // 照片/视频
+  'photo-video-btn', 'send-pv-modal', 'send-pv-form', 'pv-text-input',
+  // 图片识别
+  'image-recognition-btn', 'image-upload-input',
+  // 钱包/转账
+  'wallet-btn', 'send-transfer-modal', 'send-transfer-form',
+  'transfer-amount-input', 'transfer-remark-input',
+  'receive-transfer-actionsheet', 'accept-transfer-btn', 'return-transfer-btn',
+  // 礼物
+  'gift-btn', 'send-gift-modal',
+  // 时间跳跃
+  'time-skip-btn', 'time-skip-modal', 'time-skip-form', 'time-skip-input',
+  // 世界书
+  'world-book-list-container', 'no-world-books-placeholder', 'add-world-book-btn',
+  'edit-world-book-form', 'world-book-id-input', 'world-book-name-input',
+  'world-book-content-input', 'link-world-book-btn',
+  'world-book-selection-modal', 'world-book-selection-list', 'save-world-book-selection-btn',
+  // 群聊
+  'create-group-btn', 'create-group-modal', 'create-group-form',
+  'member-selection-list', 'group-name-input',
+  'group-settings-sidebar', 'group-settings-form',
+  'group-members-list-container', 'edit-group-member-modal', 'edit-group-member-form',
+  'add-member-actionsheet', 'invite-existing-member-btn', 'create-new-member-btn',
+  'invite-member-modal', 'invite-member-selection-list', 'confirm-invite-btn',
+  'create-member-for-group-modal', 'create-member-for-group-form',
+  'group-recipient-selection-modal', 'group-recipient-selection-list',
+  'confirm-group-recipient-btn', 'group-recipient-selection-title',
+  'link-group-world-book-btn',
+  // 设置
+  'setting-theme-color', 'setting-use-custom-css', 'setting-custom-bubble-css',
+  'reset-custom-bubble-css-btn', 'private-bubble-css-preview',
+  'setting-char-avatar-preview', 'setting-char-avatar-upload', 'setting-char-avatar-ai-btn',
+  'setting-char-real-name', 'setting-char-remark', 'setting-char-persona',
+  'setting-my-avatar-preview', 'setting-my-avatar-upload',
+  'setting-my-name', 'setting-my-persona', 'setting-max-memory',
+  'setting-chat-bg-upload', 'clear-chat-history-btn',
+  'setting-ai-img-gen', 'setting-memory-summary', 'setting-key-events-list',
+  'btn-gen-summary', 'btn-clear-summary', 'btn-clear-keyevents',
+  // 群聊设置
+  'setting-group-theme-color', 'setting-group-use-custom-css',
+  'setting-group-custom-bubble-css', 'reset-group-custom-bubble-css-btn',
+  'group-bubble-css-preview', 'setting-group-avatar-preview', 'setting-group-avatar-upload',
+  'setting-group-name', 'setting-group-my-avatar-preview', 'setting-group-my-avatar-upload',
+  'setting-group-my-nickname', 'setting-group-my-persona', 'setting-group-max-memory',
+  'setting-group-chat-bg-upload', 'clear-group-chat-history-btn',
+  'edit-member-avatar-preview', 'edit-member-avatar-upload',
+  'editing-member-id', 'edit-member-group-nickname', 'edit-member-real-name',
+  'edit-member-persona', 'edit-group-member-title',
+  'create-group-member-avatar-preview', 'create-group-member-avatar-upload',
+  'create-group-member-realname', 'create-group-member-nickname', 'create-group-member-persona',
+  // 其他
+  'toast-notification', 'font-settings-form', 'font-url', 'restore-default-font-btn',
+  'customize-form', 'import-data-input',
+  // API 设置
+  'add-api-preset-btn', 'api-preset-list', 'img-gen-settings-card', 'img-gen-edit-btn',
+  'api-edit-back-btn', 'delete-api-preset-btn', 'api-edit-title',
+  'api-edit-form', 'api-edit-id', 'api-edit-name', 'api-edit-provider',
+  'api-edit-url', 'api-edit-key', 'api-edit-fetch-btn', 'api-edit-model',
+  'img-gen-edit-screen', 'img-gen-back-btn', 'img-gen-form',
+  'img-gen-url', 'img-gen-key', 'img-gen-model', 'img-gen-reset-btn',
+  // 壁纸
+  'wallpaper-preview', 'wallpaper-upload',
+  // 检查更新
+  'check-update-btn',
+  // TTS 设置
+  'tts-settings-card', 'tts-global-status', 'tts-edit-btn', 'tts-edit-screen',
+  'setting-tts-engine', 'setting-tts-speaker', 'setting-tts-speed', 'setting-tts-speed-label', 'setting-tts-preview-btn',
+  // 屏幕（注入的 HTML）
+  'api-settings-screen', 'api-edit-screen', 'img-gen-status', 'wallpaper-screen',
+  'font-settings-screen', 'customize-screen',
+];
+
+/**
+ * 初始化并返回所有 DOM 元素引用
+ * @returns {Object<string, HTMLElement>}
+ */
+export function initDomCache() {
+  /** @type {Object<string, HTMLElement>} */
+  const dom = {};
+  for (const id of IDS) {
+    dom[id] = document.getElementById(id);
+  }
+  dom.screens = document.querySelectorAll('.screen');
+  return dom;
+}

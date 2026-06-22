@@ -1,0 +1,131 @@
+/* ========================================
+   Module Theme — 粉紫主题（仅 .theme-purple 时生效）
+   ======================================== */
+
+/* 模块背景 */
+.theme-purple #album-screen,
+.theme-purple #bilibili-screen,
+.theme-purple #gacha-screen,
+.theme-purple #games-screen,
+.theme-purple #media-screen,
+.theme-purple #live-screen {
+    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+}
+
+/* 通用头部 */
+.theme-purple .album-header,
+.theme-purple .bili-header,
+.theme-purple .gacha-header,
+.theme-purple .games-header,
+.theme-purple .media-header,
+.theme-purple .live-header {
+    background: rgba(255,255,255,0.12) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+}
+.theme-purple .album-header .title,
+.theme-purple .bili-header .title,
+.theme-purple .gacha-header .title,
+.theme-purple .games-header .title,
+.theme-purple .media-header .title {
+    color: #fff !important;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+}
+.theme-purple .album-header .back-btn,
+.theme-purple .bili-header .back-btn,
+.theme-purple .gacha-header .back-btn,
+.theme-purple .games-header .back-btn,
+.theme-purple .media-header .back-btn {
+    color: #fff !important;
+}
+
+/* 内容区 */
+.theme-purple .album-content,
+.theme-purple .bili-content,
+.theme-purple .gacha-content,
+.theme-purple .games-lobby,
+.theme-purple .media-content,
+.theme-purple .live-content {
+    background: transparent !important;
+}
+
+/* B站卡片 */
+.theme-purple .bili-video-card { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; }
+.theme-purple .bili-video-title { color: #fff !important; }
+.theme-purple .bili-video-meta,
+.theme-purple .bili-video-meta * { color: rgba(255,255,255,0.5) !important; }
+
+/* 游戏卡片 */
+.theme-purple .game-card { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; }
+.theme-purple .game-card:hover { background: rgba(255,255,255,0.18) !important; box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important; }
+.theme-purple .game-card .game-name { color: #fff !important; }
+.theme-purple .game-card .game-desc { color: rgba(255,255,255,0.6) !important; }
+.theme-purple .games-money { color: #ffd700 !important; }
+
+/* 抽卡 */
+.theme-purple .gacha-shake-btn { box-shadow: 0 8px 30px rgba(255,107,157,0.4) !important; }
+.theme-purple .gacha-result { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.15) !important; box-shadow: 0 8px 30px rgba(0,0,0,0.2) !important; }
+.theme-purple .gacha-result .char-name { color: #fff !important; }
+.theme-purple .gacha-result .char-persona { color: rgba(255,255,255,0.7) !important; }
+.theme-purple .gacha-result .char-tags span { background: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.8) !important; border: 1px solid rgba(255,255,255,0.2) !important; }
+
+/* 相册 */
+.theme-purple .album-grid { background: transparent !important; }
+.theme-purple .album-item { border-radius: 12px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important; overflow: hidden !important; }
+
+/* 媒体 */
+.theme-purple .media-tabs { background: rgba(255,255,255,0.1) !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
+.theme-purple .media-tab { color: rgba(255,255,255,0.5) !important; }
+.theme-purple .media-tab.active { color: #fff !important; border-bottom-color: #fff !important; }
+.theme-purple .media-card { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; }
+.theme-purple .media-card .media-title { color: #fff !important; }
+.theme-purple .media-card .media-desc { color: rgba(255,255,255,0.6) !important; }
+.theme-purple .media-card .media-meta { color: rgba(255,255,255,0.4) !important; }
+.theme-purple .media-detail { background: rgba(20,25,40,0.95) !important; }
+.theme-purple .media-detail .detail-title { color: #fff !important; }
+.theme-purple .media-detail .detail-content { color: rgba(255,255,255,0.85) !important; }
+
+/* 直播引导 */
+.theme-purple .live-wizard { background: rgba(20,25,40,0.95) !important; backdrop-filter: blur(40px) !important; -webkit-backdrop-filter: blur(40px) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 20px !important; box-shadow: 0 20px 60px rgba(0,0,0,0.4) !important; }
+.theme-purple .live-wizard-header .live-wizard-title { color: #fff !important; }
+.theme-purple .live-wizard-step { color: rgba(255,255,255,0.4) !important; }
+.theme-purple .live-level-card { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+.theme-purple .live-level-card.selected { background: rgba(102,126,234,0.2) !important; border-color: rgba(102,126,234,0.5) !important; }
+.theme-purple .live-level-name { color: #fff !important; }
+.theme-purple .live-level-desc { color: rgba(255,255,255,0.5) !important; }
+.theme-purple .live-scene-item { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; }
+.theme-purple .live-scene-item.selected { background: rgba(102,126,234,0.2) !important; border-color: rgba(102,126,234,0.5) !important; color: #fff !important; }
+.theme-purple .live-scene-category summary { color: rgba(255,255,255,0.6) !important; }
+.theme-purple .live-prop-item { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; }
+.theme-purple .live-prop-item.selected { background: rgba(102,126,234,0.2) !important; border-color: rgba(102,126,234,0.5) !important; color: #fff !important; }
+.theme-purple .live-host-card { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+.theme-purple .live-host-card.selected { border-color: rgba(102,126,234,0.5) !important; }
+.theme-purple .live-host-name { color: rgba(255,255,255,0.8) !important; }
+.theme-purple .live-wiz-btn-back { background: rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border: 1px solid rgba(255,255,255,0.15) !important; }
+.theme-purple .live-wiz-btn-next,
+.theme-purple .live-wiz-btn-skip { background: linear-gradient(135deg, #667eea, #9b59b6) !important; color: #fff !important; border: none !important; box-shadow: 0 4px 15px rgba(155,89,182,0.4) !important; }
+
+/* 直播流 */
+.theme-purple .live-stream { background: #0d0d0d !important; }
+.theme-purple .live-top-bar { background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%) !important; }
+.theme-purple .live-host-name-text { color: #fff !important; }
+.theme-purple .live-host-tags .live-tag { background: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.8) !important; }
+.theme-purple .live-host-tags .live-tag.hot { background: linear-gradient(135deg, #667eea, #f093fb) !important; color: #fff !important; }
+.theme-purple .live-msg-story { color: #f093fb !important; }
+.theme-purple .live-msg-danmaku { color: rgba(255,255,255,0.85) !important; }
+.theme-purple .live-msg-tip { color: #ffd700 !important; }
+.theme-purple .live-msg-gift { color: #ffd700 !important; }
+.theme-purple .live-input-bar { background: rgba(0,0,0,0.5) !important; backdrop-filter: blur(10px) !important; }
+.theme-purple .live-input-bar input { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.15) !important; }
+.theme-purple .live-send-btn { background: linear-gradient(135deg, #667eea, #f093fb) !important; }
+.theme-purple .live-side-btn { color: #fff !important; }
+.theme-purple .live-close-btn { background: rgba(255,255,255,0.15) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2) !important; }
+.theme-purple .live-settle-box { background: rgba(20,25,40,0.95) !important; backdrop-filter: blur(40px) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 20px !important; }
+.theme-purple .live-settle-title { color: #fff !important; }
+.theme-purple .live-settle-sub { color: rgba(255,255,255,0.5) !important; }
+.theme-purple .live-settle-coin { color: #ffd700 !important; }
+.theme-purple .live-settle-stat-val { color: #fff !important; }
+.theme-purple .live-settle-stat-lbl { color: rgba(255,255,255,0.4) !important; }
+.theme-purple .live-settle-btn { background: linear-gradient(135deg, #667eea, #9b59b6) !important; color: #fff !important; border: none !important; border-radius: 14px !important; box-shadow: 0 4px 15px rgba(155,89,182,0.4) !important; }
+.theme-purple .live-empty-state { color: rgba(255,255,255,0.4) !important; }
