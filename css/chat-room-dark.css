@@ -5,24 +5,20 @@
 .theme-purple #chat-room-screen {
     background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
 }
-.theme-purple #chat-room-screen .chat-header,
-.theme-purple #chat-room-screen .chat-header-bar {
+.theme-purple #chat-room-screen .app-header {
     background: rgba(255,255,255,0.12) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     border-bottom: 1px solid rgba(255,255,255,0.15) !important;
 }
-.theme-purple #chat-room-screen .chat-header .title,
-.theme-purple #chat-room-screen .chat-header-bar .title {
+.theme-purple #chat-room-screen .app-header .title {
     color: #fff !important;
     text-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
 }
-.theme-purple #chat-room-screen .chat-header .status,
-.theme-purple #chat-room-screen .chat-header-bar .status {
+.theme-purple #chat-room-screen .app-header .status {
     color: rgba(255,255,255,0.6) !important;
 }
-.theme-purple #chat-room-screen .chat-header .back-btn,
-.theme-purple #chat-room-screen .chat-header-bar .back-btn {
+.theme-purple #chat-room-screen .app-header .back-btn {
     color: #fff !important;
 }
 
@@ -85,8 +81,24 @@
 .theme-purple .typing-indicator { color: rgba(255,255,255,0.4) !important; }
 .theme-purple .load-more-btn { background: rgba(255,255,255,0.12) !important; color: rgba(255,255,255,0.6) !important; border: 1px solid rgba(255,255,255,0.15) !important; }
 .theme-purple #multi-select-bar { background: rgba(255,255,255,0.12) !important; backdrop-filter: blur(20px) !important; border-top: 1px solid rgba(255,255,255,0.15) !important; }
-.theme-purple .settings-sidebar { background: rgba(20,25,40,0.95) !important; box-shadow: -5px 0 40px rgba(0,0,0,0.3) !important; }
-.theme-purple .settings-sidebar .header { color: #a5b4fc !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
+.theme-purple .settings-sidebar {
+    background: linear-gradient(180deg, rgba(25,30,50,0.97), rgba(30,35,55,0.95)) !important;
+    box-shadow:
+        -10px 0 30px rgba(0,0,0,0.35),
+        -4px 0 12px rgba(0,0,0,0.2),
+        0 0 0 1px rgba(255,255,255,0.06) !important;
+}
+.theme-purple .settings-sidebar::before {
+    background: linear-gradient(to right, rgba(255,255,255,0.08), transparent) !important;
+}
+.theme-purple .settings-sidebar::after {
+    border-color: transparent transparent rgba(255,255,255,0.06) transparent !important;
+}
+.theme-purple .settings-sidebar .header {
+    color: #a5b4fc !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    background: linear-gradient(180deg, rgba(40,50,80,0.9), transparent) !important;
+}
 .theme-purple .settings-sidebar .content { color: rgba(255,255,255,0.8) !important; }
 .theme-purple #send-gift-modal { background: rgba(0,0,0,0.5) !important; backdrop-filter: blur(4px) !important; }
 .theme-purple .msg-select-check { background: rgba(255,255,255,0.15) !important; border-color: rgba(255,255,255,0.3) !important; }

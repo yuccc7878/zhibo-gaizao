@@ -134,19 +134,6 @@ Engine.register({
                 <button class="shop-tab" data-tab="r18">🔞 成人</button>
             </div>
             <main class="shop-content"><div class="shop-grid" id="shop-grid"></div></main>
-            <div class="shop-overlay" id="shop-overlay">
-                <div class="shop-modal">
-                    <div class="shop-modal-glow"></div>
-                    <div class="shop-modal-icon" id="shop-modal-icon"></div>
-                    <div class="shop-modal-name" id="shop-modal-name"></div>
-                    <div class="shop-modal-desc" id="shop-modal-desc"></div>
-                    <div class="shop-modal-price" id="shop-modal-price"></div>
-                    <div class="shop-modal-btns">
-                        <button class="shop-btn shop-btn-cancel" id="shop-cancel-btn">取消</button>
-                        <button class="shop-btn shop-btn-buy" id="shop-buy-btn">购买</button>
-                    </div>
-                </div>
-            </div>
             <div class="shop-toast" id="shop-toast"></div>`;
 
         // Tab 切换
@@ -165,12 +152,6 @@ Engine.register({
         const moneyEl = document.getElementById('shop-money');
         if (moneyEl) moneyEl.textContent = db.money || 0;
         this.renderGrid();
-        document.getElementById('shop-overlay')?.classList.remove('visible');
-        document.getElementById('shop-cancel-btn')?.addEventListener('click', () => this.closeConfirm());
-        document.getElementById('shop-buy-btn')?.addEventListener('click', () => this.buyItem());
-        document.getElementById('shop-overlay')?.addEventListener('click', (e) => {
-            if (e.target.id === 'shop-overlay') this.closeConfirm();
-        });
     },
 
     /** 获取当前标签的商品列表 */
@@ -239,21 +220,57 @@ Engine.register({
                 const tagHtml = item.tag ? `<span class="shop-tag shop-tag-${item.tag}">${
                     {hot:'🔥爆', new:'✨新', ltd:'👑限', set:'📦套'}[item.tag] || ''
                 }</span>` : '';
+                const costHtml = isOwned ? `<span class="shop-card-price" style="color:#4CAF50;">✓ 已拥有</span>` : `<span class="shop-card-price">🪙 ${item.cost}</span>`;
                 html += `<div class="${cls}" data-id="${item.id}">
-                    ${tagHtml}
-                    <span class="shop-card-icon">${item.icon}</span>
-                    <span class="shop-card-label">${item.label}</span>
-                    ${item.desc ? `<span class="shop-card-desc">${item.desc}</span>` : ''}
-                    <span class="shop-card-price">🪙 ${item.cost}</span>
+                    <div class="shop-card-inner">
+                        <div class="shop-card-front">
+                            ${tagHtml}
+                            <span class="shop-card-icon">${item.icon}</span>
+                            <span class="shop-card-label">${item.label}</span>
+                            ${item.desc ? `<span class="shop-card-desc">${item.desc}</span>` : ''}
+                            ${costHtml}
+                        </div>
+                        <div class="shop-card-back">
+                            <span class="shop-card-icon" style="font-size:32px;">${item.icon}</span>
+                            <span class="shop-card-label">${item.label}</span>
+                            <span class="shop-card-price">🪙 ${item.cost}</span>
+                            <div style="display:flex;gap:8px;width:100%;margin-top:4px;">
+                                <button class="shop-btn shop-btn-cancel" style="flex:1;padding:6px 0;font-size:12px;">取消</button>
+                                <button class="shop-btn shop-btn-buy" style="flex:1;padding:6px 0;font-size:12px;">购买</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>`;
             });
             html += '</div>';
         }
         grid.innerHTML = html;
 
-        // 绑定点击事件
+        // 绑定翻转事件 — 点击可购买卡片翻转
         grid.querySelectorAll('.shop-card:not(.shop-card-owned):not(.shop-card-disabled)').forEach(el => {
-            el.addEventListener('click', () => this.openConfirm(el.dataset.id));
+            const front = el.querySelector('.shop-card-front');
+            if (front) {
+                front.addEventListener('click', (e) => {
+                    if (e.target.closest('.shop-btn')) return;
+                    el.classList.add('flipped');
+                });
+            }
+            // 反面取消按钮 — 翻回正面
+            const cancelBtn = el.querySelector('.shop-card-back .shop-btn-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    el.classList.remove('flipped');
+                });
+            }
+            // 反面购买按钮
+            const buyBtn = el.querySelector('.shop-card-back .shop-btn-buy');
+            if (buyBtn) {
+                buyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.buyItem(el.dataset.id);
+                });
+            }
         });
 
         // 入场动画
@@ -312,23 +329,25 @@ Engine.register({
     },
 
     /** 购买 */
-    async buyItem() {
-        if (!this.pendingItem) return;
-        const item = this.pendingItem;
-
+    async buyItem(itemId) {
+        const item = this.getAllItems().find(i => i.id === itemId);
+        if (!item) return;
         if (!db.ownedItems) db.ownedItems = [];
-        if (db.ownedItems.includes(item.id)) { this.closeConfirm(); this.toast('已拥有该物品'); return; }
+        if (db.ownedItems.includes(item.id)) {
+            // 已拥有，翻回正面
+            const card = document.querySelector(`.shop-card[data-id="${itemId}"]`);
+            if (card) card.classList.remove('flipped');
+            this.toast('已拥有该物品');
+            return;
+        }
         const money = db.money || 0;
         if (money < item.cost) {
-            // 余额不足：抖动购买按钮，不关弹窗
-            const btn = document.getElementById('shop-buy-btn');
-            if (btn) { btn.classList.add('shop-btn-nomoney'); setTimeout(() => btn.classList.remove('shop-btn-nomoney'), 600); }
+            // 余额不足
+            const card = document.querySelector(`.shop-card[data-id="${itemId}"]`);
+            if (card) card.classList.remove('flipped');
             this.toast('金币不足');
             return;
         }
-
-        // 余额充足，关闭弹窗
-        this.closeConfirm();
 
         // 扣款
         db.money = money - item.cost;

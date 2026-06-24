@@ -146,7 +146,7 @@
 .shop-content {
     flex: 1;
     overflow-y: auto;
-    padding: 8px 16px 20px;
+    padding: 8px 16px 80px;
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.08) transparent;
 }
@@ -193,29 +193,65 @@
 /* ─── 卡片 ─── */
 .shop-card {
     border-radius: 12px;
-    padding: 20px 14px 16px;
+    padding: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
     cursor: pointer;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    perspective: 800px;
+    min-height: 180px;
 }
-.theme-purple .shop-card {
+.shop-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 180px;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    border-radius: 12px;
+}
+.shop-card.flipped .shop-card-inner {
+    transform: rotateY(180deg);
+}
+.shop-card-front, .shop-card-back {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px 14px 16px;
+    box-sizing: border-box;
+}
+.shop-card-back {
+    transform: rotateY(180deg);
+    cursor: default;
+}
+.theme-purple .shop-card-front,
+.theme-purple .shop-card-back {
     background: rgba(255,255,255,0.06) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     border: 2px solid rgba(255,255,255,0.1) !important;
 }
-.theme-white .shop-card {
+.theme-white .shop-card-front,
+.theme-white .shop-card-back {
     background: #fff !important;
     border: none !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
 }
 /* 顶部内光 */
-.theme-purple .shop-card::before {
+.theme-purple .shop-card-front::before,
+.theme-purple .shop-card-back::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -245,7 +281,8 @@
     border-color: rgba(255,215,0,0.3);
     background: rgba(255,215,0,0.08);
 }
-.shop-card-premium::before {
+.shop-card-premium .shop-card-front::before,
+.shop-card-premium .shop-card-back::before {
     background: linear-gradient(180deg, rgba(255,215,0,0.08) 0%, transparent 100%);
 }
 
@@ -347,99 +384,7 @@
 .shop-tag-new { background: linear-gradient(135deg, #7c4dff, #b388ff); }
 .shop-tag-ltd { background: linear-gradient(135deg, #ffd700, #e67e22); }
 .shop-tag-set { background: linear-gradient(135deg, #e84393, #fd79a8); }
-
-/* ─── 弹窗 ─── */
-.shop-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-}
-.theme-purple .shop-overlay { background: rgba(0,0,0,0.5) !important; }
-.theme-white .shop-overlay { background: rgba(0,0,0,0.4) !important; }
-.shop-overlay.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
-.shop-modal {
-    border-radius: 20px;
-    padding: 32px 24px 24px;
-    width: 85%;
-    max-width: 320px;
-    text-align: center;
-    transform: scale(0.7) translateY(20px);
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    position: relative;
-    overflow: hidden;
-}
-.theme-purple .shop-modal {
-    background: linear-gradient(135deg, #1e2a3a 0%, #151d2a 100%) !important;
-    border: 1px solid rgba(255,255,255,0.15) !important;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.5) !important;
-}
-.theme-white .shop-modal {
-    background: #fff !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
-}
-.shop-overlay.visible .shop-modal {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-}
-.shop-modal-glow {
-    position: absolute;
-    top: -50px; left: 50%;
-    transform: translateX(-50%);
-    width: 140px; height: 140px;
-    background: radial-gradient(circle, rgba(255,105,180,0.3), transparent 70%);
-    pointer-events: none;
-}
-.shop-modal-icon {
-    font-size: 60px;
-    margin-bottom: 12px;
-    position: relative;
-    animation: shop-float 2.5s ease-in-out infinite;
-}
-@keyframes shop-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-.shop-modal-name {
-    font-size: 22px;
-    font-weight: 900;
-    margin-bottom: 6px;
-    letter-spacing: -0.5px;
-}
-.theme-purple .shop-modal-name { color: rgba(255,255,255,0.95) !important; }
-.theme-white .shop-modal-name { color: #333 !important; }
-.shop-modal-desc {
-    font-size: 13px;
-    margin-bottom: 20px;
-    line-height: 1.5;
-    min-height: 20px;
-}
-.theme-purple .shop-modal-desc { color: rgba(255,255,255,0.45) !important; }
-.theme-white .shop-modal-desc { color: #888 !important; }
-.shop-modal-price {
-    font-size: 26px;
-    font-weight: 900;
-    background: linear-gradient(135deg, #ffd700, #e8a87c);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 24px;
-}
-.shop-modal-btns {
-    display: flex;
-    gap: 10px;
-}
+/* ─── Toast 提示 ─── */
 .shop-btn {
     flex: 1;
     padding: 14px;

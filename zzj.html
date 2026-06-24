@@ -78,23 +78,23 @@
     <!-- 聊天室 -->
     <div id="chat-room-screen" class="screen">
         <header class="app-header" id="chat-room-header-default">
-            <button class="back-btn" data-target="chat-list-screen">‹</button>
-            <div class="title-container">
-                <h1 class="title" id="chat-room-title">...</h1>
-                <div class="subtitle" id="chat-room-subtitle"><div class="online-indicator"></div><span id="chat-room-status-text">在线</span></div>
-            </div>
-            <button class="action-btn" id="chat-settings-btn"><img src="assets/icons/设置.png" alt="设置"></button>
-        </header>
-        <header class="app-header" id="chat-room-header-select" style="display:none;">
-            <button class="action-btn" id="cancel-multi-select-btn">取消</button>
-            <div class="title-container"><h1 class="title" id="multi-select-title">选择消息</h1></div>
-            <div class="placeholder"></div>
-        </header>
-        <main class="content">
-            <div class="message-area" id="message-area"></div>
-            <div class="typing-indicator" id="typing-indicator"></div>
-        </main>
-        <div class="chat-input-wrapper">
+                    <button class="back-btn" data-target="chat-list-screen">‹</button>
+                    <div class="title-container">
+                        <h1 class="title" id="chat-room-title">...</h1>
+                        <div class="subtitle" id="chat-room-subtitle"><div class="online-indicator"></div><span id="chat-room-status-text">在线</span></div>
+                    </div>
+                    <button class="action-btn" id="chat-settings-btn"><img src="assets/icons/设置.png" alt="设置"></button>
+                </header>
+                <header class="app-header" id="chat-room-header-select" style="display:none;">
+                    <button class="action-btn" id="cancel-multi-select-btn">取消</button>
+                    <div class="title-container"><h1 class="title" id="multi-select-title">选择消息</h1></div>
+                    <div class="placeholder"></div>
+                </header>
+                <main class="content">
+                    <div class="message-area" id="message-area"></div>
+                    <div class="typing-indicator" id="typing-indicator"></div>
+                </main>
+                <div class="chat-input-wrapper">
             <div id="sticker-bar">
                 <button class="sticker-bar-btn" id="sticker-toggle-btn"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>
                 <button class="sticker-bar-btn" id="photo-video-btn"><svg viewBox="0 0 24 24"><path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/></svg></button>
@@ -114,12 +114,176 @@
                 <input type="text" id="message-edit-input">
                 <button id="save-edit-btn" class="icon-btn send-btn">✓</button>
                 <button id="cancel-edit-btn" class="icon-btn" style="background-color:#aaa;">✗</button>
-            </div>
+                </div><!-- /chat-input-wrapper -->
         </div>
+
         <div id="multi-select-bar"><span id="select-count">已选择 0 项</span><button class="btn btn-danger" id="delete-selected-btn" style="width:auto;padding:8px 16px;">删除已选</button></div>
         <div id="sticker-modal">
             <div class="header"><span>我的表情</span><button class="btn btn-primary btn-small" id="add-new-sticker-btn">添加新表情</button></div>
             <div class="sticker-grid" id="sticker-grid-container"></div>
+        </div>
+    </div>
+
+    <!-- 私聊设置侧边栏 -->
+    <div id="chat-settings-sidebar" class="settings-sidebar">
+        <div class="header">聊天设置</div>
+        <div class="content">
+            <form id="chat-settings-form">
+                <!-- █ 核心信息（始终可见） -->
+                <div class="avatar-setting"><img src="" alt="角色头像" id="setting-char-avatar-preview" class="avatar-preview"><input type="file" id="setting-char-avatar-upload" accept="image/*" style="display:none;"><label for="setting-char-avatar-upload" class="btn btn-primary" style="flex:1;height:44px;padding:10px 14px;font-size:13px;white-space:nowrap;">📁 本地上传</label><button type="button" class="btn-ai" id="setting-char-avatar-ai-btn">🤖 AI生成</button></div>
+                <div class="form-group"><label for="setting-char-real-name">角色姓名</label><input type="text" id="setting-char-real-name" placeholder="角色的真实姓名"></div>
+                <div class="form-group"><label for="setting-char-remark">角色备注 (昵称)</label><input type="text" id="setting-char-remark"></div>
+                <div class="form-group"><label for="setting-char-persona">角色人设</label><textarea id="setting-char-persona" rows="4" placeholder="详细描述角色的性格、背景、说话风格等（此内容会作为 AI 生成头像的提示词）。"></textarea></div>
+                <div class="avatar-setting"><img src="" alt="我的头像" id="setting-my-avatar-preview" class="avatar-preview"><input type="file" id="setting-my-avatar-upload" accept="image/*" style="display:none;"><label for="setting-my-avatar-upload" class="btn btn-secondary" style="flex-grow:1;">更换我的头像</label></div>
+                <div class="form-group"><label for="setting-my-name">我的姓名</label><input type="text" id="setting-my-name"></div>
+                <div class="form-group"><label for="setting-my-persona">我的人设</label><textarea id="setting-my-persona" rows="3" placeholder="描述你希望在对话中扮演的形象。"></textarea></div>
+
+                <!-- █ 折叠面板 -->
+                <details class="settings-collapse" id="setting-collapse-style">
+                    <summary class="settings-collapse-title">💬 对话风格</summary>
+                    <div class="settings-collapse-body">
+                        <div class="form-group"><label for="setting-char-scenario">场景设定</label><textarea id="setting-char-scenario" rows="3" placeholder="当前对话发生的场景设定（可选）"></textarea></div>
+                        <div class="form-group"><label for="setting-char-system-prompt">系统指令</label><textarea id="setting-char-system-prompt" rows="3" placeholder="角色的系统级行为指令（可选）"></textarea></div>
+                        <div class="form-group"><label for="setting-char-mes-example">对话示例</label><textarea id="setting-char-mes-example" rows="4" placeholder="角色对话风格示例（可选）"></textarea></div>
+                    </div>
+                </details>
+                <details class="settings-collapse" id="setting-collapse-wb">
+                    <summary class="settings-collapse-title">📖 专属世界书 <span id="setting-wb-count" class="collapse-badge">0</span></summary>
+                    <div class="settings-collapse-body">
+                        <div id="setting-builtin-wb-list"></div>
+                        <button type="button" class="btn btn-secondary" id="setting-add-builtin-wb" style="width:100%;padding:8px;font-size:13px;margin-top:6px;">+ 添加条目</button>
+                    </div>
+                </details>
+                <details class="settings-collapse" id="setting-collapse-global-wb">
+                    <summary class="settings-collapse-title">🌐 关联全局世界书</summary>
+                    <div class="settings-collapse-body">
+                        <p style="font-size:12px;color:#999;margin:0 0 8px;">从全局世界书列表中选关联到此角色的条目</p>
+                        <button type="button" class="btn btn-secondary" id="link-world-book-btn" style="width:100%;padding:8px;font-size:13px;">选择关联条目</button>
+                    </div>
+                </details>
+                <details class="settings-collapse" id="setting-collapse-appearance">
+                    <summary class="settings-collapse-title">🎨 外观与样式</summary>
+                    <div class="settings-collapse-body">
+                        <div class="form-group"><label for="setting-theme-color">主题颜色 (对方/我方)</label><select id="setting-theme-color"></select></div>
+                        <div class="form-group"><label for="setting-max-memory">最大记忆轮数</label><input type="number" id="setting-max-memory" value="100" min="1" max="500"></div>
+                        <div class="form-group">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><label for="setting-use-custom-css" style="margin-bottom:0;">自定义气泡样式</label><input type="checkbox" id="setting-use-custom-css" style="width:auto;"></div>
+                            <div id="private-bubble-css-preview" style="background:#fff;border:1px solid #eee;border-radius:10px;padding:15px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px;"></div>
+                            <textarea id="setting-custom-bubble-css" rows="4" placeholder="在此输入CSS代码..." disabled></textarea>
+                            <button type="button" class="btn btn-neutral" id="reset-custom-bubble-css-btn" style="margin-top:8px;width:auto;padding:5px 15px;font-size:13px;">恢复默认</button>
+                        </div>
+                        <div class="form-group"><label><input type="checkbox" id="setting-ai-img-gen" style="width:auto;margin-right:8px;">🎨 AI 回复时生成配图</label></div>
+                        <div class="form-group"><label for="setting-chat-bg-upload" class="btn btn-primary" style="font-size:13px;padding:10px;">更换聊天背景</label><input type="file" id="setting-chat-bg-upload" accept="image/*" style="display:none;"></div>
+                    </div>
+                </details>
+                <details class="settings-collapse" id="setting-collapse-tts">
+                    <summary class="settings-collapse-title">🔊 语音朗读</summary>
+                    <div class="settings-collapse-body">
+                        <div class="form-group">
+                            <label for="setting-tts-engine">朗读引擎</label>
+                            <select id="setting-tts-engine">
+                                <option value="global">跟随全局设置</option>
+                                <option value="local">本地浏览器</option>
+                                <option value="sogou">搜狗在线 TTS</option>
+                            </select>
+                        </div>
+                        <div id="setting-tts-sogou-options" style="display:none;">
+                            <div class="form-group">
+                                <label for="setting-tts-speaker">搜狗音色</label>
+                                <select id="setting-tts-speaker">
+                                    <option value="1">🎙️ 标准女声</option>
+                                    <option value="2">🎀 温柔女声</option>
+                                    <option value="3">🍬 甜美女声</option>
+                                    <option value="4">🎤 标准男声</option>
+                                    <option value="5">📢 沉稳男声</option>
+                                    <option value="6">🧲 磁性男声</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>语速</label>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <span style="font-size:12px;color:#999;">慢</span>
+                                    <input type="range" id="setting-tts-speed" min="1" max="5" value="3" style="flex:1;">
+                                    <span style="font-size:12px;color:#999;">快</span>
+                                    <span id="setting-tts-speed-label" style="font-size:12px;color:#666;min-width:20px;text-align:center;">3</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="setting-tts-preview-btn" style="width:100%;margin-top:8px;">🔊 试听当前设置</button>
+                    </div>
+                </details>
+                <details class="settings-collapse" id="setting-collapse-memory">
+                    <summary class="settings-collapse-title">📝 记忆与事件</summary>
+                    <div class="settings-collapse-body">
+                        <div style="margin-bottom:12px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                <span style="font-weight:500;font-size:13px;">📝 对话记忆摘要</span>
+                                <div style="display:flex;gap:4px;">
+                                    <button type="button" class="btn btn-secondary" id="btn-gen-summary" style="padding:3px 10px;font-size:11px;width:auto;">生成</button>
+                                    <button type="button" class="btn btn-neutral" id="btn-clear-summary" style="padding:3px 10px;font-size:11px;width:auto;">清空</button>
+                                </div>
+                            </div>
+                            <textarea id="setting-memory-summary" rows="3" style="width:100%;padding:8px;border:1px solid #eee;border-radius:8px;font-size:12px;resize:vertical;box-sizing:border-box;" placeholder="还没有记忆摘要，点击「生成」由 AI 自动总结"></textarea>
+                        </div>
+                        <div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                <span style="font-weight:500;font-size:13px;">⭐ 关键事件</span>
+                                <button type="button" class="btn btn-neutral" id="btn-clear-keyevents" style="padding:3px 10px;font-size:11px;width:auto;">清空</button>
+                            </div>
+                            <div id="setting-key-events-list" style="font-size:12px;color:#666;max-height:120px;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+                </details>
+                <button type="submit" class="btn btn-primary">保存设置</button>
+            </form>
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+            <button type="button" class="btn btn-danger" id="clear-chat-history-btn">清空聊天记录</button>
+        </div>
+    </div>
+
+    <!-- 群聊设置侧边栏 -->
+    <div id="group-settings-sidebar" class="settings-sidebar">
+        <div class="header">群聊设置</div>
+        <div class="content">
+            <form id="group-settings-form">
+                <div class="group-avatar-setting"><img src="" alt="群头像" id="setting-group-avatar-preview" class="group-avatar-preview"><input type="file" id="setting-group-avatar-upload" accept="image/*" style="display:none;"><label for="setting-group-avatar-upload" class="btn btn-primary" style="flex-grow:1;">更换群头像</label></div>
+                <div class="form-group"><label for="setting-group-name">群名 (AI也可见)</label><input type="text" id="setting-group-name"></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="avatar-setting"><img src="" alt="我的头像" id="setting-group-my-avatar-preview" class="avatar-preview"><input type="file" id="setting-group-my-avatar-upload" accept="image/*" style="display:none;"><label for="setting-group-my-avatar-upload" class="btn btn-secondary" style="flex-grow:1;">更换我的头像</label></div>
+                <div class="form-group"><label for="setting-group-my-nickname">我的群昵称</label><input type="text" id="setting-group-my-nickname"></div>
+                <div class="form-group"><label for="setting-group-my-persona">我的人设</label><textarea id="setting-group-my-persona" placeholder="描述你希望在此群聊中扮演的形象。"></textarea></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="form-group"><label>群成员</label><div class="group-members-list" id="group-members-list-container"></div></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <details class="settings-collapse">
+                    <summary class="settings-collapse-title">💬 对话风格</summary>
+                    <div class="settings-collapse-body">
+                        <div class="form-group"><label for="setting-group-scenario">场景设定</label><textarea id="setting-group-scenario" rows="3" placeholder="当前群聊对话的场景（可选）"></textarea></div>
+                        <div class="form-group"><label for="setting-group-system-prompt">系统指令</label><textarea id="setting-group-system-prompt" rows="3" placeholder="群聊系统级指令（可选）"></textarea></div>
+                    </div>
+                </details>
+                <details class="settings-collapse">
+                    <summary class="settings-collapse-title">📖 群专属世界书 <span id="setting-group-wb-count" class="collapse-badge">0</span></summary>
+                    <div class="settings-collapse-body">
+                        <div id="setting-group-builtin-wb-list"></div>
+                        <button type="button" class="btn btn-secondary" id="setting-group-add-builtin-wb" style="width:100%;padding:8px;font-size:13px;margin-top:6px;">+ 添加条目</button>
+                    </div>
+                </details>
+                <div class="form-group"><button type="button" class="btn btn-secondary" id="link-group-world-book-btn">关联全局世界书</button></div>
+                <div class="form-group"><label for="setting-group-theme-color">主题颜色 (对方/我方)</label><select id="setting-group-theme-color"></select></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><label for="setting-group-use-custom-css" style="margin-bottom:0;">自定义气泡样式</label><input type="checkbox" id="setting-group-use-custom-css" style="width:auto;"></div>
+                    <div id="group-bubble-css-preview" style="background:#fff;border:1px solid #eee;border-radius:10px;padding:15px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px;"></div>
+                    <textarea id="setting-group-custom-bubble-css" rows="6" placeholder="在此输入CSS代码..." disabled></textarea>
+                    <button type="button" class="btn btn-neutral" id="reset-group-custom-bubble-css-btn" style="margin-top:10px;width:auto;padding:5px 15px;font-size:14px;">恢复默认</button>
+                </div>
+                <div class="form-group"><label for="setting-group-max-memory">最大记忆轮数</label><input type="number" id="setting-group-max-memory" value="100" min="1" max="500"></div>
+                <div class="form-group"><label for="setting-group-chat-bg-upload" class="btn btn-primary">更换聊天背景</label><input type="file" id="setting-group-chat-bg-upload" accept="image/*" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary">保存设置</button>
+            </form>
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+            <button type="button" class="btn btn-danger" id="clear-group-chat-history-btn">清空聊天记录</button>
         </div>
     </div>
 
@@ -375,134 +539,7 @@
         </div>
     </div>
 
-    <!-- 私聊设置侧边栏 -->
-    <div id="chat-settings-sidebar" class="settings-sidebar">
-        <div class="header">聊天设置</div>
-        <div class="content">
-            <form id="chat-settings-form">
-                <!-- █ 核心信息（始终可见） -->
-                <div class="avatar-setting"><img src="" alt="角色头像" id="setting-char-avatar-preview" class="avatar-preview"><input type="file" id="setting-char-avatar-upload" accept="image/*" style="display:none;"><label for="setting-char-avatar-upload" class="btn btn-primary" style="flex:1;height:44px;padding:10px 14px;font-size:13px;white-space:nowrap;">📁 本地上传</label><button type="button" class="btn-ai" id="setting-char-avatar-ai-btn">🤖 AI生成</button></div>
-                <div class="form-group"><label for="setting-char-real-name">角色姓名</label><input type="text" id="setting-char-real-name" placeholder="角色的真实姓名"></div>
-                <div class="form-group"><label for="setting-char-remark">角色备注 (昵称)</label><input type="text" id="setting-char-remark"></div>
-                <div class="form-group"><label for="setting-char-persona">角色人设</label><textarea id="setting-char-persona" rows="4" placeholder="详细描述角色的性格、背景、说话风格等（此内容会作为 AI 生成头像的提示词）。"></textarea></div>
-                <div class="avatar-setting"><img src="" alt="我的头像" id="setting-my-avatar-preview" class="avatar-preview"><input type="file" id="setting-my-avatar-upload" accept="image/*" style="display:none;"><label for="setting-my-avatar-upload" class="btn btn-secondary" style="flex-grow:1;">更换我的头像</label></div>
-                <div class="form-group"><label for="setting-my-name">我的姓名</label><input type="text" id="setting-my-name"></div>
-                <div class="form-group"><label for="setting-my-persona">我的人设</label><textarea id="setting-my-persona" rows="3" placeholder="描述你希望在对话中扮演的形象。"></textarea></div>
-
-                <!-- █ 折叠面板 -->
-                <!-- 1. 对话风格 -->
-                <details class="settings-collapse" id="setting-collapse-style">
-                    <summary class="settings-collapse-title">💬 对话风格</summary>
-                    <div class="settings-collapse-body">
-                        <div class="form-group"><label for="setting-char-scenario">场景设定</label><textarea id="setting-char-scenario" rows="3" placeholder="当前对话发生的场景设定（可选）"></textarea></div>
-                        <div class="form-group"><label for="setting-char-system-prompt">系统指令</label><textarea id="setting-char-system-prompt" rows="3" placeholder="角色的系统级行为指令（可选）"></textarea></div>
-                        <div class="form-group"><label for="setting-char-mes-example">对话示例</label><textarea id="setting-char-mes-example" rows="4" placeholder="角色对话风格示例（可选）"></textarea></div>
-                    </div>
-                </details>
-
-                <!-- 2. 专属世界书 -->
-                <details class="settings-collapse" id="setting-collapse-wb">
-                    <summary class="settings-collapse-title">📖 专属世界书 <span id="setting-wb-count" class="collapse-badge">0</span></summary>
-                    <div class="settings-collapse-body">
-                        <div id="setting-builtin-wb-list"></div>
-                        <button type="button" class="btn btn-secondary" id="setting-add-builtin-wb" style="width:100%;padding:8px;font-size:13px;margin-top:6px;">+ 添加条目</button>
-                    </div>
-                </details>
-
-                <!-- 3. 关联全局世界书 -->
-                <details class="settings-collapse" id="setting-collapse-global-wb">
-                    <summary class="settings-collapse-title">🌐 关联全局世界书</summary>
-                    <div class="settings-collapse-body">
-                        <p style="font-size:12px;color:#999;margin:0 0 8px;">从全局世界书列表中选关联到此角色的条目</p>
-                        <button type="button" class="btn btn-secondary" id="link-world-book-btn" style="width:100%;padding:8px;font-size:13px;">选择关联条目</button>
-                    </div>
-                </details>
-
-                <!-- 4. 外观与样式 -->
-                <details class="settings-collapse" id="setting-collapse-appearance">
-                    <summary class="settings-collapse-title">🎨 外观与样式</summary>
-                    <div class="settings-collapse-body">
-                        <div class="form-group"><label for="setting-theme-color">主题颜色 (对方/我方)</label><select id="setting-theme-color"></select></div>
-                        <div class="form-group"><label for="setting-max-memory">最大记忆轮数</label><input type="number" id="setting-max-memory" value="100" min="1" max="500"></div>
-                        <div class="form-group">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><label for="setting-use-custom-css" style="margin-bottom:0;">自定义气泡样式</label><input type="checkbox" id="setting-use-custom-css" style="width:auto;"></div>
-                            <div id="private-bubble-css-preview" style="background:#fff;border:1px solid #eee;border-radius:10px;padding:15px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px;"></div>
-                            <textarea id="setting-custom-bubble-css" rows="4" placeholder="在此输入CSS代码..." disabled></textarea>
-                            <button type="button" class="btn btn-neutral" id="reset-custom-bubble-css-btn" style="margin-top:8px;width:auto;padding:5px 15px;font-size:13px;">恢复默认</button>
-                        </div>
-                        <div class="form-group"><label><input type="checkbox" id="setting-ai-img-gen" style="width:auto;margin-right:8px;">🎨 AI 回复时生成配图</label></div>
-                        <div class="form-group"><label for="setting-chat-bg-upload" class="btn btn-primary" style="font-size:13px;padding:10px;">更换聊天背景</label><input type="file" id="setting-chat-bg-upload" accept="image/*" style="display:none;"></div>
-                    </div>
-                </details>
-
-                <!-- 4.5 语音朗读 -->
-                <details class="settings-collapse" id="setting-collapse-tts">
-                    <summary class="settings-collapse-title">🔊 语音朗读</summary>
-                    <div class="settings-collapse-body">
-                        <div class="form-group">
-                            <label for="setting-tts-engine">朗读引擎</label>
-                            <select id="setting-tts-engine">
-                                <option value="global">跟随全局设置</option>
-                                <option value="local">本地浏览器</option>
-                                <option value="sogou">搜狗在线 TTS</option>
-                            </select>
-                        </div>
-                        <div id="setting-tts-sogou-options" style="display:none;">
-                            <div class="form-group">
-                                <label for="setting-tts-speaker">搜狗音色</label>
-                                <select id="setting-tts-speaker">
-                                    <option value="1">🎙️ 标准女声</option>
-                                    <option value="2">🎀 温柔女声</option>
-                                    <option value="3">🍬 甜美女声</option>
-                                    <option value="4">🎤 标准男声</option>
-                                    <option value="5">📢 沉稳男声</option>
-                                    <option value="6">🧲 磁性男声</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>语速</label>
-                                <div style="display:flex;align-items:center;gap:10px;">
-                                    <span style="font-size:12px;color:#999;">慢</span>
-                                    <input type="range" id="setting-tts-speed" min="1" max="5" value="3" style="flex:1;">
-                                    <span style="font-size:12px;color:#999;">快</span>
-                                    <span id="setting-tts-speed-label" style="font-size:12px;color:#666;min-width:20px;text-align:center;">3</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-secondary" id="setting-tts-preview-btn" style="width:100%;margin-top:8px;">🔊 试听当前设置</button>
-                    </div>
-                </details>
-
-                <!-- 5. 记忆与事件 -->
-                <details class="settings-collapse" id="setting-collapse-memory">
-                    <summary class="settings-collapse-title">📝 记忆与事件</summary>
-                    <div class="settings-collapse-body">
-                        <div style="margin-bottom:12px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                                <span style="font-weight:500;font-size:13px;">📝 对话记忆摘要</span>
-                                <div style="display:flex;gap:4px;">
-                                    <button type="button" class="btn btn-secondary" id="btn-gen-summary" style="padding:3px 10px;font-size:11px;width:auto;">生成</button>
-                                    <button type="button" class="btn btn-neutral" id="btn-clear-summary" style="padding:3px 10px;font-size:11px;width:auto;">清空</button>
-                                </div>
-                            </div>
-                            <textarea id="setting-memory-summary" rows="3" style="width:100%;padding:8px;border:1px solid #eee;border-radius:8px;font-size:12px;resize:vertical;box-sizing:border-box;" placeholder="还没有记忆摘要，点击「生成」由 AI 自动总结"></textarea>
-                        </div>
-                        <div>
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                                <span style="font-weight:500;font-size:13px;">⭐ 关键事件</span>
-                                <button type="button" class="btn btn-neutral" id="btn-clear-keyevents" style="padding:3px 10px;font-size:11px;width:auto;">清空</button>
-                            </div>
-                            <div id="setting-key-events-list" style="font-size:12px;color:#666;max-height:120px;overflow-y:auto;"></div>
-                        </div>
-                    </div>
-                </details>
-
-                <button type="submit" class="btn btn-primary">保存设置</button>
-            </form>
-            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-            <button type="button" class="btn btn-danger" id="clear-chat-history-btn">清空聊天记录</button>
-        </div>
-    </div>
+    <!-- 私聊设置面板已移至聊天室内部（上方） -->
 
     <!-- 世界书选择弹窗 -->
     <div id="world-book-selection-modal" class="modal-overlay">
@@ -525,51 +562,7 @@
         </div>
     </div>
 
-    <!-- 群聊设置侧边栏 -->
-    <div id="group-settings-sidebar" class="settings-sidebar">
-        <div class="header">群聊设置</div>
-        <div class="content">
-            <form id="group-settings-form">
-                <div class="group-avatar-setting"><img src="" alt="群头像" id="setting-group-avatar-preview" class="group-avatar-preview"><input type="file" id="setting-group-avatar-upload" accept="image/*" style="display:none;"><label for="setting-group-avatar-upload" class="btn btn-primary" style="flex-grow:1;">更换群头像</label></div>
-                <div class="form-group"><label for="setting-group-name">群名 (AI也可见)</label><input type="text" id="setting-group-name"></div>
-                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-                <div class="avatar-setting"><img src="" alt="我的头像" id="setting-group-my-avatar-preview" class="avatar-preview"><input type="file" id="setting-group-my-avatar-upload" accept="image/*" style="display:none;"><label for="setting-group-my-avatar-upload" class="btn btn-secondary" style="flex-grow:1;">更换我的头像</label></div>
-                <div class="form-group"><label for="setting-group-my-nickname">我的群昵称</label><input type="text" id="setting-group-my-nickname"></div>
-                <div class="form-group"><label for="setting-group-my-persona">我的人设</label><textarea id="setting-group-my-persona" placeholder="描述你希望在此群聊中扮演的形象。"></textarea></div>
-                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-                <div class="form-group"><label>群成员</label><div class="group-members-list" id="group-members-list-container"></div></div>
-                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-                <details class="settings-collapse">
-                    <summary class="settings-collapse-title">💬 对话风格</summary>
-                    <div class="settings-collapse-body">
-                        <div class="form-group"><label for="setting-group-scenario">场景设定</label><textarea id="setting-group-scenario" rows="3" placeholder="当前群聊对话的场景（可选）"></textarea></div>
-                        <div class="form-group"><label for="setting-group-system-prompt">系统指令</label><textarea id="setting-group-system-prompt" rows="3" placeholder="群聊系统级指令（可选）"></textarea></div>
-                    </div>
-                </details>
-                <details class="settings-collapse">
-                    <summary class="settings-collapse-title">📖 群专属世界书 <span id="setting-group-wb-count" class="collapse-badge">0</span></summary>
-                    <div class="settings-collapse-body">
-                        <div id="setting-group-builtin-wb-list"></div>
-                        <button type="button" class="btn btn-secondary" id="setting-group-add-builtin-wb" style="width:100%;padding:8px;font-size:13px;margin-top:6px;">+ 添加条目</button>
-                    </div>
-                </details>
-                <div class="form-group"><button type="button" class="btn btn-secondary" id="link-group-world-book-btn">关联全局世界书</button></div>
-                <div class="form-group"><label for="setting-group-theme-color">主题颜色 (对方/我方)</label><select id="setting-group-theme-color"></select></div>
-                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-                <div class="form-group">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><label for="setting-group-use-custom-css" style="margin-bottom:0;">自定义气泡样式</label><input type="checkbox" id="setting-group-use-custom-css" style="width:auto;"></div>
-                    <div id="group-bubble-css-preview" style="background:#fff;border:1px solid #eee;border-radius:10px;padding:15px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px;"></div>
-                    <textarea id="setting-group-custom-bubble-css" rows="6" placeholder="在此输入CSS代码..." disabled></textarea>
-                    <button type="button" class="btn btn-neutral" id="reset-group-custom-bubble-css-btn" style="margin-top:10px;width:auto;padding:5px 15px;font-size:14px;">恢复默认</button>
-                </div>
-                <div class="form-group"><label for="setting-group-max-memory">最大记忆轮数</label><input type="number" id="setting-group-max-memory" value="100" min="1" max="500"></div>
-                <div class="form-group"><label for="setting-group-chat-bg-upload" class="btn btn-primary">更换聊天背景</label><input type="file" id="setting-group-chat-bg-upload" accept="image/*" style="display:none;"></div>
-                <button type="submit" class="btn btn-primary">保存设置</button>
-            </form>
-            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-            <button type="button" class="btn btn-danger" id="clear-group-chat-history-btn">清空聊天记录</button>
-        </div>
-    </div>
+    <!-- 群聊设置面板已移至聊天室内部（上方） -->
 
     <!-- 群成员编辑弹窗 -->
     <div id="edit-group-member-modal" class="modal-overlay">
@@ -641,12 +634,8 @@
 
 <!-- 主应用逻辑 -->
 <script src="js/sillytavern-import.js"></script>
-<!-- 旧版视频通话已合并到 ES Module js/systems/videoCall.js -->
 <script src="js/systems/ttsService.js"></script>
 <script src="js/systems/activeWorld.js"></script>
-<!-- 旧版单体入口（已切换到模块化版，保留备份） -->
-<!-- <script src="app.legacy.js"></script> -->
-
 <!-- 模块化入口 -->
 <script type="module" src="js/app.js?v=1781645449"></script>
 
