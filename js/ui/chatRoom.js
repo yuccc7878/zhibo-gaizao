@@ -34,6 +34,28 @@ function bindEvents() {
     if (e.key === 'Enter' && !state.isGenerating) sendMessage();
   });
   dom['get-reply-btn'].addEventListener('click', triggerAiReply);
+
+  // 重新生成按钮：删除最后一条 AI 回复，重新请求
+  dom['regenerate-btn']?.addEventListener('click', async () => {
+    if (state.isGenerating) return;
+    const chat = state.currentChatType === 'private'
+      ? dataService.getCharacter(state.currentChatId)
+      : dataService.getGroup(state.currentChatId);
+    if (!chat || !chat.history || chat.history.length === 0) return;
+
+    // 找到最后一条 assistant 消息并删除
+    const lastIdx = chat.history.length - 1;
+    const lastMsg = chat.history[lastIdx];
+    if (!lastMsg || lastMsg.role !== 'assistant') {
+      utils.showToast(dom['toast-notification'], '没有可重新生成的消息');
+      return;
+    }
+    chat.history.splice(lastIdx, 1);
+    await dataService.saveData();
+    renderMessages(false, true);
+    // 重新请求 AI 回复
+    triggerAiReply();
+  });
   dom['message-area'].addEventListener('click', (e) => {
     // 点击气泡外的空白关闭编辑模式、退出多选
     if (state.editingMessageId) { cancelMessageEdit(); }

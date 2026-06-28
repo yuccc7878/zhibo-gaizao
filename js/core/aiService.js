@@ -36,14 +36,6 @@
     imageConfig = config ? { ...config } : null;
   }
 
-  function getChatConfig() {
-    return chatConfig;
-  }
-
-  function getImageConfig() {
-    return imageConfig;
-  }
-
   // ─── 消息规范化 ───────────────────────
 
   function normalizeMessages(messages) {
@@ -415,8 +407,6 @@
     // 配置
     setChatConfig,
     setImageConfig,
-    getChatConfig,
-    getImageConfig,
     // 核心方法
     chat,
     generateImage,

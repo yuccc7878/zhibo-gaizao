@@ -111,6 +111,58 @@
     100% { box-shadow: 0 0 0 14px rgba(255, 128, 171, 0); }
 }
 
+/* 发送按钮特效增强 */
+.message-input-area .icon-btn {
+    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                box-shadow 0.2s ease,
+                background-color 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+.message-input-area .icon-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+.message-input-area .icon-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(255, 128, 171, 0.4);
+}
+.message-input-area .icon-btn:hover::before {
+    opacity: 1;
+}
+.message-input-area .icon-btn:active {
+    transform: scale(0.92);
+    box-shadow: 0 2px 8px rgba(255, 128, 171, 0.5);
+}
+.message-input-area .icon-btn.send-btn {
+    box-shadow: 0 4px 15px rgba(255, 128, 171, 0.35);
+}
+.message-input-area .icon-btn.send-btn:hover {
+    box-shadow: 0 6px 25px rgba(255, 128, 171, 0.5);
+}
+
+/* 重新生成按钮 */
+#regenerate-btn {
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+#regenerate-btn:active {
+    transform: scale(0.85);
+}
+#regenerate-btn svg {
+    transition: transform 0.3s ease;
+}
+#regenerate-btn:hover svg {
+    transform: rotate(180deg);
+}
+
 /* 图标按钮悬浮 */
 .sticker-bar-btn {
     transition: transform 0.2s ease, opacity 0.2s ease;

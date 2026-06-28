@@ -232,5 +232,5 @@ function splitText(text, maxLen) {
   return segments;
 }
 
-// ─── 暴露到全局（供 video-call.js 等非模块脚本使用）───
+// ─── 暴露到全局（供非模块脚本使用）───
 window.ttsService = { speak, stop, isSpeaking, setConfig, getConfig, getSpeakerNames };

@@ -39,6 +39,7 @@ const IDS = [
   'gift-btn', 'send-gift-modal',
   // 时间跳跃
   'time-skip-btn', 'time-skip-modal', 'time-skip-form', 'time-skip-input',
+  'regenerate-btn', 'video-call-btn',
   // 世界书
   'world-book-list-container', 'no-world-books-placeholder', 'add-world-book-btn',
   'edit-world-book-form', 'world-book-id-input', 'world-book-name-input',
@@ -56,14 +57,14 @@ const IDS = [
   'confirm-group-recipient-btn', 'group-recipient-selection-title',
   'link-group-world-book-btn',
   // 设置
-  'setting-theme-color', 'setting-use-custom-css', 'setting-custom-bubble-css',
+  'setting-use-custom-css', 'setting-custom-bubble-css',
   'reset-custom-bubble-css-btn', 'private-bubble-css-preview',
   'setting-char-avatar-preview', 'setting-char-avatar-upload', 'setting-char-avatar-ai-btn',
   'setting-char-real-name', 'setting-char-remark', 'setting-char-persona',
   'setting-my-avatar-preview', 'setting-my-avatar-upload',
   'setting-my-name', 'setting-my-persona', 'setting-max-memory',
   'setting-chat-bg-upload', 'clear-chat-history-btn',
-  'setting-ai-img-gen', 'setting-memory-summary', 'setting-key-events-list',
+  'setting-memory-summary', 'setting-key-events-list',
   'btn-gen-summary', 'btn-clear-summary', 'btn-clear-keyevents',
   // 群聊设置
   'setting-group-theme-color', 'setting-group-use-custom-css',
@@ -91,6 +92,7 @@ const IDS = [
   'wallpaper-preview', 'wallpaper-upload',
   // 检查更新
   'check-update-btn',
+  'bubble-preset-grid',
   // TTS 设置
   'tts-settings-card', 'tts-global-status', 'tts-edit-btn', 'tts-edit-screen',
   'setting-tts-engine', 'setting-tts-speaker', 'setting-tts-speed', 'setting-tts-speed-label', 'setting-tts-preview-btn',
