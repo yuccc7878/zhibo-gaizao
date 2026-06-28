@@ -135,12 +135,24 @@
                 background-color 0.2s ease;
 }
 .list-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .list-item:active {
     transform: scale(0.98) translateY(0);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* 世界书条目悬浮 */
+.world-book-item {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.world-book-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.world-book-item:active {
+    transform: scale(0.98);
 }
 
 /* API 配置卡片 */
