@@ -353,11 +353,11 @@ function setupImportHandler() {
     importInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      if (confirm('此操作将覆盖当前所有数据，确定要继续吗？')) {
+      if (confirm(`导入文件: ${file.name} (${(file.size / 1024).toFixed(1)} KB)\n此操作将覆盖当前所有数据，确定要继续吗？`)) {
         try {
           let json;
           try {
-            // 尝试 gzip 解压（新版格式）
+            // 尝试 gzip 解压（.ee 格式）
             const ds = new DecompressionStream('gzip');
             json = await new Response(file.stream().pipeThrough(ds)).text();
           } catch (_) {
@@ -366,10 +366,16 @@ function setupImportHandler() {
           }
           const data = JSON.parse(json);
           if (!data || typeof data !== 'object') throw new Error('数据格式无效');
+          // 显示导入摘要
+          const charCount = (data.characters || []).length;
+          const groupCount = (data.groups || []).length;
+          const wbCount = (data.worldBooks || []).length;
+          console.log('[Import] 角色:', charCount, '群聊:', groupCount, '世界书:', wbCount, 'keys:', Object.keys(data).join(','));
           await saveData(data);
-          showToast(dom?.['toast-notification'], '数据已恢复，即将刷新');
-          window.location.reload();
+          showToast(dom?.['toast-notification'], `✅ 已导入 ${charCount} 个角色、${groupCount} 个群聊、${wbCount} 本世界书，即将刷新`);
+          setTimeout(() => window.location.reload(), 1500);
         } catch (err) {
+          console.error('[Import] 失败:', err);
           showToast(dom?.['toast-notification'], `导入失败: ${err.message}`);
         }
       } else {
