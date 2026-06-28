@@ -285,6 +285,7 @@ function bindEvents() {
 }
 
 export function renderWorldBookList() {
+  if (!dom) return;
   const db = getDb();
   const books = db.worldBooks || [];
   const container = dom['world-book-list-container'];
