@@ -167,18 +167,18 @@ function _renderAll(form) {
   if (db.fontUrl) fontUrlInput.value = db.fontUrl;
   fontApplyBtn.addEventListener('click', async () => {
     const url = fontUrlInput.value.trim();
-    if (!url) { showToast(dom['toast-notification'], '请输入字体链接'); return; }
+    if (!url) { showToast(dom?.['toast-notification'], '请输入字体链接'); return; }
     db.fontUrl = url;
     await saveData();
     applyGlobalFont(url);
-    showToast(dom['toast-notification'], '✅ 字体已应用');
+    showToast(dom?.['toast-notification'], '✅ 字体已应用');
   });
   fontResetBtn.addEventListener('click', async () => {
     db.fontUrl = '';
     await saveData();
     applyGlobalFont('');
     fontUrlInput.value = '';
-    showToast(dom['toast-notification'], '已恢复默认字体');
+    showToast(dom?.['toast-notification'], '已恢复默认字体');
   });
 
   // ── 数据管理 ──
@@ -211,7 +211,7 @@ function _renderAll(form) {
     db.customPrompts = {};
     await saveData();
     renderCustomizeForm();
-    showToast(dom['toast-notification'], '✅ 所有提示词已恢复默认');
+    showToast(dom?.['toast-notification'], '✅ 所有提示词已恢复默认');
   });
 
   divider.appendChild(backupBtn);
@@ -289,7 +289,7 @@ function renderPromptEditor(key, label) {
     if (!db.customPrompts) db.customPrompts = {};
     db.customPrompts[key] = textarea.value;
     await saveData();
-    showToast(dom['toast-notification'], `✅ "${label}" 已保存`);
+    showToast(dom?.['toast-notification'], `✅ "${label}" 已保存`);
     // 更新 badge
     if (!titleLabel.querySelector('span')) {
       const badge = document.createElement('span');
@@ -312,7 +312,7 @@ function renderPromptEditor(key, label) {
     if (badge) badge.remove();
     resetBtn.disabled = true;
     resetBtn.style.opacity = '0.4';
-    showToast(dom['toast-notification'], `✅ "${label}" 已恢复默认`);
+    showToast(dom?.['toast-notification'], `✅ "${label}" 已恢复默认`);
   });
 
   return wrapper;
@@ -337,9 +337,9 @@ async function handleBackup() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(dom['toast-notification'], '聊天记录导出成功');
+    showToast(dom?.['toast-notification'], '聊天记录导出成功');
   } catch (e) {
-    showToast(dom['toast-notification'], `导出失败: ${e.message}`);
+    showToast(dom?.['toast-notification'], `导出失败: ${e.message}`);
   }
   loadingBtn = false;
 }
@@ -358,10 +358,10 @@ function setupImportHandler() {
           const ds = new DecompressionStream('gzip');
           const json = await new Response(file.stream().pipeThrough(ds)).text();
           await saveData(JSON.parse(json));
-          showToast(dom['toast-notification'], '数据已恢复，即将刷新');
+          showToast(dom?.['toast-notification'], '数据已恢复，即将刷新');
           window.location.reload();
         } catch (err) {
-          showToast(dom['toast-notification'], `导入失败: ${err.message}`);
+          showToast(dom?.['toast-notification'], `导入失败: ${err.message}`);
         }
       } else {
         e.target.value = null;
@@ -377,7 +377,7 @@ function switchTheme(theme) {
   db.appTheme = theme;
   saveData();
   applyTheme(theme);
-  showToast(dom['toast-notification'], theme === 'purple' ? '🎨 已切换为粉紫渐变主题' : '🎨 已切换为经典白色主题');
+  showToast(dom?.['toast-notification'], theme === 'purple' ? '🎨 已切换为粉紫渐变主题' : '🎨 已切换为经典白色主题');
   // 重新渲染自定义页面以更新按钮状态
   renderCustomizeForm();
 }

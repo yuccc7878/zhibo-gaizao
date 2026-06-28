@@ -53,10 +53,11 @@ export function getRandomValue(str) {
  * @param {string} message
  */
 export function showToast(toastEl, message) {
-  if (!toastEl) return;
-  toastEl.textContent = message;
-  toastEl.classList.add('show');
-  setTimeout(() => toastEl.classList.remove('show'), 3000);
+  const el = toastEl || document.getElementById('toast-notification');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
 }
 
 /**
