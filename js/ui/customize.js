@@ -28,7 +28,10 @@ function bindEvents() {
           const keys = await caches.keys();
           await Promise.all(keys.map(k => caches.delete(k)));
         }
-        window.location.reload();
+        // 强制清除 HTTP 缓存：给当前 URL 加时间戳参数，绕过浏览器缓存
+        const url = new URL(window.location.href);
+        url.searchParams.set('_t', Date.now());
+        window.location.href = url.toString();
       }
     });
   }
