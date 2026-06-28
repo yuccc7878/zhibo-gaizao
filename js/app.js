@@ -3,35 +3,34 @@
    替代原 app.js，接管所有初始化
    ======================================== */
 
-import { state } from './core/state.js';
-import { initDomCache } from './core/dom.js';
-import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js';
-import * as dataService from './core/dataService.js';
+import { state } from './core/state.js?v=3';
+import { initDomCache } from './core/dom.js?v=3';
+import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js?v=3';
+import * as dataService from './core/dataService.js?v=3';
 // aiService 已通过全局 script 加载，使用 window.AiService
 
-import * as chatRoom from './ui/chatRoom.js';
-import { maybeSendAiImage } from './ui/chatRoom.js';
-import * as chatList from './ui/chatList.js';
-import * as homeScreen from './ui/homeScreen.js';
-import { updateActiveWorldStatus } from './ui/homeScreen.js';
-import * as PromptDefaults from './ui/promptDefaults.js';
-import * as settings from './ui/settings.js';
-import * as wallpaper from './ui/wallpaper.js';
-import * as customize from './ui/customize.js';
-import * as fontSettings from './ui/fontSettings.js';
+import * as chatRoom from './ui/chatRoom.js?v=3';
+import * as chatList from './ui/chatList.js?v=3';
+import * as homeScreen from './ui/homeScreen.js?v=3';
+import { updateActiveWorldStatus } from './ui/homeScreen.js?v=3';
+import * as PromptDefaults from './ui/promptDefaults.js?v=3';
+import * as settings from './ui/settings.js?v=3';
+import * as wallpaper from './ui/wallpaper.js?v=3';
+import * as customize from './ui/customize.js?v=3';
+import * as fontSettings from './ui/fontSettings.js?v=3';
 
-import * as worldBook from './systems/worldBook.js';
-import * as apiSettings from './systems/apiSettings.js';
-import * as imgGenSettings from './systems/imgGenSettings.js';
-import * as stickers from './systems/stickers.js';
-import * as voice from './systems/voice.js';
-import * as photoVideo from './systems/photoVideo.js';
-import * as wallet from './systems/wallet.js';
-import * as gift from './systems/gift.js';
-import * as timeSkip from './systems/timeSkip.js';
-import * as imageRecognition from './systems/imageRecognition.js';
-import * as group from './systems/group.js';
-import * as videoCall from './systems/videoCall.js';
+import * as worldBook from './systems/worldBook.js?v=3';
+import * as apiSettings from './systems/apiSettings.js?v=3';
+import * as imgGenSettings from './systems/imgGenSettings.js?v=3';
+import * as stickers from './systems/stickers.js?v=3';
+import * as voice from './systems/voice.js?v=3';
+import * as photoVideo from './systems/photoVideo.js?v=3';
+import * as wallet from './systems/wallet.js?v=3';
+import * as gift from './systems/gift.js?v=3';
+import * as timeSkip from './systems/timeSkip.js?v=3';
+import * as imageRecognition from './systems/imageRecognition.js?v=3';
+import * as group from './systems/group.js?v=3';
+import * as videoCall from './systems/videoCall.js?v=3';
 
 async function initApp() {
   console.log('[App] initApp 开始');
@@ -184,7 +183,7 @@ async function initApp() {
   window.renderMessages = chatRoom.renderMessages;
   window.addMessageBubble = chatRoom.addMessageBubble;
   window.showToast = showToast;
-  window.maybeSendAiImage = maybeSendAiImage;
+  window.maybeSendAiImage = chatRoom.maybeSendAiImage;
   window.PromptDefaults = PromptDefaults;
 
   // 10. 刷新后恢复上次屏幕状态
