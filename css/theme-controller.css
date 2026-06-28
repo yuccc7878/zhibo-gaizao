@@ -33,7 +33,16 @@
 .theme-purple #gacha-screen,
 .theme-purple #games-screen,
 .theme-purple #media-screen,
-.theme-purple #live-screen {
+.theme-purple #live-screen,
+.theme-purple #api-settings-screen,
+.theme-purple #api-edit-screen,
+.theme-purple #img-gen-edit-screen,
+.theme-purple #tts-edit-screen,
+.theme-purple #wallpaper-screen,
+.theme-purple #font-settings-screen,
+.theme-purple #customize-screen,
+.theme-purple #world-book-screen,
+.theme-purple #edit-world-book-screen {
     background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
 }
 .theme-white #album-screen,
@@ -41,7 +50,16 @@
 .theme-white #gacha-screen,
 .theme-white #games-screen,
 .theme-white #media-screen,
-.theme-white #live-screen {
+.theme-white #live-screen,
+.theme-white #api-settings-screen,
+.theme-white #api-edit-screen,
+.theme-white #img-gen-edit-screen,
+.theme-white #tts-edit-screen,
+.theme-white #wallpaper-screen,
+.theme-white #font-settings-screen,
+.theme-white #customize-screen,
+.theme-white #world-book-screen,
+.theme-white #edit-world-book-screen {
     background: #f5f5f5 !important;
 }
 
@@ -53,7 +71,16 @@
 .theme-purple .bili-header,
 .theme-purple .gacha-header,
 .theme-purple .games-header,
-.theme-purple .media-header {
+.theme-purple .media-header,
+.theme-purple #api-settings-screen .app-header,
+.theme-purple #api-edit-screen .app-header,
+.theme-purple #img-gen-edit-screen .app-header,
+.theme-purple #tts-edit-screen .app-header,
+.theme-purple #wallpaper-screen .app-header,
+.theme-purple #font-settings-screen .app-header,
+.theme-purple #customize-screen .app-header,
+.theme-purple #world-book-screen .app-header,
+.theme-purple #edit-world-book-screen .app-header {
     background: rgba(255,255,255,0.12) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
@@ -62,11 +89,21 @@
 .theme-white .shop-header-bar,
 .theme-white #chat-room-screen .chat-header,
 .theme-white #chat-room-screen .chat-header-bar,
+.theme-white #chat-room-screen .app-header,
 .theme-white .album-header,
 .theme-white .bili-header,
 .theme-white .gacha-header,
 .theme-white .games-header,
-.theme-white .media-header {
+.theme-white .media-header,
+.theme-white #api-settings-screen .app-header,
+.theme-white #api-edit-screen .app-header,
+.theme-white #img-gen-edit-screen .app-header,
+.theme-white #tts-edit-screen .app-header,
+.theme-white #wallpaper-screen .app-header,
+.theme-white #font-settings-screen .app-header,
+.theme-white #customize-screen .app-header,
+.theme-white #world-book-screen .app-header,
+.theme-white #edit-world-book-screen .app-header {
     background: rgba(255,255,255,0.85) !important;
     backdrop-filter: blur(10px) !important;
     border-bottom: 1px solid #eee !important;
@@ -80,18 +117,37 @@
 .theme-purple .bili-header .title,
 .theme-purple .gacha-header .title,
 .theme-purple .games-header .title,
-.theme-purple .media-header .title {
+.theme-purple .media-header .title,
+.theme-purple #api-settings-screen .app-header .title,
+.theme-purple #api-edit-screen .app-header .title,
+.theme-purple #img-gen-edit-screen .app-header .title,
+.theme-purple #tts-edit-screen .app-header .title,
+.theme-purple #wallpaper-screen .app-header .title,
+.theme-purple #font-settings-screen .app-header .title,
+.theme-purple #customize-screen .app-header .title,
+.theme-purple #world-book-screen .app-header .title,
+.theme-purple #edit-world-book-screen .app-header .title {
     color: #fff !important;
     text-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
 }
 .theme-white .shop-title,
 .theme-white #chat-room-screen .chat-header .title,
 .theme-white #chat-room-screen .chat-header-bar .title,
+.theme-white #chat-room-screen .app-header .title,
 .theme-white .album-header .title,
 .theme-white .bili-header .title,
 .theme-white .gacha-header .title,
 .theme-white .games-header .title,
-.theme-white .media-header .title {
+.theme-white .media-header .title,
+.theme-white #api-settings-screen .app-header .title,
+.theme-white #api-edit-screen .app-header .title,
+.theme-white #img-gen-edit-screen .app-header .title,
+.theme-white #tts-edit-screen .app-header .title,
+.theme-white #wallpaper-screen .app-header .title,
+.theme-white #font-settings-screen .app-header .title,
+.theme-white #customize-screen .app-header .title,
+.theme-white #world-book-screen .app-header .title,
+.theme-white #edit-world-book-screen .app-header .title {
     color: #333 !important;
     text-shadow: none !important;
 }
@@ -104,7 +160,14 @@
 .theme-purple .bili-header .back-btn,
 .theme-purple .gacha-header .back-btn,
 .theme-purple .games-header .back-btn,
-.theme-purple .media-header .back-btn {
+.theme-purple .media-header .back-btn,
+.theme-purple #api-settings-screen .app-header .back-btn,
+.theme-purple #api-edit-screen .app-header .back-btn,
+.theme-purple #wallpaper-screen .app-header .back-btn,
+.theme-purple #font-settings-screen .app-header .back-btn,
+.theme-purple #customize-screen .app-header .back-btn,
+.theme-purple #world-book-screen .app-header .back-btn,
+.theme-purple #edit-world-book-screen .app-header .back-btn {
     color: #fff !important;
 }
 .theme-white .shop-header-bar .back-btn,
@@ -114,7 +177,15 @@
 .theme-white .bili-header .back-btn,
 .theme-white .gacha-header .back-btn,
 .theme-white .games-header .back-btn,
-.theme-white .media-header .back-btn {
+.theme-white .games-header .back-btn,
+.theme-white .media-header .back-btn,
+.theme-white #api-settings-screen .app-header .back-btn,
+.theme-white #api-edit-screen .app-header .back-btn,
+.theme-white #wallpaper-screen .app-header .back-btn,
+.theme-white #font-settings-screen .app-header .back-btn,
+.theme-white #customize-screen .app-header .back-btn,
+.theme-white #world-book-screen .app-header .back-btn,
+.theme-white #edit-world-book-screen .app-header .back-btn {
     color: var(--primary-color) !important;
 }
 

@@ -4,7 +4,7 @@
 
 import { state } from '../core/state.js';
 import { getDb, saveData } from '../core/dataService.js';
-import { showToast, switchScreen as utilsSwitchScreen } from '../core/utils.js';
+import { showToast, switchScreen as utilsSwitchScreen, createContextMenu } from '../core/utils.js';
 
 // worldBook 没有 dom 引用，共用全局 screen 元素的 switchScreen
 function ss(id) { utilsSwitchScreen({ screens: document.querySelectorAll('.screen') }, id); }
@@ -180,12 +180,60 @@ function bindEvents() {
     ss('edit-world-book-screen');
   });
 
-  dom['world-book-list-container'].addEventListener('mousedown', (e) => {
-    const item = e.target.closest('.world-book-item');
-    if (item) {
-      state._longPressTimer = setTimeout(async () => {
-        const id = item.dataset.id;
-        if (confirm('确定删除这个世界书条目吗？')) {
+  // 长按弹出菜单（鼠标 + 触摸）
+  function showWBContextMenu(id, x, y) {
+    const db = getDb();
+    const book = (db.worldBooks || []).find(b => b.id === id);
+    if (!book) return;
+
+    createContextMenu([
+      {
+        label: '✏️ 编辑',
+        action: () => {
+          state.currentEditingWorldBookId = book.id;
+          dom['world-book-name-input'].value = book.name;
+          dom['world-book-content-input'].value = book.content;
+          const posRadio = document.querySelector(`input[name="world-book-position"][value="${book.position}"]`);
+          if (posRadio) posRadio.checked = true;
+          ss('edit-world-book-screen');
+        }
+      },
+      {
+        label: '📋 复制内容',
+        action: () => {
+          const text = `${book.name}\n\n${book.content}`;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => {
+              showToast(dom['toast-notification'], '已复制到剪贴板');
+            }).catch(() => {
+              fallbackCopy(text);
+            });
+          } else {
+            fallbackCopy(text);
+          }
+        }
+      },
+      {
+        label: '📑 复制为条目',
+        action: async () => {
+          const db = getDb();
+          if (!db.worldBooks) db.worldBooks = [];
+          db.worldBooks.push({
+            id: 'wb_' + Date.now(),
+            name: book.name + ' (副本)',
+            content: book.content,
+            position: book.position,
+            enabled: book.enabled !== false
+          });
+          await saveData();
+          renderWorldBookList();
+          showToast(dom['toast-notification'], '已复制条目');
+        }
+      },
+      {
+        label: '🗑️ 删除',
+        danger: true,
+        action: async () => {
           const db = getDb();
           db.worldBooks = (db.worldBooks || []).filter(b => b.id !== id);
           // 清理角色和群聊中的关联引用
@@ -195,12 +243,45 @@ function bindEvents() {
           renderWorldBookList();
           showToast(dom['toast-notification'], '条目已删除');
         }
+      }
+    ], x, y);
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast(dom['toast-notification'], '已复制到剪贴板');
+  }
+
+  // 鼠标长按
+  dom['world-book-list-container'].addEventListener('mousedown', (e) => {
+    const item = e.target.closest('.world-book-item');
+    if (item) {
+      state._longPressTimer = setTimeout(() => {
+        showWBContextMenu(item.dataset.id, e.clientX, e.clientY);
       }, 500);
     }
   });
-
   dom['world-book-list-container'].addEventListener('mouseup', () => clearTimeout(state._longPressTimer));
   dom['world-book-list-container'].addEventListener('mouseleave', () => clearTimeout(state._longPressTimer));
+
+  // 触摸长按
+  dom['world-book-list-container'].addEventListener('touchstart', (e) => {
+    const item = e.target.closest('.world-book-item');
+    if (item) {
+      state._longPressTimer = setTimeout(() => {
+        const touch = e.touches[0];
+        showWBContextMenu(item.dataset.id, touch.clientX, touch.clientY);
+      }, 500);
+    }
+  });
+  dom['world-book-list-container'].addEventListener('touchend', () => clearTimeout(state._longPressTimer));
+  dom['world-book-list-container'].addEventListener('touchmove', () => clearTimeout(state._longPressTimer));
 }
 
 export function renderWorldBookList() {
@@ -217,9 +298,32 @@ export function renderWorldBookList() {
   if (placeholder) placeholder.style.display = 'none';
 
   container.innerHTML = '<ul class="list-container">' +
-    books.map(b => `<li class="world-book-item" data-id="${b.id}">
-      <div style="flex:1;"><strong>${b.name}</strong><span style="font-size:12px;color:#999;margin-left:8px;">${b.position === 'before' ? '🔹' : '🔸'}</span></div>
-      <div style="font-size:12px;color:#888;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">${b.content}</div>
-    </li>`).join('') +
+    books.map(b => {
+      const isEnabled = b.enabled !== false;
+      return `<li class="world-book-item" data-id="${b.id}" style="display:flex;align-items:center;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;"><strong>${b.name}</strong><span style="font-size:12px;color:#999;">${b.position === 'before' ? '🔹' : '🔸'}</span>${!isEnabled ? '<span style="font-size:10px;color:#ccc;background:#f5f5f5;padding:1px 6px;border-radius:4px;">已停用</span>' : ''}</div>
+          <div style="font-size:12px;color:#888;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${b.content}</div>
+        </div>
+        <label class="wb-toggle-switch" title="${isEnabled ? '点击停用' : '点击启用'}" style="flex-shrink:0;">
+          <input type="checkbox" ${isEnabled ? 'checked' : ''} data-wb-toggle="${b.id}">
+          <span class="wb-toggle-slider"></span>
+        </label>
+      </li>`;
+    }).join('') +
     '</ul>';
+
+  // 开关事件
+  container.querySelectorAll('[data-wb-toggle]').forEach(cb => {
+    cb.addEventListener('change', async () => {
+      const id = cb.dataset.wbToggle;
+      const db = getDb();
+      const book = (db.worldBooks || []).find(b => b.id === id);
+      if (book) {
+        book.enabled = cb.checked;
+        await saveData();
+        showToast(dom['toast-notification'], cb.checked ? '✅ 已启用' : '⛔ 已停用');
+      }
+    });
+  });
 }

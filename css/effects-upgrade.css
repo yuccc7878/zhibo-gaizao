@@ -1,0 +1,666 @@
+/* ========================================
+ * Effects Upgrade - 特效美化补丁
+ * 参照 SullyOS 设计，适配组装姬项目
+ *
+ * 使用方式：在 styles.css 之后引入
+ * <link rel="stylesheet" href="css/effects-upgrade.css">
+ * ======================================== */
+
+
+
+
+/* ════════════════════════════════════════
+ * 1. 消息气泡入场动画
+ * ════════════════════════════════════════ */
+
+/* 收到消息 — 从左侧滑入 */
+.message-wrapper.received {
+    animation: msgSlideInLeft 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* 发送消息 — 从右侧滑入 */
+.message-wrapper.sent {
+    animation: msgSlideInRight 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes msgSlideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes msgSlideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+/* 系统通知 — 淡入 */
+.system-notification {
+    animation: msgFadeIn 0.4s ease both;
+}
+
+@keyframes msgFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 2. 按钮微交互
+ * ════════════════════════════════════════ */
+
+/* 通用按钮按下效果 */
+.btn {
+    transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                box-shadow 0.15s ease,
+                opacity 0.15s ease;
+}
+.btn:active {
+    transform: scale(0.95);
+}
+.btn:hover {
+    filter: brightness(1.05);
+}
+
+/* 主按钮发光 */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+}
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+.btn-primary:hover::after {
+    opacity: 1;
+}
+
+/* 发送按钮脉冲 */
+.icon-btn.send-btn.pulse {
+    animation: sendPulse 0.4s ease-out;
+}
+@keyframes sendPulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 128, 171, 0.5); }
+    100% { box-shadow: 0 0 0 14px rgba(255, 128, 171, 0); }
+}
+
+/* 图标按钮悬浮 */
+.sticker-bar-btn {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.sticker-bar-btn:active {
+    transform: scale(0.85);
+}
+.sticker-bar-btn:hover {
+    opacity: 0.8;
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 3. 卡片悬浮效果
+ * ════════════════════════════════════════ */
+
+.list-item {
+    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                box-shadow 0.2s ease,
+                background-color 0.2s ease;
+}
+.list-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+.list-item:active {
+    transform: scale(0.98) translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* API 配置卡片 */
+.api-preset-card {
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.api-preset-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+.api-preset-card:active {
+    transform: scale(0.98);
+}
+
+/* 图标悬浮 */
+.icon-img {
+    transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                box-shadow 0.25s ease;
+}
+.icon-img:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+.icon-img:active {
+    transform: translateY(-1px) scale(0.97);
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 4. 弹窗动画
+ * ════════════════════════════════════════ */
+
+/* 弹窗打开 */
+.modal-overlay.visible {
+    animation: modalFadeIn 0.3s ease both;
+}
+.modal-overlay.visible .modal-window {
+    animation: modalSlideUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Action Sheet */
+.action-sheet-overlay.visible {
+    animation: modalFadeIn 0.25s ease both;
+}
+.action-sheet-overlay.visible .action-sheet {
+    animation: sheetSlideUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@keyframes sheetSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* 设置侧边栏 */
+.settings-sidebar {
+    transition: right 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* 表情面板 */
+#sticker-modal.visible {
+    animation: sheetSlideUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 5. Toast 通知动画
+ * ════════════════════════════════════════ */
+
+.toast {
+    transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
+    transform: translateX(-50%) translateY(10px);
+}
+.toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    animation: toastBounce 0.4s ease;
+}
+@keyframes toastBounce {
+    0% { transform: translateX(-50%) translateY(20px); opacity: 0; }
+    50% { transform: translateX(-50%) translateY(-5px); }
+    100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 6. 输入框特效
+ * ════════════════════════════════════════ */
+
+/* 输入框聚焦光效 */
+.message-input-area input {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+.message-input-area input:focus {
+    box-shadow: 0 0 0 3px rgba(255, 128, 171, 0.15);
+}
+
+/* 流光边框增强 */
+.input-glow-wrap::before {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+.input-glow-wrap.active::before {
+    opacity: 1;
+    animation: inputGlowFlow 2s linear infinite;
+}
+@keyframes inputGlowFlow {
+    from { background-position: 0 0; }
+    to { background-position: -120px 0; }
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 7. 打字指示器动画
+ * ════════════════════════════════════════ */
+
+.typing-indicator {
+    animation: typingFadeIn 0.3s ease both;
+}
+@keyframes typingFadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 打字省略号动画 */
+.typing-dots {
+    display: inline-flex;
+    gap: 3px;
+}
+.typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #aaa;
+    animation: typingDot 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingDot {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-6px); opacity: 1; }
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 8. 在线状态指示器
+ * ════════════════════════════════════════ */
+
+.online-indicator {
+    animation: onlinePulse 2s ease-in-out infinite;
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
+}
+@keyframes onlinePulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 0 6px rgba(76, 175, 80, 0);
+    }
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 9. 转账/礼物卡片特效
+ * ════════════════════════════════════════ */
+
+/* 转账卡片入场 */
+.transfer-card {
+    animation: cardPopIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@keyframes cardPopIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(10px);
+    }
+    60% {
+        transform: scale(1.03) translateY(-2px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 礼物卡片入场 */
+.gift-card {
+    animation: giftSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@keyframes giftSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-15px) rotate(-3deg);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) rotate(0);
+    }
+}
+
+/* 收到转账/礼物时的高光闪烁 */
+.transfer-card.received-transfer::after,
+.gift-card:not(.received)::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: cardShine 1.5s ease-in-out;
+    pointer-events: none;
+}
+@keyframes cardShine {
+    0% { left: -100%; }
+    100% { left: 200%; }
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 10. 加载动画
+ * ════════════════════════════════════════ */
+
+/* 图片加载占位 */
+.image-placeholder .placeholder-spinner {
+    animation: pSpin 0.8s linear infinite;
+}
+@keyframes pSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* 图片加载气泡 */
+.image-loading-bubble .loading-spinner {
+    animation: imgSpin 0.8s linear infinite;
+}
+@keyframes imgSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* 进度条不定态 */
+.image-loading-bubble .progress-fill {
+    animation: progressIndeterminate 1.5s ease-in-out infinite;
+}
+@keyframes progressIndeterminate {
+    0% { width: 0%; margin-left: 0; }
+    50% { width: 60%; margin-left: 20%; }
+    100% { width: 0%; margin-left: 100%; }
+}
+
+/* 按钮 loading spinner */
+.btn .spinner {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 11. 屏幕切换动画
+ * ════════════════════════════════════════ */
+
+.screen {
+    animation: screenFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@keyframes screenFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.97) translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 主屏幕页面切换 */
+.page-swipe-container {
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 12. 气泡特效增强
+ * ════════════════════════════════════════ */
+
+/* 气泡点击波纹 */
+.message-bubble {
+    position: relative;
+    overflow: hidden;
+}
+.message-bubble::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s, opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+}
+.message-bubble:active::after {
+    width: 200%;
+    height: 200%;
+    opacity: 1;
+    transition: width 0s, height 0s, opacity 0s;
+}
+
+/* 气泡悬浮微动 */
+.message-bubble {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.message-bubble:hover {
+    transform: translateY(-1px);
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 13. 日期分隔线美化
+ * ════════════════════════════════════════ */
+
+.date-separator {
+    animation: dateFadeIn 0.5s ease both;
+}
+@keyframes dateFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.date-separator::before,
+.date-separator::after {
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.08), transparent);
+    height: 1px;
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 14. 滚动条美化
+ * ════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+    width: 4px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 15. 特殊事件撒花增强
+ * ════════════════════════════════════════ */
+
+/* 撒花时屏幕微震 */
+@keyframes screenShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px) rotate(-0.5deg); }
+    75% { transform: translateX(2px) rotate(0.5deg); }
+}
+
+/* 礼物送出时的光圈扩散 */
+@keyframes giftRing {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 0.6;
+    }
+    100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0;
+    }
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 16. 置顶标记动画
+ * ════════════════════════════════════════ */
+
+.pin-badge {
+    animation: pinPop 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@keyframes pinPop {
+    from {
+        opacity: 0;
+        transform: scale(0);
+    }
+    60% {
+        transform: scale(1.2);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 17. 加载更多按钮
+ * ════════════════════════════════════════ */
+
+.load-more-btn {
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+.load-more-btn:hover {
+    background-color: #d5d5d5;
+}
+.load-more-btn:active {
+    transform: scale(0.95);
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 18. 世界书开关动画
+ * ════════════════════════════════════════ */
+
+.wb-toggle-slider {
+    transition: background-color 0.25s ease;
+}
+.wb-toggle-slider::before {
+    transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.wb-toggle-switch input:checked + .wb-toggle-slider::before {
+    transform: translateX(16px);
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 19. 设置面板折叠动画
+ * ════════════════════════════════════════ */
+
+.settings-collapse {
+    transition: border-color 0.2s ease;
+}
+.settings-collapse-title {
+    transition: background-color 0.15s ease;
+}
+.settings-collapse-title::before {
+    transition: transform 0.2s ease;
+}
+.settings-collapse[open] .settings-collapse-title::before {
+    transform: rotate(90deg);
+}
+
+
+
+
+/* ════════════════════════════════════════
+ * 20. 头像特效
+ * ════════════════════════════════════════ */
+
+.chat-avatar {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.chat-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 群聊头像 */
+.msg-avatar {
+    transition: transform 0.2s ease;
+}
+.msg-avatar:hover {
+    transform: scale(1.08);
+}

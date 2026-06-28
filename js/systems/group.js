@@ -256,6 +256,13 @@ function bindEvents() {
     }
   });
 
+  // 点击背景关闭收件人选择弹窗
+  dom['group-recipient-selection-modal'].addEventListener('click', (e) => {
+    if (e.target === dom['group-recipient-selection-modal']) {
+      dom['group-recipient-selection-modal'].classList.remove('visible');
+    }
+  });
+
   dom['link-group-world-book-btn'].addEventListener('click', () => {
     const g = (getDb().groups || []).find(gr => gr.id === state.currentChatId);
     if (!g) return;
@@ -395,6 +402,8 @@ export function renderGroupRecipientSelectionList(actionText) {
       <label for="recipient-select-${m.id}"><img src="${m.avatar}" alt="${m.groupNickname}"><span>${m.groupNickname}</span></label>`;
     list.appendChild(li);
   });
+  // 显示收件人选择弹窗
+  dom['group-recipient-selection-modal'].classList.add('visible');
 }
 
 async function saveGroupSettingsFromSidebar() {
