@@ -3,34 +3,34 @@
    替代原 app.js，接管所有初始化
    ======================================== */
 
-import { state } from './core/state.js?v=4';
-import { initDomCache } from './core/dom.js?v=4';
-import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js?v=4';
-import * as dataService from './core/dataService.js?v=4';
+import { state } from './core/state.js?v=5';
+import { initDomCache } from './core/dom.js?v=5';
+import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js?v=5';
+import * as dataService from './core/dataService.js?v=5';
 // aiService 已通过全局 script 加载，使用 window.AiService
 
-import * as chatRoom from './ui/chatRoom.js?v=4';
-import * as chatList from './ui/chatList.js?v=4';
-import * as homeScreen from './ui/homeScreen.js?v=4';
-import { updateActiveWorldStatus } from './ui/homeScreen.js?v=4';
-import * as PromptDefaults from './ui/promptDefaults.js?v=4';
-import * as settings from './ui/settings.js?v=4';
-import * as wallpaper from './ui/wallpaper.js?v=4';
-import * as customize from './ui/customize.js?v=4';
-import * as fontSettings from './ui/fontSettings.js?v=4';
+import * as chatRoom from './ui/chatRoom.js?v=5';
+import * as chatList from './ui/chatList.js?v=5';
+import * as homeScreen from './ui/homeScreen.js?v=5';
+import { updateActiveWorldStatus } from './ui/homeScreen.js?v=5';
+import * as PromptDefaults from './ui/promptDefaults.js?v=5';
+import * as settings from './ui/settings.js?v=5';
+import * as wallpaper from './ui/wallpaper.js?v=5';
+import * as customize from './ui/customize.js?v=5';
+import * as fontSettings from './ui/fontSettings.js?v=5';
 
-import * as worldBook from './systems/worldBook.js?v=4';
-import * as apiSettings from './systems/apiSettings.js?v=4';
-import * as imgGenSettings from './systems/imgGenSettings.js?v=4';
-import * as stickers from './systems/stickers.js?v=4';
-import * as voice from './systems/voice.js?v=4';
-import * as photoVideo from './systems/photoVideo.js?v=4';
-import * as wallet from './systems/wallet.js?v=4';
-import * as gift from './systems/gift.js?v=4';
-import * as timeSkip from './systems/timeSkip.js?v=4';
-import * as imageRecognition from './systems/imageRecognition.js?v=4';
-import * as group from './systems/group.js?v=4';
-import * as videoCall from './systems/videoCall.js?v=4';
+import * as worldBook from './systems/worldBook.js?v=5';
+import * as apiSettings from './systems/apiSettings.js?v=5';
+import * as imgGenSettings from './systems/imgGenSettings.js?v=5';
+import * as stickers from './systems/stickers.js?v=5';
+import * as voice from './systems/voice.js?v=5';
+import * as photoVideo from './systems/photoVideo.js?v=5';
+import * as wallet from './systems/wallet.js?v=5';
+import * as gift from './systems/gift.js?v=5';
+import * as timeSkip from './systems/timeSkip.js?v=5';
+import * as imageRecognition from './systems/imageRecognition.js?v=5';
+import * as group from './systems/group.js?v=5';
+import * as videoCall from './systems/videoCall.js?v=5';
 
 async function initApp() {
   console.log('[App] initApp 开始');

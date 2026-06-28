@@ -355,9 +355,18 @@ function setupImportHandler() {
       if (!file) return;
       if (confirm('此操作将覆盖当前所有数据，确定要继续吗？')) {
         try {
-          const ds = new DecompressionStream('gzip');
-          const json = await new Response(file.stream().pipeThrough(ds)).text();
-          await saveData(JSON.parse(json));
+          let json;
+          try {
+            // 尝试 gzip 解压（新版格式）
+            const ds = new DecompressionStream('gzip');
+            json = await new Response(file.stream().pipeThrough(ds)).text();
+          } catch (_) {
+            // gzip 失败，当作纯 JSON 读取（旧版格式）
+            json = await file.text();
+          }
+          const data = JSON.parse(json);
+          if (!data || typeof data !== 'object') throw new Error('数据格式无效');
+          await saveData(data);
           showToast(dom?.['toast-notification'], '数据已恢复，即将刷新');
           window.location.reload();
         } catch (err) {
