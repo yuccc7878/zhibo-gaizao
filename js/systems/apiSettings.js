@@ -228,6 +228,7 @@ function bindEvents() {
 export function renderApiPresetList() {
   const db = getDb();
   const list = dom['api-preset-list'];
+  console.log('[ApiSettings] renderApiPresetList called, presets:', (db.apiPresets||[]).length, 'list:', !!list);
   if (!list) return;
   list.innerHTML = '';
   const presets = db.apiPresets || [];

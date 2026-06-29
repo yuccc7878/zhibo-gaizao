@@ -93,6 +93,8 @@ export function renderChatList() {
   const db = getDb();
   const container = dom['chat-list-container'];
   const placeholder = dom['no-chats-placeholder'];
+  console.log('[ChatList] renderChatList called, characters:', (db.characters||[]).length, 'groups:', (db.groups||[]).length, 'container:', !!container);
+  if (!container) { console.error('[ChatList] container not found!'); return; }
   container.innerHTML = '';
 
   // 合并私聊和群聊

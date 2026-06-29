@@ -290,6 +290,7 @@ export function renderWorldBookList() {
   const books = db.worldBooks || [];
   const container = dom['world-book-list-container'];
   const placeholder = dom['no-world-books-placeholder'];
+  console.log('[WorldBook] renderWorldBookList called, books:', books.length, 'container:', !!container);
 
   if (books.length === 0) {
     container.innerHTML = '';
