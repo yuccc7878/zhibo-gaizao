@@ -15,7 +15,7 @@ export function init(_dom) {
 }
 
 function bindEvents() {
-  dom['wallet-btn'].addEventListener('click', () => {
+  dom['wallet-btn']?.addEventListener('click', () => {
     const db = getDb();
     if (state.currentChatType === 'group') {
       // 群聊：先选收件人
@@ -26,11 +26,11 @@ function bindEvents() {
     } else {
       dom['send-transfer-form'].reset();
       chatRoom.updateTransferBalanceDisplay();
-      dom['send-transfer-modal'].classList.add('visible');
+      dom['send-transfer-modal']?.classList.add('visible');
     }
   });
 
-  dom['send-transfer-form'].addEventListener('submit', (e) => {
+  dom['send-transfer-form']?.addEventListener('submit', (e) => {
     e.preventDefault();
     const amount = parseFloat(dom['transfer-amount-input'].value);
     if (amount > 0) {
@@ -40,6 +40,6 @@ function bindEvents() {
     }
   });
 
-  dom['accept-transfer-btn'].addEventListener('click', () => chatRoom.respondToTransfer('received'));
-  dom['return-transfer-btn'].addEventListener('click', () => chatRoom.respondToTransfer('returned'));
+  dom['accept-transfer-btn']?.addEventListener('click', () => chatRoom.respondToTransfer('received'));
+  dom['return-transfer-btn']?.addEventListener('click', () => chatRoom.respondToTransfer('returned'));
 }

@@ -22,20 +22,20 @@ export function init(_dom, openChatRoom) {
 }
 
 function bindEvents() {
-  dom['add-chat-btn'].addEventListener('click', () => {
+  dom['add-chat-btn']?.addEventListener('click', () => {
     // 确保手动创建 tab 默认激活
     dom['add-char-modal'].querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
     dom['add-char-modal'].querySelector('[data-tab="manual"]').classList.add('active');
     dom['add-char-form'].style.display = '';
     dom['import-tab-panel'].style.display = 'none';
     dom['add-char-modal-window'].style.maxWidth = '340px';
-    dom['add-char-modal'].classList.add('visible');
+    dom['add-char-modal']?.classList.add('visible');
     dom['add-char-form'].reset();
     resetImport();
   });
 
   // 点击聊天列表项
-  dom['chat-list-container'].addEventListener('click', (e) => {
+  dom['chat-list-container']?.addEventListener('click', (e) => {
     const item = e.target.closest('[data-chat-id]');
     if (!item) return;
     const chatId = item.dataset.chatId;
@@ -44,12 +44,12 @@ function bindEvents() {
   });
 
   // 右键长按菜单
-  dom['chat-list-container'].addEventListener('contextmenu', (e) => {
+  dom['chat-list-container']?.addEventListener('contextmenu', (e) => {
     const item = e.target.closest('[data-chat-id]');
     if (item) { e.preventDefault(); handleChatListLongPress(item.dataset.chatId, item.dataset.chatType, e.clientX, e.clientY); }
   });
 
-  dom['chat-list-container'].addEventListener('touchstart', (e) => {
+  dom['chat-list-container']?.addEventListener('touchstart', (e) => {
     const item = e.target.closest('[data-chat-id]');
     if (item) {
       state._longPressTimer = setTimeout(() => {
@@ -59,11 +59,11 @@ function bindEvents() {
     }
   });
 
-  dom['chat-list-container'].addEventListener('touchend', () => clearTimeout(state._longPressTimer));
-  dom['chat-list-container'].addEventListener('touchmove', () => clearTimeout(state._longPressTimer));
+  dom['chat-list-container']?.addEventListener('touchend', () => clearTimeout(state._longPressTimer));
+  dom['chat-list-container']?.addEventListener('touchmove', () => clearTimeout(state._longPressTimer));
 
   // 添加角色表单
-  dom['add-char-form'].addEventListener('submit', async (e) => {
+  dom['add-char-form']?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const newChar = {
       id: `char_${Date.now()}`,
@@ -84,7 +84,7 @@ function bindEvents() {
     if (!db.characters) db.characters = []; db.characters.push(newChar);
     await saveData();
     renderChatList();
-    dom['add-char-modal'].classList.remove('visible');
+    dom['add-char-modal']?.classList.remove('visible');
     showToast(dom['toast-notification'], `角色"${newChar.remarkName}"创建成功！`);
   });
 }
@@ -168,7 +168,7 @@ function handleChatListLongPress(chatId, chatType, x, y) {
     items.push({ label: '✏️ 编辑', action: () => {
       state.currentChatId = chat.id;
       state.currentChatType = 'private';
-      dom['chat-settings-btn'].click();
+      dom['chat-settings-btn']?.click();
     }});
     items.push({ label: '❌ 删除', danger: true, action: async () => {
       if (confirm(`确定删除"${chat.remarkName}"吗？`)) {
@@ -357,7 +357,7 @@ function renderImportPreview(card, wbEntries) {
       });
       await saveData();
       renderChatList();
-      dom['add-char-modal'].classList.remove('visible');
+      dom['add-char-modal']?.classList.remove('visible');
       showToast(dom['toast-notification'], `✅ 成功导入角色"${card.name}"${result.builtinWorldBookIds.length > 0 ? ` + ${result.builtinWorldBookIds.length} 条世界书` : ''}`);
       resetImport();
     } catch (err) {

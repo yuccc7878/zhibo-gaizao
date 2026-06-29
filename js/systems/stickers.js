@@ -15,10 +15,10 @@ export function init(_dom) {
 }
 
 function bindEvents() {
-  dom['sticker-toggle-btn'].addEventListener('click', (e) => {
+  dom['sticker-toggle-btn']?.addEventListener('click', (e) => {
     e.stopPropagation();
-    dom['sticker-modal'].classList.toggle('visible');
-    if (dom['sticker-modal'].classList.contains('visible')) renderStickerGrid();
+    dom['sticker-modal']?.classList.toggle('visible');
+    if (dom['sticker-modal']?.classList.contains('visible')) renderStickerGrid();
   });
 
   // 点击外部关闭表情面板
@@ -26,20 +26,20 @@ function bindEvents() {
     if (dom['sticker-modal']?.classList.contains('visible') &&
         !e.target.closest('#sticker-modal') &&
         !e.target.closest('#sticker-toggle-btn')) {
-      dom['sticker-modal'].classList.remove('visible');
+      dom['sticker-modal']?.classList.remove('visible');
     }
   });
 
-  dom['add-new-sticker-btn'].addEventListener('click', () => {
+  dom['add-new-sticker-btn']?.addEventListener('click', () => {
     dom['add-sticker-modal-title'].textContent = '添加新表情';
     dom['add-sticker-form'].reset();
     dom['sticker-edit-id'].value = '';
     dom['sticker-preview'].innerHTML = '<span>预览</span>';
     dom['sticker-url-input'].disabled = false;
-    dom['add-sticker-modal'].classList.add('visible');
+    dom['add-sticker-modal']?.classList.add('visible');
   });
 
-  dom['add-sticker-form'].addEventListener('submit', async (e) => {
+  dom['add-sticker-form']?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const db = getDb();
     if (!db.myStickers) db.myStickers = [];
@@ -63,17 +63,17 @@ function bindEvents() {
       db.myStickers.push(sticker);
     }
     await saveData();
-    dom['add-sticker-modal'].classList.remove('visible');
+    dom['add-sticker-modal']?.classList.remove('visible');
     renderStickerGrid();
     showToast(dom['toast-notification'], editId ? '表情已更新' : '表情已添加');
   });
 
-  dom['sticker-url-input'].addEventListener('input', (e) => {
+  dom['sticker-url-input']?.addEventListener('input', (e) => {
     dom['sticker-preview'].innerHTML = `<img src="${e.target.value}" alt="预览">`;
     dom['sticker-file-upload'].value = '';
   });
 
-  dom['sticker-file-upload'].addEventListener('change', async (e) => {
+  dom['sticker-file-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
@@ -85,7 +85,7 @@ function bindEvents() {
     }
   });
 
-  dom['edit-sticker-btn'].addEventListener('click', () => {
+  dom['edit-sticker-btn']?.addEventListener('click', () => {
     const id = state.currentStickerActionTarget;
     if (!id) return;
     const db = getDb();
@@ -96,12 +96,12 @@ function bindEvents() {
       dom['sticker-name'].value = sticker.name;
       dom['sticker-preview'].innerHTML = `<img src="${sticker.data}" alt="预览">`;
       dom['sticker-url-input'].disabled = true;
-      dom['add-sticker-modal'].classList.add('visible');
+      dom['add-sticker-modal']?.classList.add('visible');
     }
     dom['sticker-actionsheet']?.classList.remove('visible');
   });
 
-  dom['delete-sticker-btn'].addEventListener('click', async () => {
+  dom['delete-sticker-btn']?.addEventListener('click', async () => {
     const id = state.currentStickerActionTarget;
     if (!id) return;
     const db = getDb();

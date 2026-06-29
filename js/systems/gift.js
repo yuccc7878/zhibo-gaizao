@@ -14,7 +14,7 @@ export function init(_dom) {
 }
 
 function bindEvents() {
-  dom['gift-btn'].addEventListener('click', () => {
+  dom['gift-btn']?.addEventListener('click', () => {
     if (state.currentChatType === 'group') {
       // 群聊：先选收件人
       const g = getDb().groups.find(gr => gr.id === state.currentChatId);
@@ -23,12 +23,12 @@ function bindEvents() {
       state.currentGroupAction.type = 'gift';
     } else {
       renderGiftItemList();
-      dom['send-gift-modal'].classList.add('visible');
+      dom['send-gift-modal']?.classList.add('visible');
     }
   });
 
-  dom['send-gift-modal'].addEventListener('click', (e) => {
-    if (e.target === dom['send-gift-modal']) dom['send-gift-modal'].classList.remove('visible');
+  dom['send-gift-modal']?.addEventListener('click', (e) => {
+    if (e.target === dom['send-gift-modal']) dom['send-gift-modal']?.classList.remove('visible');
   });
 }
 
@@ -69,7 +69,7 @@ export function renderGiftItemList() {
       const item = ownedItems.find(i => i.id === el.dataset.id);
       if (item) {
         chatRoom.sendMyGift(item);
-        dom['send-gift-modal'].classList.remove('visible');
+        dom['send-gift-modal']?.classList.remove('visible');
       }
     });
   });

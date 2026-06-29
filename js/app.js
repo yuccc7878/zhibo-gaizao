@@ -75,7 +75,7 @@ async function initApp() {
   });
   // TTS 设置页按钮绑定（HTML 动态注入后）
   if (dom['tts-preview-btn']) {
-    dom['tts-preview-btn'].addEventListener('click', () => {
+    dom['tts-preview-btn']?.addEventListener('click', () => {
       const engineRadio = document.querySelector('input[name="tts-engine"]:checked');
       const engine = engineRadio?.value || 'local';
       const speaker = parseInt(dom['tts-sogou-speaker']?.value) || 1;

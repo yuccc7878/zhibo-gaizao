@@ -19,12 +19,12 @@ export function init(_dom, renderChatList, renderMessages) {
 }
 
 function bindEvents() {
-  dom['create-group-btn'].addEventListener('click', () => {
+  dom['create-group-btn']?.addEventListener('click', () => {
     renderMemberSelectionList();
-    dom['create-group-modal'].classList.add('visible');
+    dom['create-group-modal']?.classList.add('visible');
   });
 
-  dom['create-group-form'].addEventListener('submit', async (e) => {
+  dom['create-group-form']?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const selectedIds = Array.from(dom['member-selection-list'].querySelectorAll('input:checked')).map(i => i.value);
     const groupName = dom['group-name-input'].value.trim();
@@ -56,14 +56,14 @@ function bindEvents() {
     if (!db.groups) db.groups = []; db.groups.push(newGroup);
     await saveData();
     if (_renderChatList) _renderChatList();
-    dom['create-group-modal'].classList.remove('visible');
+    dom['create-group-modal']?.classList.remove('visible');
     showToast(dom['toast-notification'], `群聊"${groupName}"创建成功！`);
   });
 
-  dom['group-settings-form'].addEventListener('submit', e => {
+  dom['group-settings-form']?.addEventListener('submit', e => {
     e.preventDefault();
     saveGroupSettingsFromSidebar();
-    dom['group-settings-sidebar'].classList.remove('open');
+    dom['group-settings-sidebar']?.classList.remove('open');
   });
 
   // 群聊 CSS 自定义
@@ -94,7 +94,7 @@ function bindEvents() {
     }
   });
 
-  dom['setting-group-avatar-upload'].addEventListener('change', async (e) => {
+  dom['setting-group-avatar-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
@@ -106,7 +106,7 @@ function bindEvents() {
     } catch (err) { showToast(dom['toast-notification'], '群头像压缩失败'); }
   });
 
-  dom['setting-group-chat-bg-upload'].addEventListener('change', async (e) => {
+  dom['setting-group-chat-bg-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
@@ -120,28 +120,28 @@ function bindEvents() {
     } catch (err) { showToast(dom['toast-notification'], '群聊背景压缩失败'); }
   });
 
-  dom['clear-group-chat-history-btn'].addEventListener('click', async () => {
+  dom['clear-group-chat-history-btn']?.addEventListener('click', async () => {
     const g = (getDb().groups || []).find(gr => gr.id === state.currentChatId);
     if (g && confirm(`确定要清空群聊"${g.name}"的所有聊天记录吗？`)) {
       g.history = [];
       await saveData();
       if (_renderMessages) _renderMessages(false, true);
       if (_renderChatList) _renderChatList();
-      dom['group-settings-sidebar'].classList.remove('open');
+      dom['group-settings-sidebar']?.classList.remove('open');
       showToast(dom['toast-notification'], '聊天记录已清空');
     }
   });
 
   // 成员管理
-  dom['group-members-list-container'].addEventListener('click', e => {
+  dom['group-members-list-container']?.addEventListener('click', e => {
     const memberDiv = e.target.closest('.group-member');
     const addBtn = e.target.closest('.add-member-btn');
     if (memberDiv) openGroupMemberEditModal(memberDiv.dataset.id);
-    else if (addBtn) dom['add-member-actionsheet'].classList.add('visible');
+    else if (addBtn) dom['add-member-actionsheet']?.classList.add('visible');
   });
 
-  dom['edit-member-avatar-preview'].addEventListener('click', () => dom['edit-member-avatar-upload'].click());
-  dom['edit-member-avatar-upload'].addEventListener('change', async (e) => {
+  dom['edit-member-avatar-preview']?.addEventListener('click', () => dom['edit-member-avatar-upload']?.click());
+  dom['edit-member-avatar-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
       try { dom['edit-member-avatar-preview'].src = await compressImage(file, { quality: 0.8, maxWidth: 400, maxHeight: 400 }); }
@@ -149,7 +149,7 @@ function bindEvents() {
     }
   });
 
-  dom['edit-group-member-form'].addEventListener('submit', async (e) => {
+  dom['edit-group-member-form']?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const memberId = dom['editing-member-id'].value;
     const g = (getDb().groups || []).find(gr => gr.id === state.currentChatId);
@@ -163,24 +163,24 @@ function bindEvents() {
       renderGroupMembersInSettings(g);
       showToast(dom['toast-notification'], '成员信息已更新');
     }
-    dom['edit-group-member-modal'].classList.remove('visible');
+    dom['edit-group-member-modal']?.classList.remove('visible');
   });
 
-  dom['invite-existing-member-btn'].addEventListener('click', () => {
+  dom['invite-existing-member-btn']?.addEventListener('click', () => {
     renderInviteSelectionList();
-    dom['invite-member-modal'].classList.add('visible');
-    dom['add-member-actionsheet'].classList.remove('visible');
+    dom['invite-member-modal']?.classList.add('visible');
+    dom['add-member-actionsheet']?.classList.remove('visible');
   });
 
-  dom['create-new-member-btn'].addEventListener('click', () => {
+  dom['create-new-member-btn']?.addEventListener('click', () => {
     dom['create-member-for-group-form'].reset();
     dom['create-group-member-avatar-preview'].src = 'assets/icons/default-avatar.png';
-    dom['create-member-for-group-modal'].classList.add('visible');
-    dom['add-member-actionsheet'].classList.remove('visible');
+    dom['create-member-for-group-modal']?.classList.add('visible');
+    dom['add-member-actionsheet']?.classList.remove('visible');
   });
 
-  dom['create-group-member-avatar-preview'].addEventListener('click', () => dom['create-group-member-avatar-upload'].click());
-  dom['create-group-member-avatar-upload'].addEventListener('change', async (e) => {
+  dom['create-group-member-avatar-preview']?.addEventListener('click', () => dom['create-group-member-avatar-upload']?.click());
+  dom['create-group-member-avatar-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
       try { dom['create-group-member-avatar-preview'].src = await compressImage(file, { quality: 0.8, maxWidth: 400, maxHeight: 400 }); }
@@ -188,7 +188,7 @@ function bindEvents() {
     }
   });
 
-  dom['confirm-invite-btn'].addEventListener('click', async () => {
+  dom['confirm-invite-btn']?.addEventListener('click', async () => {
     const g = (getDb().groups || []).find(gr => gr.id === state.currentChatId);
     if (!g) return;
     const selectedCharIds = Array.from(dom['invite-member-selection-list'].querySelectorAll('input:checked')).map(i => i.value);
@@ -209,10 +209,10 @@ function bindEvents() {
       if (_renderMessages) _renderMessages(false, true);
       showToast(dom['toast-notification'], '已邀请新成员');
     }
-    dom['invite-member-modal'].classList.remove('visible');
+    dom['invite-member-modal']?.classList.remove('visible');
   });
 
-  dom['create-member-for-group-form'].addEventListener('submit', async (e) => {
+  dom['create-member-for-group-form']?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const g = (getDb().groups || []).find(gr => gr.id === state.currentChatId);
     if (!g) return;
@@ -229,10 +229,10 @@ function bindEvents() {
     renderGroupMembersInSettings(g);
     if (_renderMessages) _renderMessages(false, true);
     showToast(dom['toast-notification'], `新成员 ${newMember.groupNickname} 已加入`);
-    dom['create-member-for-group-modal'].classList.remove('visible');
+    dom['create-member-for-group-modal']?.classList.remove('visible');
   });
 
-  dom['setting-group-my-avatar-upload'].addEventListener('change', async (e) => {
+  dom['setting-group-my-avatar-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
       try { dom['setting-group-my-avatar-preview'].src = await compressImage(file, { quality: 0.8, maxWidth: 400, maxHeight: 400 }); }
@@ -240,30 +240,30 @@ function bindEvents() {
     }
   });
 
-  dom['confirm-group-recipient-btn'].addEventListener('click', () => {
+  dom['confirm-group-recipient-btn']?.addEventListener('click', () => {
     const selectedIds = Array.from(dom['group-recipient-selection-list'].querySelectorAll('input:checked')).map(i => i.value);
     if (selectedIds.length === 0) return showToast(dom['toast-notification'], '请至少选择一个收件人。');
     state.currentGroupAction.recipients = selectedIds;
-    dom['group-recipient-selection-modal'].classList.remove('visible');
+    dom['group-recipient-selection-modal']?.classList.remove('visible');
     if (state.currentGroupAction.type === 'transfer') {
       dom['send-transfer-form'].reset();
-      dom['send-transfer-modal'].classList.add('visible');
+      dom['send-transfer-modal']?.classList.add('visible');
     } else if (state.currentGroupAction.type === 'gift') {
       import('./gift.js').then(mod => {
         mod.renderGiftItemList();
-        dom['send-gift-modal'].classList.add('visible');
+        dom['send-gift-modal']?.classList.add('visible');
       });
     }
   });
 
   // 点击背景关闭收件人选择弹窗
-  dom['group-recipient-selection-modal'].addEventListener('click', (e) => {
+  dom['group-recipient-selection-modal']?.addEventListener('click', (e) => {
     if (e.target === dom['group-recipient-selection-modal']) {
-      dom['group-recipient-selection-modal'].classList.remove('visible');
+      dom['group-recipient-selection-modal']?.classList.remove('visible');
     }
   });
 
-  dom['link-group-world-book-btn'].addEventListener('click', () => {
+  dom['link-group-world-book-btn']?.addEventListener('click', () => {
     const g = (getDb().groups || []).find(gr => gr.id === state.currentChatId);
     if (!g) return;
     const list = dom['world-book-selection-list'];
@@ -275,7 +275,7 @@ function bindEvents() {
         <label for="wb-select-group-${book.id}">${book.name}</label>`;
       list.appendChild(li);
     });
-    dom['world-book-selection-modal'].classList.add('visible');
+    dom['world-book-selection-modal']?.classList.add('visible');
   });
 
   // 群专属世界书添加按钮
@@ -403,7 +403,7 @@ export function renderGroupRecipientSelectionList(actionText) {
     list.appendChild(li);
   });
   // 显示收件人选择弹窗
-  dom['group-recipient-selection-modal'].classList.add('visible');
+  dom['group-recipient-selection-modal']?.classList.add('visible');
 }
 
 async function saveGroupSettingsFromSidebar() {
@@ -440,7 +440,7 @@ function openGroupMemberEditModal(memberId) {
   dom['edit-member-group-nickname'].value = m.groupNickname;
   dom['edit-member-real-name'].value = m.realName;
   dom['edit-member-persona'].value = m.persona;
-  dom['edit-group-member-modal'].classList.add('visible');
+  dom['edit-group-member-modal']?.classList.add('visible');
   renderMemberBuiltinWBList(m);
 }
 

@@ -22,21 +22,21 @@ export function init(_dom) {
 }
 
 function bindEvents() {
-  dom['add-api-preset-btn'].addEventListener('click', () => openApiEdit(null));
+  dom['add-api-preset-btn']?.addEventListener('click', () => openApiEdit(null));
 
-  dom['img-gen-settings-card'].addEventListener('click', () => switchScreen(dom, 'img-gen-edit-screen'));
-  dom['img-gen-edit-btn'].addEventListener('click', (e) => {
+  dom['img-gen-settings-card']?.addEventListener('click', () => switchScreen(dom, 'img-gen-edit-screen'));
+  dom['img-gen-edit-btn']?.addEventListener('click', (e) => {
     e.stopPropagation();
     switchScreen(dom, 'img-gen-edit-screen');
   });
 
-  dom['api-edit-back-btn'].addEventListener('click', () => {
+  dom['api-edit-back-btn']?.addEventListener('click', () => {
     switchScreen(dom, 'api-settings-screen');
     renderApiPresetList();
     renderImgGenStatus();
   });
 
-  dom['delete-api-preset-btn'].addEventListener('click', async () => {
+  dom['delete-api-preset-btn']?.addEventListener('click', async () => {
     const editId = dom['api-edit-id'].value;
     if (!editId || !confirm('确定删除此配置吗？')) return;
     const db = getDb();
@@ -50,7 +50,7 @@ function bindEvents() {
     renderImgGenStatus();
   });
 
-  dom['api-edit-provider'].addEventListener('change', function() {
+  dom['api-edit-provider']?.addEventListener('change', function() {
     const presets = {
       newapi:   { host: 'https://api.deepseek.com',               path: '/v1/chat/completions' },
       openai:   { host: 'https://api.openai.com',                 path: '/v1/chat/completions' },
@@ -69,7 +69,7 @@ function bindEvents() {
     }
   });
 
-  dom['api-edit-fetch-btn'].addEventListener('click', async () => {
+  dom['api-edit-fetch-btn']?.addEventListener('click', async () => {
     const btn = dom['api-edit-fetch-btn'];
     const host = dom['api-edit-host'].value.trim();
     const key = dom['api-edit-key'].value.trim();
@@ -192,7 +192,7 @@ function bindEvents() {
     showToast(dom['toast-notification'], '语音设置已保存');
   });
 
-  dom['api-edit-form'].addEventListener('submit', async (e) => {
+  dom['api-edit-form']?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const db = getDb();
     if (!db.apiPresets) db.apiPresets = [];

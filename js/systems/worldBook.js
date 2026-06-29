@@ -136,7 +136,7 @@ function bindEvents() {
     });
   }
 
-  dom['add-world-book-btn'].addEventListener('click', () => {
+  dom['add-world-book-btn']?.addEventListener('click', () => {
     state.currentEditingWorldBookId = null;
     dom['edit-world-book-form'].reset();
     const radio = document.querySelector('input[name="world-book-position"][value="before"]');
@@ -144,7 +144,7 @@ function bindEvents() {
     ss('edit-world-book-screen');
   });
 
-  dom['edit-world-book-form'].addEventListener('submit', async (e) => {
+  dom['edit-world-book-form']?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const db = getDb();
     if (!db.worldBooks) db.worldBooks = [];
@@ -165,7 +165,7 @@ function bindEvents() {
     showToast(dom['toast-notification'], '世界书已保存');
   });
 
-  dom['world-book-list-container'].addEventListener('click', e => {
+  dom['world-book-list-container']?.addEventListener('click', e => {
     const item = e.target.closest('.world-book-item');
     if (!item) return;
     const id = item.dataset.id;
@@ -259,7 +259,7 @@ function bindEvents() {
   }
 
   // 鼠标长按
-  dom['world-book-list-container'].addEventListener('mousedown', (e) => {
+  dom['world-book-list-container']?.addEventListener('mousedown', (e) => {
     const item = e.target.closest('.world-book-item');
     if (item) {
       state._longPressTimer = setTimeout(() => {
@@ -267,11 +267,11 @@ function bindEvents() {
       }, 500);
     }
   });
-  dom['world-book-list-container'].addEventListener('mouseup', () => clearTimeout(state._longPressTimer));
-  dom['world-book-list-container'].addEventListener('mouseleave', () => clearTimeout(state._longPressTimer));
+  dom['world-book-list-container']?.addEventListener('mouseup', () => clearTimeout(state._longPressTimer));
+  dom['world-book-list-container']?.addEventListener('mouseleave', () => clearTimeout(state._longPressTimer));
 
   // 触摸长按
-  dom['world-book-list-container'].addEventListener('touchstart', (e) => {
+  dom['world-book-list-container']?.addEventListener('touchstart', (e) => {
     const item = e.target.closest('.world-book-item');
     if (item) {
       state._longPressTimer = setTimeout(() => {
@@ -280,8 +280,8 @@ function bindEvents() {
       }, 500);
     }
   });
-  dom['world-book-list-container'].addEventListener('touchend', () => clearTimeout(state._longPressTimer));
-  dom['world-book-list-container'].addEventListener('touchmove', () => clearTimeout(state._longPressTimer));
+  dom['world-book-list-container']?.addEventListener('touchend', () => clearTimeout(state._longPressTimer));
+  dom['world-book-list-container']?.addEventListener('touchmove', () => clearTimeout(state._longPressTimer));
 }
 
 export function renderWorldBookList() {

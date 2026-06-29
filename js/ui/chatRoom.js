@@ -26,14 +26,14 @@ export function init(_dom, renderChatList) {
 // ─── 事件绑定 ──────────────────────────
 
 function bindEvents() {
-  dom['send-message-btn'].addEventListener('click', sendMessage);
-  dom['send-message-btn'].addEventListener('touchend', (e) => {
-    e.preventDefault(); sendMessage(); setTimeout(() => dom['message-input'].focus(), 50);
+  dom['send-message-btn']?.addEventListener('click', sendMessage);
+  dom['send-message-btn']?.addEventListener('touchend', (e) => {
+    e.preventDefault(); sendMessage(); setTimeout(() => dom['message-input']?.focus(), 50);
   });
-  dom['message-input'].addEventListener('keypress', (e) => {
+  dom['message-input']?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !state.isGenerating) sendMessage();
   });
-  dom['get-reply-btn'].addEventListener('click', triggerAiReply);
+  dom['get-reply-btn']?.addEventListener('click', triggerAiReply);
 
   // 重新生成按钮：删除最后一条 AI 回复，重新请求
   dom['regenerate-btn']?.addEventListener('click', async () => {
@@ -56,7 +56,7 @@ function bindEvents() {
     // 重新请求 AI 回复
     triggerAiReply();
   });
-  dom['message-area'].addEventListener('click', (e) => {
+  dom['message-area']?.addEventListener('click', (e) => {
     // 点击气泡外的空白关闭编辑模式、退出多选
     if (state.editingMessageId) { cancelMessageEdit(); }
     if (state.isInMultiSelectMode && !e.target.closest('.message-wrapper')) { exitMultiSelectMode(); }
@@ -98,11 +98,11 @@ function bindEvents() {
       }
     }
   });
-  dom['message-area'].addEventListener('contextmenu', (e) => {
+  dom['message-area']?.addEventListener('contextmenu', (e) => {
     const wrapper = e.target.closest('.message-wrapper');
     if (wrapper) { e.preventDefault(); handleMessageLongPress(wrapper, e.clientX, e.clientY); }
   });
-  dom['message-area'].addEventListener('touchstart', (e) => {
+  dom['message-area']?.addEventListener('touchstart', (e) => {
     const wrapper = e.target.closest('.message-wrapper');
     if (wrapper) {
       state._longPressTimer = setTimeout(() => {
@@ -111,12 +111,12 @@ function bindEvents() {
       }, 500);
     }
   });
-  dom['message-area'].addEventListener('touchend', () => { clearTimeout(state._longPressTimer); });
-  dom['message-area'].addEventListener('touchmove', () => { clearTimeout(state._longPressTimer); });
-  dom['save-edit-btn'].addEventListener('click', saveMessageEdit);
-  dom['cancel-edit-btn'].addEventListener('click', cancelMessageEdit);
-  dom['cancel-multi-select-btn'].addEventListener('click', exitMultiSelectMode);
-  dom['delete-selected-btn'].addEventListener('click', deleteSelectedMessages);
+  dom['message-area']?.addEventListener('touchend', () => { clearTimeout(state._longPressTimer); });
+  dom['message-area']?.addEventListener('touchmove', () => { clearTimeout(state._longPressTimer); });
+  dom['save-edit-btn']?.addEventListener('click', saveMessageEdit);
+  dom['cancel-edit-btn']?.addEventListener('click', cancelMessageEdit);
+  dom['cancel-multi-select-btn']?.addEventListener('click', exitMultiSelectMode);
+  dom['delete-selected-btn']?.addEventListener('click', deleteSelectedMessages);
 }
 
 // ─── 聊天室开关 ────────────────────────
@@ -140,7 +140,7 @@ export function openChatRoom(chatId, type) {
   dom['chat-room-title'].textContent = remarkName;
   dom['chat-room-status-text'].textContent = type === 'private' ? (chat.status || '在线') : `${(chat.members || []).length} 人`;
   dom['message-input'].value = '';
-  dom['message-input'].focus();
+  dom['message-input']?.focus();
 
   // 设置聊天背景
   if (chat.chatBg) {
@@ -1024,7 +1024,7 @@ export function enterMultiSelectMode(initialMessageId) {
   state.isInMultiSelectMode = true;
   selectedMessageIds.clear();
   if (initialMessageId) selectedMessageIds.add(initialMessageId);
-  dom['message-area'].classList.add('multi-select-active');
+  dom['message-area']?.classList.add('multi-select-active');
   dom['multi-select-bar'].style.display = 'flex';
   dom['chat-room-header-default'].style.display = 'none';
   dom['chat-room-header-select'].style.display = 'flex';
@@ -1082,7 +1082,7 @@ export function startMessageEdit(messageId) {
   dom['message-input-default'].style.display = 'none';
   dom['message-edit-bar'].style.display = 'flex';
   dom['message-edit-input'].value = msg.content;
-  dom['message-edit-input'].focus();
+  dom['message-edit-input']?.focus();
 }
 
 async function saveMessageEdit() {
