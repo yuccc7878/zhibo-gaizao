@@ -169,7 +169,7 @@
                         <div class="form-group"><label for="setting-max-memory">最大记忆轮数</label><input type="number" id="setting-max-memory" value="100" min="1" max="500"></div>
                         <div class="form-group">
                             <label style="margin-bottom:8px;">气泡样式</label>
-                            <button type="button" class="btn btn-primary" id="open-bubble-workshop-btn" style="width:100%;padding:12px;font-size:14px;border-radius:10px;">🎨 打开气泡工坊</button>
+                            <button type="button" class="btn btn-primary" id="open-bubble-workshop-btn" style="width:100%;padding:12px;font-size:14px;border-radius:10px;">🎨 自定义气泡</button>
                             <div style="font-size:11px;color:#999;margin-top:4px;">可视化编辑气泡颜色、圆角、阴影等样式</div>
                         </div>
                         <div class="form-group"><label for="setting-chat-bg-upload" class="btn btn-primary" style="font-size:13px;padding:10px;">更换聊天背景</label><input type="file" id="setting-chat-bg-upload" accept="image/*" style="display:none;"></div>
@@ -403,21 +403,21 @@
 
     <!-- 气泡工坊 -->
     <div id="bubble-workshop-screen" class="screen">
-        <header class="app-header">
-            <button class="back-btn" id="bubble-workshop-back">‹</button>
-            <div class="title-container"><h1 class="title">🎨 气泡工坊</h1></div>
-            <button class="action-btn" id="bubble-workshop-export" title="导出CSS">📋</button>
+        <header class="app-header" style="background:linear-gradient(135deg,#ff80ab 0%,#ce93d8 100%);">
+            <button class="back-btn" id="bubble-workshop-back" style="color:#fff;">‹</button>
+            <div class="title-container"><h1 class="title" style="color:#fff;">✨ 自定义气泡</h1></div>
+            <button class="action-btn" id="bubble-workshop-export" title="导出CSS" style="color:#fff;">📋</button>
         </header>
-        <main class="content" style="padding-bottom:80px;">
+        <main class="content" style="padding-bottom:80px;background:linear-gradient(180deg,#fff5f9 0%,#fff 40px);">
             <!-- 预设 -->
             <div style="margin-bottom:16px;">
-                <div style="font-size:12px;font-weight:bold;color:#999;margin-bottom:8px;">预设模板</div>
-                <div id="bubble-preset-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+                <div style="font-size:13px;font-weight:bold;color:#c2185b;margin-bottom:10px;">🎨 预设模板</div>
+                <div id="bubble-preset-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
             </div>
             <!-- 用户/AI 标签 -->
-            <div id="bubble-role-tabs" style="display:flex;gap:0;margin-bottom:12px;background:#f5f5f5;border-radius:8px;overflow:hidden;">
-                <button class="bubble-role-tab active" data-role="user" style="flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:bold;cursor:pointer;">👤 我方气泡</button>
-                <button class="bubble-role-tab" data-role="ai" style="flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:bold;cursor:pointer;">🤖 对方气泡</button>
+            <div id="bubble-role-tabs" style="display:flex;gap:0;margin-bottom:14px;background:#fce4ec;border-radius:10px;overflow:hidden;padding:3px;">
+                <button class="bubble-role-tab active" data-role="user" style="flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:bold;cursor:pointer;border-radius:8px;transition:all 0.2s;">👤 我方气泡</button>
+                <button class="bubble-role-tab" data-role="ai" style="flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:bold;cursor:pointer;border-radius:8px;transition:all 0.2s;">🤖 对方气泡</button>
             </div>
             <!-- 用户气泡设置 -->
             <div class="bubble-role-panel active" data-role="user">
@@ -436,19 +436,19 @@
                 <div class="form-group"><label>阴影（CSS box-shadow）</label><input type="text" id="ba-shadow" placeholder="如：0 4px 12px rgba(0,0,0,0.1)" style="width:100%;font-size:12px;font-family:monospace;"></div>
             </div>
             <!-- 同步开关 -->
-            <div style="margin:12px 0;padding:10px;background:#f8f8f8;border-radius:8px;display:flex;align-items:center;gap:8px;">
+            <div style="margin:14px 0;padding:12px 14px;background:linear-gradient(135deg,#fce4ec,#f3e5f5);border-radius:10px;display:flex;align-items:center;gap:8px;">
                 <input type="checkbox" id="bubble-sync-toggle" style="width:auto;">
-                <label for="bubble-sync-toggle" style="font-size:13px;margin:0;">对方跟随我方设置</label>
+                <label for="bubble-sync-toggle" style="font-size:13px;margin:0;color:#7b1fa2;">对方跟随我方设置</label>
             </div>
             <!-- 自定义 CSS -->
-            <div class="form-group"><label>自定义 CSS</label><textarea id="bubble-custom-css" rows="4" placeholder=".message-bubble.sent { ... }" style="width:100%;font-size:12px;font-family:monospace;resize:vertical;"></textarea></div>
+            <div class="form-group"><label style="color:#c2185b;">高级 CSS</label><textarea id="bubble-custom-css" rows="4" placeholder=".message-bubble.sent { ... }" style="width:100%;font-size:12px;font-family:monospace;resize:vertical;border-color:#f8bbd0;"></textarea></div>
             <!-- 实时预览 -->
             <div style="margin:16px 0;">
-                <div style="font-size:12px;font-weight:bold;color:#999;margin-bottom:8px;">实时预览</div>
-                <div id="bubble-workshop-preview" style="background:#f0f0f0;border-radius:12px;padding:16px;min-height:120px;"></div>
+                <div style="font-size:13px;font-weight:bold;color:#c2185b;margin-bottom:10px;">👀 实时预览</div>
+                <div id="bubble-workshop-preview" style="background:#fff;border:1px solid #f8bbd0;border-radius:14px;padding:16px;min-height:120px;"></div>
             </div>
             <!-- 保存按钮 -->
-            <button type="button" class="btn btn-primary" id="bubble-workshop-save" style="width:100%;padding:14px;font-size:15px;border-radius:12px;">💾 保存气泡样式</button>
+            <button type="button" class="btn btn-primary" id="bubble-workshop-save" style="width:100%;padding:14px;font-size:15px;border-radius:12px;background:linear-gradient(135deg,#ff80ab,#ce93d8);border:none;">💾 保存气泡样式</button>
         </main>
     </div>
     <div id="shop-screen" class="screen"></div>

@@ -735,24 +735,25 @@
 
 .bubble-role-tab.active {
     background: #fff !important;
-    color: var(--primary-color, #ff80ab) !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    color: #c2185b !important;
+    box-shadow: 0 2px 8px rgba(194,24,91,0.15);
 }
 .bubble-role-panel { display: none; }
 .bubble-role-panel.active { display: block; }
 
 .bubble-preset-card {
-    padding: 10px;
-    border-radius: 10px;
+    padding: 12px 8px;
+    border-radius: 14px;
     cursor: pointer;
-    border: 2px solid #eee;
-    background: #fff;
+    border: 2px solid #f8bbd0;
+    background: linear-gradient(135deg, #fff 0%, #fce4ec 100%);
     transition: all 0.2s;
     text-align: center;
 }
 .bubble-preset-card:hover {
-    border-color: #ddd;
-    transform: translateY(-1px);
+    border-color: #f48fb1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(233,30,99,0.15);
 }
 .bubble-preset-card:active {
     transform: scale(0.97);
