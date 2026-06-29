@@ -51,20 +51,30 @@ function bindEvents() {
   });
 
   dom['api-edit-provider'].addEventListener('change', function() {
-    const urls = {
-      newapi: 'https://api.deepseek.com',
-      deepseek: 'https://api.deepseek.com',
-      claude: 'https://api.anthropic.com',
-      gemini: 'https://generativelanguage.googleapis.com',
+    const presets = {
+      newapi:   { host: 'https://api.deepseek.com',               path: '/v1/chat/completions' },
+      openai:   { host: 'https://api.openai.com',                 path: '/v1/chat/completions' },
+      deepseek: { host: 'https://api.deepseek.com',               path: '/v1/chat/completions' },
+      claude:   { host: 'https://api.anthropic.com',              path: '/v1/messages' },
+      gemini:   { host: 'https://generativelanguage.googleapis.com', path: '/v1beta/models' },
+      zhipu:    { host: 'https://open.bigmodel.cn',               path: '/api/paas/v4/chat/completions' },
+      moonshot: { host: 'https://api.moonshot.cn',                path: '/v1/chat/completions' },
+      qwen:     { host: 'https://dashscope.aliyuncs.com',         path: '/compatible-mode/v1/chat/completions' },
+      ollama:   { host: 'http://localhost:11434',                  path: '/v1/chat/completions' },
     };
-    dom['api-edit-url'].value = urls[this.value] || '';
+    const p = presets[this.value];
+    if (p) {
+      dom['api-edit-host'].value = p.host;
+      dom['api-edit-path'].value = p.path;
+    }
   });
 
   dom['api-edit-fetch-btn'].addEventListener('click', async () => {
     const btn = dom['api-edit-fetch-btn'];
-    const url = dom['api-edit-url'].value.trim();
+    const host = dom['api-edit-host'].value.trim();
     const key = dom['api-edit-key'].value.trim();
     const provider = dom['api-edit-provider'].value;
+    const url = host;
     if (!url || !key) { showToast(dom['toast-notification'], '请先填写地址和密钥'); return; }
     btn.classList.add('loading');
     btn.querySelector('.btn-text').textContent = '拉取中...';
@@ -139,11 +149,14 @@ function bindEvents() {
     const db = getDb();
     if (!db.apiPresets) db.apiPresets = [];
     const editId = dom['api-edit-id'].value;
+    const host = dom['api-edit-host'].value.trim().replace(/\/+$/, '');
+    const path = dom['api-edit-path'].value.trim() || '/v1/chat/completions';
     const preset = {
       id: editId || 'preset_' + Date.now(),
       name: dom['api-edit-name'].value.trim(),
       provider: dom['api-edit-provider'].value,
-      url: dom['api-edit-url'].value.trim(),
+      url: host,
+      apiPath: path,
       key: dom['api-edit-key'].value.trim(),
       model: dom['api-edit-model'].value,
     };
@@ -176,9 +189,10 @@ export function renderApiPresetList() {
     const card = document.createElement('div');
     card.className = 'api-preset-card' + (isActive ? ' active' : '');
     card.dataset.id = p.id;
+    const providerNames = { newapi:'NewAPI', openai:'OpenAI', deepseek:'DeepSeek', claude:'Claude', gemini:'Gemini', zhipu:'智谱', moonshot:'月之暗面', qwen:'通义千问', ollama:'Ollama' };
     card.innerHTML = `<div class="api-preset-info">
       <div class="api-preset-name">${isActive ? '✓ ' : ''}${p.name}</div>
-      <div class="api-preset-meta">${p.provider || 'newapi'} · ${p.model || '未设置'}</div>
+      <div class="api-preset-meta">${providerNames[p.provider] || p.provider || 'NewAPI'} · ${p.model || '未设置'}</div>
     </div>
     <div class="api-preset-actions">
       ${isActive ? '' : '<button class="api-preset-activate-btn" data-id="' + p.id + '">启用</button>'}
@@ -234,7 +248,8 @@ function openApiEdit(presetId) {
       dom['api-edit-id'].value = preset.id;
       dom['api-edit-name'].value = preset.name;
       dom['api-edit-provider'].value = preset.provider || 'newapi';
-      dom['api-edit-url'].value = preset.url || '';
+      dom['api-edit-host'].value = preset.url || '';
+      dom['api-edit-path'].value = preset.apiPath || '/v1/chat/completions';
       dom['api-edit-key'].value = preset.key || '';
       // 拉取模型列表
       fetchAndPopulateModels(preset.url, preset.key, preset.provider, preset.model);
@@ -245,13 +260,15 @@ function openApiEdit(presetId) {
     dom['api-edit-form'].reset();
     dom['api-edit-id'].value = '';
     dom['api-edit-provider'].value = 'newapi';
-    dom['api-edit-url'].value = 'https://api.deepseek.com';
+    dom['api-edit-host'].value = 'https://api.deepseek.com';
+    dom['api-edit-path'].value = '/v1/chat/completions';
     const select = dom['api-edit-model'];
     select.innerHTML = '<option value="">请先拉取模型列表</option>';
   }
 }
 
-async function fetchAndPopulateModels(url, key, provider, selectedModel) {
+async function fetchAndPopulateModels(host, key, provider, selectedModel) {
+  const url = host;
   if (!url || !key) return;
   const btn = dom['api-edit-fetch-btn'];
   btn.classList.add('loading');

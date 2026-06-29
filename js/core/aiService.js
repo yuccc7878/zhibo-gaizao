@@ -52,10 +52,11 @@
   // ─── 适配器 ────────────────────────────
 
   class BaseAdapter {
-    constructor(baseUrl, key, model) {
+    constructor(baseUrl, key, model, apiPath) {
       this.baseUrl = baseUrl.replace(/\/+$/, '');
       this.key = key;
       this.model = model;
+      this.apiPath = apiPath || '/v1/chat/completions';
     }
     formatChatRequest(system, messages, options) {
       throw new AiServiceError('CONFIG_ERROR', '未实现的适配器');
@@ -87,7 +88,7 @@
         stream: options.stream ?? false,
       };
       return {
-        url: this.baseUrl + '/v1/chat/completions',
+        url: this.baseUrl + this.apiPath,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + this.key,
@@ -197,9 +198,14 @@
 
   const adapterMap = {
     newapi: OpenAIAdapter,
+    openai: OpenAIAdapter,
     deepseek: OpenAIAdapter,
     claude: OpenAIAdapter,
     gemini: GeminiAdapter,
+    zhipu: OpenAIAdapter,
+    moonshot: OpenAIAdapter,
+    qwen: OpenAIAdapter,
+    ollama: OpenAIAdapter,
   };
 
   function createAdapter(config) {
@@ -207,7 +213,7 @@
       throw new AiServiceError('CONFIG_ERROR', 'API 配置不完整，请检查接口地址、密钥和模型');
     }
     const AdapterClass = adapterMap[config.provider] || OpenAIAdapter;
-    return new AdapterClass(config.url, config.key, config.model);
+    return new AdapterClass(config.url, config.key, config.model, config.apiPath);
   }
 
   // ─── 核心方法 ──────────────────────────
