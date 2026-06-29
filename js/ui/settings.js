@@ -351,28 +351,30 @@ function loadSettingsToSidebar() {
   const c = getDb().characters.find(ch => ch.id === state.currentChatId);
   if (!c) return;
 
-  dom['setting-char-avatar-preview'].src = c.avatar;
-  dom['setting-char-real-name'].value = c.realName || '';
-  dom['setting-char-remark'].value = c.remarkName;
-  dom['setting-char-persona'].value = c.persona;
-  dom['setting-my-avatar-preview'].src = c.myAvatar;
-  dom['setting-my-name'].value = c.myName;
-  dom['setting-my-persona'].value = c.myPersona;
+  if (dom['setting-char-avatar-preview']) dom['setting-char-avatar-preview'].src = c.avatar;
+  if (dom['setting-char-real-name']) dom['setting-char-real-name'].value = c.realName || '';
+  if (dom['setting-char-remark']) dom['setting-char-remark'].value = c.remarkName;
+  if (dom['setting-char-persona']) dom['setting-char-persona'].value = c.persona;
+  if (dom['setting-my-avatar-preview']) dom['setting-my-avatar-preview'].src = c.myAvatar;
+  if (dom['setting-my-name']) dom['setting-my-name'].value = c.myName;
+  if (dom['setting-my-persona']) dom['setting-my-persona'].value = c.myPersona;
   // 旧主题颜色选择器已废弃
-  dom['setting-max-memory'].value = c.maxMemory;
+  if (dom['setting-max-memory']) dom['setting-max-memory'].value = c.maxMemory;
 
   const useCss = dom['setting-use-custom-css'];
   const cssText = dom['setting-custom-bubble-css'];
   const previewBox = dom['private-bubble-css-preview'];
-  useCss.checked = c.useCustomBubbleCss || false;
-  cssText.value = c.customBubbleCss || '';
-  cssText.disabled = !useCss.checked;
+  if (useCss) useCss.checked = c.useCustomBubbleCss || false;
+  if (cssText) {
+    cssText.value = c.customBubbleCss || '';
+    cssText.disabled = !(useCss && useCss.checked);
+  }
   updateBubbleCssPreview(previewBox, c.customBubbleCss, !c.useCustomBubbleCss, colorThemes['white_pink']);
 
   // 渲染气泡预设
   renderBubblePresets(c);
 
-  dom['setting-memory-summary'].value = c.memorySummary || '';
+  if (dom['setting-memory-summary']) dom['setting-memory-summary'].value = c.memorySummary || '';
   renderKeyEventsList(c);
   renderBuiltinWorldBooks(c);
 
@@ -394,19 +396,19 @@ async function saveSettingsFromSidebar() {
   const c = getDb().characters.find(ch => ch.id === state.currentChatId);
   if (!c) return;
 
-  c.avatar = dom['setting-char-avatar-preview'].src;
-  c.realName = dom['setting-char-real-name'].value;
-  c.remarkName = dom['setting-char-remark'].value;
-  c.persona = dom['setting-char-persona'].value;
-  c.myAvatar = dom['setting-my-avatar-preview'].src;
-  c.myName = dom['setting-my-name'].value;
-  c.myPersona = dom['setting-my-persona'].value;
+  c.avatar = dom['setting-char-avatar-preview']?.src || c.avatar;
+  c.realName = dom['setting-char-real-name']?.value || c.realName;
+  c.remarkName = dom['setting-char-remark']?.value || c.remarkName;
+  c.persona = dom['setting-char-persona']?.value || c.persona;
+  c.myAvatar = dom['setting-my-avatar-preview']?.src || c.myAvatar;
+  c.myName = dom['setting-my-name']?.value || c.myName;
+  c.myPersona = dom['setting-my-persona']?.value || c.myPersona;
   // 旧主题颜色选择器已废弃
-  c.maxMemory = parseInt(dom['setting-max-memory'].value) || 100;
-  c.useCustomBubbleCss = dom['setting-use-custom-css'].checked;
-  c.customBubbleCss = dom['setting-custom-bubble-css'].value;
+  c.maxMemory = parseInt(dom['setting-max-memory']?.value) || 100;
+  c.useCustomBubbleCss = dom['setting-use-custom-css']?.checked || false;
+  c.customBubbleCss = dom['setting-custom-bubble-css']?.value || '';
   // AI配图选项已废弃
-  c.memorySummary = dom['setting-memory-summary'].value.trim();
+  c.memorySummary = dom['setting-memory-summary']?.value?.trim() || '';
 
   // TTS 设置
   c.ttsConfig = {
