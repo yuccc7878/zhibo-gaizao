@@ -110,8 +110,8 @@ async function initApp() {
 
   // 4. 同步 AI 配置到 AiService
   const activePreset = db.apiPresets?.find(p => p.id === db.activeApiPresetId);
-  if (activePreset) window.AiService.setChatConfig(activePreset);
-  window.AiService.setImageConfig(db.imgGenSettings || {});
+  if (activePreset && window.AiService) window.AiService.setChatConfig(activePreset);
+  if (window.AiService) window.AiService.setImageConfig(db.imgGenSettings || {});
 
   // 5. 初始化所有模块（注入依赖）
   chatRoom.init(dom, chatList.renderChatList);
