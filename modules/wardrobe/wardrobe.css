@@ -34,6 +34,7 @@
 
 /* ── 左上角返回按钮 ── */
 .wardrobe-back-btn {
+    position: absolute;
     top: 20px;
     left: 20px;
     z-index: 200;
@@ -66,8 +67,9 @@
 
 /* ── 标题 ── */
 .wardrobe-title {
+    position: absolute;
+    left: 50%;
     top: 28px;
-    transform: translateX(-50%);
     z-index: 50;
     color: #fff;
     font-size: 22px;
@@ -78,6 +80,7 @@
 
 /* ── 工具按钮（右上角） ── */
 .wardrobe-tools {
+    position: absolute;
     top: 20px;
     right: 20px;
     z-index: 200;
@@ -110,6 +113,7 @@
 
 /* ── 人物展示区（全屏居中） ── */
 .wardrobe-doll-section {
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
@@ -183,8 +187,9 @@
 
 /* ── 抽屉打开按钮（右侧） ── */
 .wardrobe-drawer-toggle {
+    position: absolute;
     right: 20px;
-    transform: translateY(-50%);
+    top: 50%;
     z-index: 200;
     width: 56px;
     height: 56px;
@@ -572,7 +577,9 @@
 
 /* ── 缩放滑块弹出面板 ── */
 .wardrobe-resize-popup {
+    position: absolute;
     bottom: 20px;
+    left: 50%;
     transform: translateX(-50%);
     z-index: 100;
     background: rgba(20, 25, 40, 0.95);

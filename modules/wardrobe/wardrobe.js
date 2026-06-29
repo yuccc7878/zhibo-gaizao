@@ -78,7 +78,21 @@ Engine.register({
                         </div>
                     </div>
                     <div class="wardrobe-drawer-footer">
-                        <div class="wardrobe-hint">拖拽衣物到人偶 · 点击即可穿戴</div>
+                        <div class="wardrobe-hint">拖拽衣物到人偶 · 点击即可穿戴 · 滚轮/双指缩放</div>
+                    </div>
+                </div>
+                <!-- 手动调整大小面板 -->
+                <div class="wardrobe-resize-popup" id="wardrobe-resize-popup">
+                    <div class="wardrobe-resize-row">
+                        <span class="wardrobe-resize-label">大小</span>
+                        <input type="range" class="wardrobe-resize-slider" id="wardrobe-resize-slider" min="20" max="300" value="100">
+                        <span class="wardrobe-resize-val" id="wardrobe-resize-val">100%</span>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <button class="wardrobe-resize-btn" id="wardrobe-resize-smaller">缩小</button>
+                        <button class="wardrobe-resize-btn" id="wardrobe-resize-bigger">放大</button>
+                        <button class="wardrobe-resize-btn" id="wardrobe-resize-reset">重置</button>
+                        <button class="wardrobe-resize-btn" id="wardrobe-resize-close" style="color:#ff6b6b;">✕</button>
                     </div>
                 </div>
                 <!-- 上传弹窗 -->
@@ -210,6 +224,38 @@ Engine.register({
             e.preventDefault();
             const img = piece.querySelector('img');
             if (img && confirm(`删除「${img.alt}」？`)) self._removeCustomItem(piece.dataset.customId);
+        });
+        // 点击空白处隐藏调整面板
+        document.getElementById('wardrobe-doll-area').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('wardrobe-doll-area') || e.target.id === 'wardrobe-skintone') {
+                self._hideResizePopup();
+            }
+        });
+        // 调整大小面板事件
+        const resizeSlider = document.getElementById('wardrobe-resize-slider');
+        const resizeVal = document.getElementById('wardrobe-resize-val');
+        resizeSlider.addEventListener('input', () => {
+            const pct = parseInt(resizeSlider.value);
+            resizeVal.textContent = pct + '%';
+            self._applyResize(pct);
+        });
+        document.getElementById('wardrobe-resize-smaller').addEventListener('click', () => {
+            resizeSlider.value = Math.max(20, parseInt(resizeSlider.value) - 10);
+            resizeVal.textContent = resizeSlider.value + '%';
+            self._applyResize(parseInt(resizeSlider.value));
+        });
+        document.getElementById('wardrobe-resize-bigger').addEventListener('click', () => {
+            resizeSlider.value = Math.min(300, parseInt(resizeSlider.value) + 10);
+            resizeVal.textContent = resizeSlider.value + '%';
+            self._applyResize(parseInt(resizeSlider.value));
+        });
+        document.getElementById('wardrobe-resize-reset').addEventListener('click', () => {
+            resizeSlider.value = 100;
+            resizeVal.textContent = '100%';
+            self._applyResize(100);
+        });
+        document.getElementById('wardrobe-resize-close').addEventListener('click', () => {
+            self._hideResizePopup();
         });
     },
     _bindUploadEvents() {
@@ -445,6 +491,13 @@ Engine.register({
             el.remove();
             self._placedItems = self._placedItems.filter(i => i.el !== el);
             self._syncActiveState();
+            self._hideResizePopup();
+        });
+        
+        // 单击显示调整大小面板
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            self._showResizePopup(el, container);
         });
         
         // ========== 安全读取数值 ==========
@@ -598,6 +651,7 @@ Engine.register({
         });
         this._placedItems = [];
         this._syncActiveState();
+        this._hideResizePopup();
     },
     _downloadDoll() {
         const dollArea = document.getElementById('wardrobe-doll-area');
@@ -630,6 +684,52 @@ Engine.register({
             img.src = item.el.src;
         };
         loadAndDraw(0);
+    },
+    /* ── 调整大小面板 ── */
+    _showResizePopup(el, container) {
+        this._resizeTarget = el;
+        this._resizeContainer = container;
+        const popup = document.getElementById('wardrobe-resize-popup');
+        const slider = document.getElementById('wardrobe-resize-slider');
+        const valEl = document.getElementById('wardrobe-resize-val');
+        // 记录原始尺寸
+        if (!el._origW) {
+            el._origW = parseFloat(el.style.width) || 60;
+            el._origH = parseFloat(el.style.height) || 80;
+        }
+        const currentW = parseFloat(el.style.width) || el._origW;
+        const pct = Math.round((currentW / el._origW) * 100);
+        slider.value = pct;
+        valEl.textContent = pct + '%';
+        popup.style.display = 'flex';
+        // 高亮选中
+        document.querySelectorAll('.wardrobe-placed').forEach(p => p.style.outline = '');
+        el.style.outline = '2px solid rgba(102,126,234,0.8)';
+    },
+    _hideResizePopup() {
+        const popup = document.getElementById('wardrobe-resize-popup');
+        if (popup) popup.style.display = 'none';
+        document.querySelectorAll('.wardrobe-placed').forEach(p => p.style.outline = '');
+        this._resizeTarget = null;
+    },
+    _applyResize(pct) {
+        const el = this._resizeTarget;
+        if (!el || !el._origW) return;
+        const container = this._resizeContainer;
+        const rect = container.getBoundingClientRect();
+        const newW = Math.max(20, Math.round(el._origW * pct / 100));
+        const newH = Math.max(20, Math.round(el._origH * pct / 100));
+        const oldW = parseFloat(el.style.width) || el._origW;
+        const oldH = parseFloat(el.style.height) || el._origH;
+        const oldL = parseFloat(el.style.left) || 0;
+        const oldT = parseFloat(el.style.top) || 0;
+        // 保持中心点不变
+        const cx = oldL + oldW / 2;
+        const cy = oldT + oldH / 2;
+        el.style.width = newW + 'px';
+        el.style.height = newH + 'px';
+        el.style.left = Math.max(0, Math.min(cx - newW / 2, rect.width - newW)) + 'px';
+        el.style.top = Math.max(0, Math.min(cy - newH / 2, rect.height - newH)) + 'px';
     },
     async _loadCustomItems() {
         try {
