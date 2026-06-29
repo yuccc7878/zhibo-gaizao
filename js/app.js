@@ -3,34 +3,35 @@
    替代原 app.js，接管所有初始化
    ======================================== */
 
-import { state } from './core/state.js?v=9';
-import { initDomCache } from './core/dom.js?v=9';
-import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js?v=9';
-import * as dataService from './core/dataService.js?v=9';
+import { state } from './core/state.js?v=10';
+import { initDomCache } from './core/dom.js?v=10';
+import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js?v=10';
+import * as dataService from './core/dataService.js?v=10';
 // aiService 已通过全局 script 加载，使用 window.AiService
 
-import * as chatRoom from './ui/chatRoom.js?v=9';
-import * as chatList from './ui/chatList.js?v=9';
-import * as homeScreen from './ui/homeScreen.js?v=9';
-import { updateActiveWorldStatus } from './ui/homeScreen.js?v=9';
-import * as PromptDefaults from './ui/promptDefaults.js?v=9';
-import * as settings from './ui/settings.js?v=9';
-import * as wallpaper from './ui/wallpaper.js?v=9';
-import * as customize from './ui/customize.js?v=9';
-import * as fontSettings from './ui/fontSettings.js?v=9';
+import * as chatRoom from './ui/chatRoom.js?v=10';
+import * as chatList from './ui/chatList.js?v=10';
+import * as homeScreen from './ui/homeScreen.js?v=10';
+import { updateActiveWorldStatus } from './ui/homeScreen.js?v=10';
+import * as PromptDefaults from './ui/promptDefaults.js?v=10';
+import * as settings from './ui/settings.js?v=10';
+import * as wallpaper from './ui/wallpaper.js?v=10';
+import * as customize from './ui/customize.js?v=10';
+import * as fontSettings from './ui/fontSettings.js?v=10';
+import * as bubbleWorkshop from './ui/bubbleWorkshop.js?v=10';
 
-import * as worldBook from './systems/worldBook.js?v=9';
-import * as apiSettings from './systems/apiSettings.js?v=9';
-import * as imgGenSettings from './systems/imgGenSettings.js?v=9';
-import * as stickers from './systems/stickers.js?v=9';
-import * as voice from './systems/voice.js?v=9';
-import * as photoVideo from './systems/photoVideo.js?v=9';
-import * as wallet from './systems/wallet.js?v=9';
-import * as gift from './systems/gift.js?v=9';
-import * as timeSkip from './systems/timeSkip.js?v=9';
-import * as imageRecognition from './systems/imageRecognition.js?v=9';
-import * as group from './systems/group.js?v=9';
-import * as videoCall from './systems/videoCall.js?v=9';
+import * as worldBook from './systems/worldBook.js?v=10';
+import * as apiSettings from './systems/apiSettings.js?v=10';
+import * as imgGenSettings from './systems/imgGenSettings.js?v=10';
+import * as stickers from './systems/stickers.js?v=10';
+import * as voice from './systems/voice.js?v=10';
+import * as photoVideo from './systems/photoVideo.js?v=10';
+import * as wallet from './systems/wallet.js?v=10';
+import * as gift from './systems/gift.js?v=10';
+import * as timeSkip from './systems/timeSkip.js?v=10';
+import * as imageRecognition from './systems/imageRecognition.js?v=10';
+import * as group from './systems/group.js?v=10';
+import * as videoCall from './systems/videoCall.js?v=10';
 
 async function initApp() {
   console.log('[App] initApp 开始');
@@ -58,6 +59,8 @@ async function initApp() {
   dom['wallpaper-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">更换壁纸</h1></div><div class="placeholder"></div></header><main class="content"><div class="wallpaper-preview" id="wallpaper-preview"><span>当前壁纸预览</span></div><input type="file" id="wallpaper-upload" accept="image/*" style="display: none;"><label for="wallpaper-upload" class="btn btn-primary">从相册选择新壁纸</label></main>`;
   dom['font-settings-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">字体设置</h1></div><div class="placeholder"></div></header><main class="content"><form id="font-settings-form"><div class="form-group"><label for="font-url">字体链接 (ttf, woff, woff2)</label><input type="url" id="font-url" placeholder="https://.../font.ttf" required></div><p style="font-size:12px; color:#888; text-align:center;">示例: https://lf3-static.bytednsdoc.com/obj/eden-cn/jplptk/ljhwZthlaukjlkulzlp/portal/fonts/HarmonyOS_Sans_SC_Regular.woff2</p><button type="submit" class="btn btn-primary">应用字体</button><button type="button" class="btn btn-neutral" id="restore-default-font-btn" style="margin-top: 15px;">恢复默认字体</button></form></main>`;
   dom['customize-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">主屏幕自定义</h1></div><div class="placeholder"></div></header><main class="content"><form id="customize-form"></form><div style="margin-top:24px;padding:0 4px;"><button type="button" id="check-update-btn" class="btn btn-secondary" style="width:100%;padding:14px;font-size:15px;border-radius:12px;">🔄 检查更新</button><p style="font-size:12px;color:#999;text-align:center;margin-top:8px;">清除浏览器缓存并从仓库重新加载最新版本</p></div></main>`;
+  // 气泡工坊屏幕
+  dom['bubble-workshop-screen'] = document.getElementById('bubble-workshop-screen');
 
   // 重新缓存动态注入的 DOM 元素
   ['img-gen-status', 'tts-global-status', 'tts-settings-card', 'tts-edit-btn',
@@ -121,6 +124,7 @@ async function initApp() {
   customize.initTheme();
   customize.renderCustomizeForm();
   fontSettings.init(dom);
+  bubbleWorkshop.init(dom);
   worldBook.init(dom);
   videoCall.init(dom);
   apiSettings.init(dom);

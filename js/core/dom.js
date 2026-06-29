@@ -92,6 +92,8 @@ const IDS = [
   'wallpaper-preview', 'wallpaper-upload',
   // 检查更新
   'check-update-btn',
+  // 气泡工坊
+  'bubble-workshop-screen', 'bubble-preset-grid', 'bubble-role-tabs', 'bubble-workshop-preview', 'bubble-workshop-save', 'bubble-workshop-export', 'bubble-workshop-back', 'bubble-sync-toggle', 'bubble-custom-css',
   'bubble-preset-grid',
   // TTS 设置
   'tts-settings-card', 'tts-global-status', 'tts-edit-btn', 'tts-edit-screen',

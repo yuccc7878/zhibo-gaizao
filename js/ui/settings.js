@@ -6,6 +6,7 @@ import { state } from '../core/state.js';
 import { getDb, saveData } from '../core/dataService.js';
 import { showToast, updateCustomBubbleStyle, updateBubbleCssPreview, compressImage, colorThemes } from '../core/utils.js';
 import { getEffectivePrompt, fillTemplate } from './promptDefaults.js';
+import { open as openBubbleWorkshop } from './bubbleWorkshop.js';
 
 // ─── 气泡预设 ───
 const BUBBLE_PRESETS = [
@@ -423,53 +424,16 @@ async function saveSettingsFromSidebar() {
   if (_renderMessages) _renderMessages(false, true);
 }
 
-// ─── 气泡预设渲染 ───
+// ─── 气泡预设渲染（已迁移到气泡工坊） ───
 function renderBubblePresets(c) {
-  const grid = dom['bubble-preset-grid'];
-  if (!grid) return;
-
-  const activeId = c.bubblePresetId || 'default';
-
-  grid.innerHTML = BUBBLE_PRESETS.map(preset => {
-    const isActive = preset.id === activeId;
-    return `<div class="bubble-preset-card" data-preset-id="${preset.id}" style="
-      padding:10px; border-radius:10px; cursor:pointer;
-      border:2px solid ${isActive ? 'var(--primary-color)' : '#eee'};
-      background:${isActive ? '#fff0f5' : '#fff'};
-      transition:all 0.2s;
-    ">
-      <div style="display:flex;gap:6px;margin-bottom:6px;">
-        <div style="width:24px;height:16px;border-radius:8px;background:${preset.previewSent};"></div>
-        <div style="width:24px;height:16px;border-radius:8px;background:${preset.previewReceived};border:1px solid #eee;"></div>
-      </div>
-      <div style="font-size:12px;font-weight:${isActive ? '700' : '500'};color:${isActive ? 'var(--primary-color)' : '#666'};">${isActive ? '✓ ' : ''}${preset.name}</div>
-    </div>`;
-  }).join('');
-
-  grid.querySelectorAll('.bubble-preset-card').forEach(card => {
-    card.addEventListener('click', async () => {
-      const presetId = card.dataset.presetId;
-      const preset = BUBBLE_PRESETS.find(p => p.id === presetId);
-      if (!preset) return;
-
-      const character = getDb().characters.find(ch => ch.id === state.currentChatId);
-      if (!character) return;
-
-      character.bubblePresetId = presetId;
-      character.useCustomBubbleCss = !!preset.css;
-      character.customBubbleCss = preset.css;
-
-      // 更新 UI
-      dom['setting-use-custom-css'].checked = !!preset.css;
-      dom['setting-custom-bubble-css'].value = preset.css;
-      dom['setting-custom-bubble-css'].disabled = !preset.css;
-
-      await saveData();
-      updateCustomBubbleStyle(state.currentChatId, preset.css, !!preset.css);
-      renderBubblePresets(character);
-      showToast(dom['toast-notification'], `已切换为「${preset.name}」气泡`);
+  const btn = document.getElementById('open-bubble-workshop-btn');
+  if (btn && !btn._bound) {
+    btn._bound = true;
+    btn.addEventListener('click', () => {
+      openBubbleWorkshop(state.currentChatId, 'private');
+      switchScreen(dom, 'bubble-workshop-screen');
     });
-  });
+  }
 }
 
 export function renderKeyEventsList(c) {

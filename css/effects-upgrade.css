@@ -728,3 +728,69 @@
 .msg-avatar:hover {
     transform: scale(1.08);
 }
+
+/* ══════════════════════════════════════
+ * 气泡工坊
+ * ══════════════════════════════════════ */
+
+.bubble-role-tab.active {
+    background: #fff !important;
+    color: var(--primary-color, #ff80ab) !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.bubble-role-panel { display: none; }
+.bubble-role-panel.active { display: block; }
+
+.bubble-preset-card {
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 2px solid #eee;
+    background: #fff;
+    transition: all 0.2s;
+    text-align: center;
+}
+.bubble-preset-card:hover {
+    border-color: #ddd;
+    transform: translateY(-1px);
+}
+.bubble-preset-card:active {
+    transform: scale(0.97);
+}
+.bubble-preset-preview {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 6px;
+}
+.bubble-mini {
+    width: 28px;
+    height: 18px;
+    border-radius: 6px;
+}
+.bubble-preset-name {
+    font-size: 11px;
+    color: #666;
+}
+
+#bubble-workshop-preview .bws-sent,
+#bubble-workshop-preview .bws-received {
+    max-width: 75%;
+    word-break: break-word;
+    line-height: 1.5;
+    font-size: 14px;
+    padding: 10px 14px;
+    margin: 4px 12px;
+}
+#bubble-workshop-preview .bws-sent {
+    align-self: flex-end;
+    border-bottom-right-radius: 5px !important;
+}
+#bubble-workshop-preview .bws-received {
+    align-self: flex-start;
+    border-bottom-left-radius: 5px !important;
+}
+#bubble-workshop-preview {
+    display: flex;
+    flex-direction: column;
+}
