@@ -126,10 +126,43 @@ function _renderAll(form) {
   themeSection.innerHTML = `
     <summary style="padding:12px 16px;background:#fafafa;cursor:pointer;font-weight:600;font-size:15px;">🎨 主题风格</summary>
     <div style="padding:12px 16px;">
-      <div style="display:flex;gap:10px;">
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
         <button type="button" id="theme-purple" class="btn ${currentTheme === 'purple' ? 'btn-primary' : 'btn-neutral'}" style="flex:1;">粉紫渐变</button>
         <button type="button" id="theme-white" class="btn ${currentTheme === 'white' ? 'btn-primary' : 'btn-neutral'}" style="flex:1;">经典白色</button>
       </div>
+
+      <div id="hsl-sliders" style="display:${currentTheme === 'white' ? 'none' : 'block'};margin-top:12px;">
+        <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:10px;">自定义配色</div>
+
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px;">
+            <span>色相</span><span id="hsl-h-val">${getDb().themeHue ?? PURPLE_HSL.h}°</span>
+          </div>
+          <input type="range" id="hsl-h" min="0" max="360" value="${getDb().themeHue ?? PURPLE_HSL.h}" style="width:100%;accent-color:#ff80ab;">
+          <div style="height:6px;border-radius:3px;margin-top:4px;background:linear-gradient(to right,hsl(0,80%,66%),hsl(60,80%,66%),hsl(120,80%,66%),hsl(180,80%,66%),hsl(240,80%,66%),hsl(300,80%,66%),hsl(360,80%,66%));opacity:0.5;"></div>
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px;">
+            <span>饱和度</span><span id="hsl-s-val">${getDb().themeSat ?? PURPLE_HSL.s}%</span>
+          </div>
+          <input type="range" id="hsl-s" min="0" max="100" value="${getDb().themeSat ?? PURPLE_HSL.s}" style="width:100%;accent-color:#ff80ab;">
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px;">
+            <span>亮度</span><span id="hsl-l-val">${getDb().themeLit ?? PURPLE_HSL.l}%</span>
+          </div>
+          <input type="range" id="hsl-l" min="20" max="85" value="${getDb().themeLit ?? PURPLE_HSL.l}" style="width:100%;accent-color:#ff80ab;">
+        </div>
+
+        <div id="hsl-preview" style="height:40px;border-radius:10px;margin-bottom:8px;background:linear-gradient(135deg,hsl(${getDb().themeHue ?? 260},${getDb().themeSat ?? 80}%,${getDb().themeLit ?? 66}%),hsl(${(getDb().themeHue ?? 260)-10},${Math.max((getDb().themeSat ?? 80)-36,10)}%,${Math.max((getDb().themeLit ?? 66)-18,15)}%),hsl(${(getDb().themeHue ?? 260)+40},${Math.min((getDb().themeSat ?? 80)+7,100)}%,${Math.min((getDb().themeLit ?? 66)+9,85)}%));"></div>
+
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button type="button" id="hsl-reset" class="btn btn-neutral" style="flex:1;font-size:12px;padding:8px;">恢复粉紫</button>
+        </div>
+      </div>
+
       <p style="font-size:11px;color:#aaa;margin-top:8px;">切换后全局生效，聊天/商店/直播/模块统一风格</p>
     </div>`;
   form.appendChild(themeSection);
@@ -137,6 +170,56 @@ function _renderAll(form) {
   // 主题按钮事件
   themeSection.querySelector('#theme-purple').addEventListener('click', () => switchTheme('purple'));
   themeSection.querySelector('#theme-white').addEventListener('click', () => switchTheme('white'));
+
+  // HSL 滑块事件
+  const hslSliders = themeSection.querySelector('#hsl-sliders');
+  const hInput = themeSection.querySelector('#hsl-h');
+  const sInput = themeSection.querySelector('#hsl-s');
+  const lInput = themeSection.querySelector('#hsl-l');
+  const hVal = themeSection.querySelector('#hsl-h-val');
+  const sVal = themeSection.querySelector('#hsl-s-val');
+  const lVal = themeSection.querySelector('#hsl-l-val');
+  const preview = themeSection.querySelector('#hsl-preview');
+
+  function onHSLChange() {
+    const h = parseInt(hInput.value);
+    const s = parseInt(sInput.value);
+    const l = parseInt(lInput.value);
+    hVal.textContent = h + '°';
+    sVal.textContent = s + '%';
+    lVal.textContent = l + '%';
+
+    // 更新预览条
+    const m_s = Math.max(s - 36, 10), m_l = Math.max(l - 18, 15);
+    const e_s = Math.min(s + 7, 100), e_l = Math.min(l + 9, 85);
+    preview.style.background = `linear-gradient(135deg, hsl(${h},${s}%,${l}%), hsl(${h-10},${m_s}%,${m_l}%), hsl(${h+40},${e_s}%,${e_l}%))`;
+
+    // 实时应用
+    const db = getDb();
+    db.themeHue = h;
+    db.themeSat = s;
+    db.themeLit = l;
+    db.appTheme = 'custom';
+    saveData();
+    applyTheme('custom');
+
+    // 更新按钮状态
+    themeSection.querySelector('#theme-purple').className = 'btn btn-neutral';
+    themeSection.querySelector('#theme-white').className = 'btn btn-neutral';
+  }
+
+  hInput.addEventListener('input', onHSLChange);
+  sInput.addEventListener('input', onHSLChange);
+  lInput.addEventListener('input', onHSLChange);
+
+  // 恢复粉紫
+  themeSection.querySelector('#hsl-reset').addEventListener('click', () => {
+    hInput.value = PURPLE_HSL.h;
+    sInput.value = PURPLE_HSL.s;
+    lInput.value = PURPLE_HSL.l;
+    onHSLChange();
+    switchTheme('purple');
+  });
 
   // ── 字体设置 ──
   const fontSection = document.createElement('details');
@@ -390,24 +473,49 @@ function setupImportHandler() {
 
 // ─── 主题切换 ───
 
+const PURPLE_HSL = { h: 260, s: 80, l: 66 };
+
 function switchTheme(theme) {
   const db = getDb();
   db.appTheme = theme;
   saveData();
   applyTheme(theme);
-  showToast(dom?.['toast-notification'], theme === 'purple' ? '🎨 已切换为粉紫渐变主题' : '🎨 已切换为经典白色主题');
-  // 重新渲染自定义页面以更新按钮状态
+  const msg = theme === 'purple' ? '🎨 已切换为粉紫渐变主题'
+    : theme === 'white' ? '🎨 已切换为经典白色主题'
+    : '🎨 已切换为自定义主题';
+  showToast(dom?.['toast-notification'], msg);
   renderCustomizeForm();
+}
+
+function applyThemeHSL(h, s, l) {
+  const root = document.documentElement;
+  root.style.setProperty('--theme-h', h);
+  root.style.setProperty('--theme-s', s + '%');
+  root.style.setProperty('--theme-l', l + '%');
+  root.style.setProperty('--theme-bg-start', `hsl(${h}, ${s}%, ${l}%)`);
+  root.style.setProperty('--theme-bg-mid', `hsl(${h - 10}, ${Math.max(s - 36, 10)}%, ${Math.max(l - 18, 15)}%)`);
+  root.style.setProperty('--theme-bg-end', `hsl(${h + 40}, ${Math.min(s + 7, 100)}%, ${Math.min(l + 9, 85)}%)`);
+  root.style.setProperty('--theme-btn-gradient', `linear-gradient(135deg, hsl(${h}, ${s}%, ${l}%), hsl(${h - 10}, ${Math.max(s - 36, 10)}%, ${Math.max(l - 18, 15)}%), hsl(${h + 40}, ${Math.min(s + 7, 100)}%, ${Math.min(l + 9, 85)}%))`);
+  root.style.setProperty('--theme-btn-glow', `hsla(${h + 20}, 80%, 70%, 0.4)`);
+  root.style.setProperty('--theme-btn-glow2', `hsla(${h + 30}, 90%, 70%, 0.4)`);
 }
 
 export function applyTheme(theme) {
   const root = document.documentElement;
+  root.classList.remove('theme-purple', 'theme-white', 'theme-custom');
+
   if (theme === 'purple') {
     root.classList.add('theme-purple');
-    root.classList.remove('theme-white');
-  } else {
-    root.classList.remove('theme-purple');
+    applyThemeHSL(PURPLE_HSL.h, PURPLE_HSL.s, PURPLE_HSL.l);
+  } else if (theme === 'white') {
     root.classList.add('theme-white');
+  } else {
+    root.classList.add('theme-custom');
+    const db = getDb();
+    const h = db.themeHue ?? PURPLE_HSL.h;
+    const s = db.themeSat ?? PURPLE_HSL.s;
+    const l = db.themeLit ?? PURPLE_HSL.l;
+    applyThemeHSL(h, s, l);
   }
 }
 

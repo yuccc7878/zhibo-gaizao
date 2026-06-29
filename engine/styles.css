@@ -3,6 +3,30 @@
    ======================================== */
 
 :root {
+    /* ─── 主题色 HSL 基础值（粉紫预设） ─── */
+    --theme-h: 260;
+    --theme-s: 80%;
+    --theme-l: 66%;
+
+    /* ─── 主题色派生（由 JS 动态计算写入） ─── */
+    --theme-bg-start:  hsl(260, 80%, 66%);
+    --theme-bg-mid:    hsl(270, 44%, 48%);
+    --theme-bg-end:    hsl(300, 87%, 75%);
+    --theme-header:    rgba(255,255,255,0.12);
+    --theme-header-border: rgba(255,255,255,0.15);
+    --theme-card:      rgba(255,255,255,0.1);
+    --theme-card-border: rgba(255,255,255,0.12);
+    --theme-text:      rgba(255,255,255,0.95);
+    --theme-text-sub:  rgba(255,255,255,0.5);
+    --theme-text-dim:  rgba(255,255,255,0.3);
+    --theme-input-bg:  rgba(255,255,255,0.1);
+    --theme-input-border: rgba(255,255,255,0.15);
+    --theme-bubble-sent: rgba(255,255,255,0.2);
+    --theme-bubble-recv: rgba(255,255,255,0.12);
+    --theme-btn-gradient: linear-gradient(135deg, hsl(260,80%,66%), hsl(270,44%,48%), hsl(300,87%,75%));
+    --theme-btn-glow: rgba(224,64,251,0.4);
+    --theme-btn-glow2: rgba(255,107,157,0.4);
+
     /* ─── 品牌色 ─── */
     --primary:        #ff80ab;
     --primary-dark:   #e0608a;

@@ -1,5 +1,5 @@
 /* ========================================
-   Module Theme — 粉紫主题（仅 .theme-purple 时生效）
+   Module Theme — 粉紫/自定义主题（.theme-purple 或 .theme-custom 时生效）
    ======================================== */
 
 /* 模块背景 */
@@ -8,8 +8,14 @@
 .theme-purple #gacha-screen,
 .theme-purple #games-screen,
 .theme-purple #media-screen,
-.theme-purple #live-screen {
-    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+.theme-purple #live-screen,
+.theme-custom #album-screen,
+.theme-custom #bilibili-screen,
+.theme-custom #gacha-screen,
+.theme-custom #games-screen,
+.theme-custom #media-screen,
+.theme-custom #live-screen {
+    background: linear-gradient(135deg, var(--theme-bg-start), var(--theme-bg-mid), var(--theme-bg-end)) !important;
 }
 
 /* 通用头部 */
@@ -18,7 +24,13 @@
 .theme-purple .gacha-header,
 .theme-purple .games-header,
 .theme-purple .media-header,
-.theme-purple .live-header {
+.theme-purple .live-header,
+.theme-custom .album-header,
+.theme-custom .bili-header,
+.theme-custom .gacha-header,
+.theme-custom .games-header,
+.theme-custom .media-header,
+.theme-custom .live-header {
     background: rgba(255,255,255,0.12) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
@@ -28,7 +40,12 @@
 .theme-purple .bili-header .title,
 .theme-purple .gacha-header .title,
 .theme-purple .games-header .title,
-.theme-purple .media-header .title {
+.theme-purple .media-header .title,
+.theme-custom .album-header .title,
+.theme-custom .bili-header .title,
+.theme-custom .gacha-header .title,
+.theme-custom .games-header .title,
+.theme-custom .media-header .title {
     color: #fff !important;
     text-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
 }
@@ -36,7 +53,12 @@
 .theme-purple .bili-header .back-btn,
 .theme-purple .gacha-header .back-btn,
 .theme-purple .games-header .back-btn,
-.theme-purple .media-header .back-btn {
+.theme-purple .media-header .back-btn,
+.theme-custom .album-header .back-btn,
+.theme-custom .bili-header .back-btn,
+.theme-custom .gacha-header .back-btn,
+.theme-custom .games-header .back-btn,
+.theme-custom .media-header .back-btn {
     color: #fff !important;
 }
 
@@ -46,86 +68,92 @@
 .theme-purple .gacha-content,
 .theme-purple .games-lobby,
 .theme-purple .media-content,
-.theme-purple .live-content {
+.theme-purple .live-content,
+.theme-custom .album-content,
+.theme-custom .bili-content,
+.theme-custom .gacha-content,
+.theme-custom .games-lobby,
+.theme-custom .media-content,
+.theme-custom .live-content {
     background: transparent !important;
 }
 
 /* B站卡片 */
-.theme-purple .bili-video-card { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; }
-.theme-purple .bili-video-title { color: #fff !important; }
-.theme-purple .bili-video-meta,
-.theme-purple .bili-video-meta * { color: rgba(255,255,255,0.5) !important; }
+.theme-purple .bili-video-card, .theme-custom .bili-video-card { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; }
+.theme-purple .bili-video-title, .theme-custom .bili-video-title { color: #fff !important; }
+.theme-purple .bili-video-meta, .theme-purple .bili-video-meta *,
+.theme-custom .bili-video-meta, .theme-custom .bili-video-meta * { color: rgba(255,255,255,0.5) !important; }
 
 /* 游戏卡片 */
-.theme-purple .game-card { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; }
-.theme-purple .game-card:hover { background: rgba(255,255,255,0.18) !important; box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important; }
-.theme-purple .game-card .game-name { color: #fff !important; }
-.theme-purple .game-card .game-desc { color: rgba(255,255,255,0.6) !important; }
-.theme-purple .games-money { color: #ffd700 !important; }
+.theme-purple .game-card, .theme-custom .game-card { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; }
+.theme-purple .game-card:hover, .theme-custom .game-card:hover { background: rgba(255,255,255,0.18) !important; box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important; }
+.theme-purple .game-card .game-name, .theme-custom .game-card .game-name { color: #fff !important; }
+.theme-purple .game-card .game-desc, .theme-custom .game-card .game-desc { color: rgba(255,255,255,0.6) !important; }
+.theme-purple .games-money, .theme-custom .games-money { color: #ffd700 !important; }
 
 /* 抽卡 */
-.theme-purple .gacha-shake-btn { box-shadow: 0 8px 30px rgba(255,107,157,0.4) !important; }
-.theme-purple .gacha-result { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.15) !important; box-shadow: 0 8px 30px rgba(0,0,0,0.2) !important; }
-.theme-purple .gacha-result .char-name { color: #fff !important; }
-.theme-purple .gacha-result .char-persona { color: rgba(255,255,255,0.7) !important; }
-.theme-purple .gacha-result .char-tags span { background: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.8) !important; border: 1px solid rgba(255,255,255,0.2) !important; }
+.theme-purple .gacha-shake-btn, .theme-custom .gacha-shake-btn { box-shadow: 0 8px 30px rgba(255,107,157,0.4) !important; }
+.theme-purple .gacha-result, .theme-custom .gacha-result { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.15) !important; box-shadow: 0 8px 30px rgba(0,0,0,0.2) !important; }
+.theme-purple .gacha-result .char-name, .theme-custom .gacha-result .char-name { color: #fff !important; }
+.theme-purple .gacha-result .char-persona, .theme-custom .gacha-result .char-persona { color: rgba(255,255,255,0.7) !important; }
+.theme-purple .gacha-result .char-tags span, .theme-custom .gacha-result .char-tags span { background: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.8) !important; border: 1px solid rgba(255,255,255,0.2) !important; }
 
 /* 相册 */
-.theme-purple .album-grid { background: transparent !important; }
-.theme-purple .album-item { border-radius: 12px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important; overflow: hidden !important; }
+.theme-purple .album-grid, .theme-custom .album-grid { background: transparent !important; }
+.theme-purple .album-item, .theme-custom .album-item { border-radius: 12px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important; overflow: hidden !important; }
 
 /* 媒体 */
-.theme-purple .media-tabs { background: rgba(255,255,255,0.1) !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
-.theme-purple .media-tab { color: rgba(255,255,255,0.5) !important; }
-.theme-purple .media-tab.active { color: #fff !important; border-bottom-color: #fff !important; }
-.theme-purple .media-card { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; }
-.theme-purple .media-card .media-title { color: #fff !important; }
-.theme-purple .media-card .media-desc { color: rgba(255,255,255,0.6) !important; }
-.theme-purple .media-card .media-meta { color: rgba(255,255,255,0.4) !important; }
-.theme-purple .media-detail { background: rgba(20,25,40,0.95) !important; }
-.theme-purple .media-detail .detail-title { color: #fff !important; }
-.theme-purple .media-detail .detail-content { color: rgba(255,255,255,0.85) !important; }
+.theme-purple .media-tabs, .theme-custom .media-tabs { background: rgba(255,255,255,0.1) !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
+.theme-purple .media-tab, .theme-custom .media-tab { color: rgba(255,255,255,0.5) !important; }
+.theme-purple .media-tab.active, .theme-custom .media-tab.active { color: #fff !important; border-bottom-color: #fff !important; }
+.theme-purple .media-card, .theme-custom .media-card { background: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important; }
+.theme-purple .media-card .media-title, .theme-custom .media-card .media-title { color: #fff !important; }
+.theme-purple .media-card .media-desc, .theme-custom .media-card .media-desc { color: rgba(255,255,255,0.6) !important; }
+.theme-purple .media-card .media-meta, .theme-custom .media-card .media-meta { color: rgba(255,255,255,0.4) !important; }
+.theme-purple .media-detail, .theme-custom .media-detail { background: rgba(20,25,40,0.95) !important; }
+.theme-purple .media-detail .detail-title, .theme-custom .media-detail .detail-title { color: #fff !important; }
+.theme-purple .media-detail .detail-content, .theme-custom .media-detail .detail-content { color: rgba(255,255,255,0.85) !important; }
 
 /* 直播引导 */
-.theme-purple .live-wizard { background: rgba(20,25,40,0.95) !important; backdrop-filter: blur(40px) !important; -webkit-backdrop-filter: blur(40px) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 20px !important; box-shadow: 0 20px 60px rgba(0,0,0,0.4) !important; }
-.theme-purple .live-wizard-header .live-wizard-title { color: #fff !important; }
-.theme-purple .live-wizard-step { color: rgba(255,255,255,0.4) !important; }
-.theme-purple .live-level-card { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
-.theme-purple .live-level-card.selected { background: rgba(102,126,234,0.2) !important; border-color: rgba(102,126,234,0.5) !important; }
-.theme-purple .live-level-name { color: #fff !important; }
-.theme-purple .live-level-desc { color: rgba(255,255,255,0.5) !important; }
-.theme-purple .live-scene-item { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; }
-.theme-purple .live-scene-item.selected { background: rgba(102,126,234,0.2) !important; border-color: rgba(102,126,234,0.5) !important; color: #fff !important; }
-.theme-purple .live-scene-category summary { color: rgba(255,255,255,0.6) !important; }
-.theme-purple .live-prop-item { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; }
-.theme-purple .live-prop-item.selected { background: rgba(102,126,234,0.2) !important; border-color: rgba(102,126,234,0.5) !important; color: #fff !important; }
-.theme-purple .live-host-card { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
-.theme-purple .live-host-card.selected { border-color: rgba(102,126,234,0.5) !important; }
-.theme-purple .live-host-name { color: rgba(255,255,255,0.8) !important; }
-.theme-purple .live-wiz-btn-back { background: rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border: 1px solid rgba(255,255,255,0.15) !important; }
-.theme-purple .live-wiz-btn-next,
-.theme-purple .live-wiz-btn-skip { background: linear-gradient(135deg, #667eea, #9b59b6) !important; color: #fff !important; border: none !important; box-shadow: 0 4px 15px rgba(155,89,182,0.4) !important; }
+.theme-purple .live-wizard, .theme-custom .live-wizard { background: rgba(20,25,40,0.95) !important; backdrop-filter: blur(40px) !important; -webkit-backdrop-filter: blur(40px) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 20px !important; box-shadow: 0 20px 60px rgba(0,0,0,0.4) !important; }
+.theme-purple .live-wizard-header .live-wizard-title, .theme-custom .live-wizard-header .live-wizard-title { color: #fff !important; }
+.theme-purple .live-wizard-step, .theme-custom .live-wizard-step { color: rgba(255,255,255,0.4) !important; }
+.theme-purple .live-level-card, .theme-custom .live-level-card { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+.theme-purple .live-level-card.selected, .theme-custom .live-level-card.selected { background: hsla(var(--theme-h), 60%, 60%, 0.2) !important; border-color: hsla(var(--theme-h), 60%, 60%, 0.5) !important; }
+.theme-purple .live-level-name, .theme-custom .live-level-name { color: #fff !important; }
+.theme-purple .live-level-desc, .theme-custom .live-level-desc { color: rgba(255,255,255,0.5) !important; }
+.theme-purple .live-scene-item, .theme-custom .live-scene-item { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; }
+.theme-purple .live-scene-item.selected, .theme-custom .live-scene-item.selected { background: hsla(var(--theme-h), 60%, 60%, 0.2) !important; border-color: hsla(var(--theme-h), 60%, 60%, 0.5) !important; color: #fff !important; }
+.theme-purple .live-scene-category summary, .theme-custom .live-scene-category summary { color: rgba(255,255,255,0.6) !important; }
+.theme-purple .live-prop-item, .theme-custom .live-prop-item { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; }
+.theme-purple .live-prop-item.selected, .theme-custom .live-prop-item.selected { background: hsla(var(--theme-h), 60%, 60%, 0.2) !important; border-color: hsla(var(--theme-h), 60%, 60%, 0.5) !important; color: #fff !important; }
+.theme-purple .live-host-card, .theme-custom .live-host-card { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+.theme-purple .live-host-card.selected, .theme-custom .live-host-card.selected { border-color: hsla(var(--theme-h), 60%, 60%, 0.5) !important; }
+.theme-purple .live-host-name, .theme-custom .live-host-name { color: rgba(255,255,255,0.8) !important; }
+.theme-purple .live-wiz-btn-back, .theme-custom .live-wiz-btn-back { background: rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border: 1px solid rgba(255,255,255,0.15) !important; }
+.theme-purple .live-wiz-btn-next, .theme-purple .live-wiz-btn-skip,
+.theme-custom .live-wiz-btn-next, .theme-custom .live-wiz-btn-skip { background: linear-gradient(135deg, var(--theme-bg-start), var(--theme-bg-mid)) !important; color: #fff !important; border: none !important; box-shadow: 0 4px 15px hsla(var(--theme-h), 50%, 50%, 0.4) !important; }
 
 /* 直播流 */
-.theme-purple .live-stream { background: #0d0d0d !important; }
-.theme-purple .live-top-bar { background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%) !important; }
-.theme-purple .live-host-name-text { color: #fff !important; }
-.theme-purple .live-host-tags .live-tag { background: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.8) !important; }
-.theme-purple .live-host-tags .live-tag.hot { background: linear-gradient(135deg, #667eea, #f093fb) !important; color: #fff !important; }
-.theme-purple .live-msg-story { color: #f093fb !important; }
-.theme-purple .live-msg-danmaku { color: rgba(255,255,255,0.85) !important; }
-.theme-purple .live-msg-tip { color: #ffd700 !important; }
-.theme-purple .live-msg-gift { color: #ffd700 !important; }
-.theme-purple .live-input-bar { background: rgba(0,0,0,0.5) !important; backdrop-filter: blur(10px) !important; }
-.theme-purple .live-input-bar input { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.15) !important; }
-.theme-purple .live-send-btn { background: linear-gradient(135deg, #667eea, #f093fb) !important; }
-.theme-purple .live-side-btn { color: #fff !important; }
-.theme-purple .live-close-btn { background: rgba(255,255,255,0.15) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2) !important; }
-.theme-purple .live-settle-box { background: rgba(20,25,40,0.95) !important; backdrop-filter: blur(40px) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 20px !important; }
-.theme-purple .live-settle-title { color: #fff !important; }
-.theme-purple .live-settle-sub { color: rgba(255,255,255,0.5) !important; }
-.theme-purple .live-settle-coin { color: #ffd700 !important; }
-.theme-purple .live-settle-stat-val { color: #fff !important; }
-.theme-purple .live-settle-stat-lbl { color: rgba(255,255,255,0.4) !important; }
-.theme-purple .live-settle-btn { background: linear-gradient(135deg, #667eea, #9b59b6) !important; color: #fff !important; border: none !important; border-radius: 14px !important; box-shadow: 0 4px 15px rgba(155,89,182,0.4) !important; }
-.theme-purple .live-empty-state { color: rgba(255,255,255,0.4) !important; }
+.theme-purple .live-stream, .theme-custom .live-stream { background: #0d0d0d !important; }
+.theme-purple .live-top-bar, .theme-custom .live-top-bar { background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%) !important; }
+.theme-purple .live-host-name-text, .theme-custom .live-host-name-text { color: #fff !important; }
+.theme-purple .live-host-tags .live-tag, .theme-custom .live-host-tags .live-tag { background: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.8) !important; }
+.theme-purple .live-host-tags .live-tag.hot, .theme-custom .live-host-tags .live-tag.hot { background: var(--theme-btn-gradient) !important; color: #fff !important; }
+.theme-purple .live-msg-story, .theme-custom .live-msg-story { color: hsl(var(--theme-h), 80%, 75%) !important; }
+.theme-purple .live-msg-danmaku, .theme-custom .live-msg-danmaku { color: rgba(255,255,255,0.85) !important; }
+.theme-purple .live-msg-tip, .theme-custom .live-msg-tip { color: #ffd700 !important; }
+.theme-purple .live-msg-gift, .theme-custom .live-msg-gift { color: #ffd700 !important; }
+.theme-purple .live-input-bar, .theme-custom .live-input-bar { background: rgba(0,0,0,0.5) !important; backdrop-filter: blur(10px) !important; }
+.theme-purple .live-input-bar input, .theme-custom .live-input-bar input { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.15) !important; }
+.theme-purple .live-send-btn, .theme-custom .live-send-btn { background: var(--theme-btn-gradient) !important; }
+.theme-purple .live-side-btn, .theme-custom .live-side-btn { color: #fff !important; }
+.theme-purple .live-close-btn, .theme-custom .live-close-btn { background: rgba(255,255,255,0.15) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2) !important; }
+.theme-purple .live-settle-box, .theme-custom .live-settle-box { background: rgba(20,25,40,0.95) !important; backdrop-filter: blur(40px) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 20px !important; }
+.theme-purple .live-settle-title, .theme-custom .live-settle-title { color: #fff !important; }
+.theme-purple .live-settle-sub, .theme-custom .live-settle-sub { color: rgba(255,255,255,0.5) !important; }
+.theme-purple .live-settle-coin, .theme-custom .live-settle-coin { color: #ffd700 !important; }
+.theme-purple .live-settle-stat-val, .theme-custom .live-settle-stat-val { color: #fff !important; }
+.theme-purple .live-settle-stat-lbl, .theme-custom .live-settle-stat-lbl { color: rgba(255,255,255,0.4) !important; }
+.theme-purple .live-settle-btn, .theme-custom .live-settle-btn { background: linear-gradient(135deg, var(--theme-bg-start), var(--theme-bg-mid)) !important; color: #fff !important; border: none !important; border-radius: 14px !important; box-shadow: 0 4px 15px hsla(var(--theme-h), 50%, 50%, 0.4) !important; }
+.theme-purple .live-empty-state, .theme-custom .live-empty-state { color: rgba(255,255,255,0.4) !important; }

@@ -17,6 +17,20 @@ export const colorThemes = {
   'pink_blue':    { name: '粉/蓝', received: {bg:'rgba(255,231,240,0.9)',text:'#7C6770'}, sent: {bg:'rgba(173,216,230,0.9)',text:'#4A6F8A'} },
 };
 
+/**
+ * 根据主题 HSL 生成气泡配色
+ * @param {number} h 色相 0-360
+ * @param {number} s 饱和度 0-100
+ * @param {number} l 亮度 0-100
+ */
+export function themeToBubble(h, s, l) {
+  return {
+    name: '跟随主题',
+    received: { bg: `hsla(${h}, ${Math.max(s - 30, 10)}%, 95%, 0.9)`, text: `hsl(${h}, 20%, 45%)` },
+    sent:     { bg: `hsla(${h}, ${s}%, ${l}%, 0.85)`, text: l > 60 ? `hsl(${h}, 30%, 25%)` : '#fff' },
+  };
+}
+
 export const defaultIcons = {
   'chat-list-screen':   { name: 'QQ',    url: 'assets/icons/qq.png' },
   'api-settings-screen':{ name: 'API设置', url: 'assets/icons/设置.png' },

@@ -1,33 +1,45 @@
 /* ========================================
    Theme Controller
-   通过 .theme-purple / .theme-white 控制主题
+   .theme-purple  = 粉紫预设（CSS 变量默认值）
+   .theme-custom  = 用户自定义 HSL（变量由 JS 写入）
+   .theme-white   = 经典白色（独立配色）
    ======================================== */
 
-/* ─── 默认：粉紫主题激活，白色主题隐藏 ─── */
-
-/* 粉紫主题 CSS（当 .theme-purple 时生效） */
-.theme-purple ~ link[href*="chat-room-dark"],
-.theme-purple ~ link[href*="module-theme"] {
-    /* CSS 无法控制 link 标签，用 JS 处理 */
+/* ─── 粉紫/自定义主题：屏幕背景渐变 ─── */
+.theme-purple,
+.theme-custom {
+    --theme-header: rgba(255,255,255,0.12);
+    --theme-header-border: rgba(255,255,255,0.15);
+    --theme-card: rgba(255,255,255,0.1);
+    --theme-card-border: rgba(255,255,255,0.12);
+    --theme-text: rgba(255,255,255,0.95);
+    --theme-text-sub: rgba(255,255,255,0.5);
+    --theme-text-dim: rgba(255,255,255,0.3);
+    --theme-input-bg: rgba(255,255,255,0.1);
+    --theme-input-border: rgba(255,255,255,0.15);
+    --theme-bubble-sent: rgba(255,255,255,0.2);
+    --theme-bubble-recv: rgba(255,255,255,0.12);
 }
 
-/* ─── 粉紫主题：商店 ─── */
-.theme-purple #shop-screen {
-    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+/* ─── 粉紫/自定义：商店 ─── */
+.theme-purple #shop-screen,
+.theme-custom #shop-screen {
+    background: linear-gradient(135deg, var(--theme-bg-start), var(--theme-bg-mid), var(--theme-bg-end)) !important;
 }
 .theme-white #shop-screen {
     background: #fff !important;
 }
 
-/* ─── 粉紫主题：聊天室 ─── */
-.theme-purple #chat-room-screen {
-    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+/* ─── 粉紫/自定义：聊天室 ─── */
+.theme-purple #chat-room-screen,
+.theme-custom #chat-room-screen {
+    background: linear-gradient(135deg, var(--theme-bg-start), var(--theme-bg-mid), var(--theme-bg-end)) !important;
 }
 .theme-white #chat-room-screen {
     background: #f5f5f5 !important;
 }
 
-/* ─── 粉紫主题：其他模块 ─── */
+/* ─── 粉紫/自定义：其他模块 ─── */
 .theme-purple #album-screen,
 .theme-purple #bilibili-screen,
 .theme-purple #gacha-screen,
@@ -43,8 +55,24 @@
 .theme-purple #font-settings-screen,
 .theme-purple #customize-screen,
 .theme-purple #world-book-screen,
-.theme-purple #edit-world-book-screen {
-    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+.theme-purple #edit-world-book-screen,
+.theme-custom #album-screen,
+.theme-custom #bilibili-screen,
+.theme-custom #gacha-screen,
+.theme-custom #games-screen,
+.theme-custom #media-screen,
+.theme-custom #live-screen,
+.theme-custom #chat-list-screen,
+.theme-custom #api-settings-screen,
+.theme-custom #api-edit-screen,
+.theme-custom #img-gen-edit-screen,
+.theme-custom #tts-edit-screen,
+.theme-custom #wallpaper-screen,
+.theme-custom #font-settings-screen,
+.theme-custom #customize-screen,
+.theme-custom #world-book-screen,
+.theme-custom #edit-world-book-screen {
+    background: linear-gradient(135deg, var(--theme-bg-start), var(--theme-bg-mid), var(--theme-bg-end)) !important;
 }
 .theme-white #album-screen,
 .theme-white #bilibili-screen,
@@ -65,7 +93,7 @@
     background: #f5f5f5 !important;
 }
 
-/* ─── 粉紫主题：头部栏 ─── */
+/* ─── 粉紫/自定义：头部栏 ─── */
 .theme-purple .shop-header-bar,
 .theme-purple #chat-room-screen .chat-header,
 .theme-purple #chat-room-screen .chat-header-bar,
@@ -83,11 +111,29 @@
 .theme-purple #font-settings-screen .app-header,
 .theme-purple #customize-screen .app-header,
 .theme-purple #world-book-screen .app-header,
-.theme-purple #edit-world-book-screen .app-header {
-    background: rgba(255,255,255,0.12) !important;
+.theme-purple #edit-world-book-screen .app-header,
+.theme-custom .shop-header-bar,
+.theme-custom #chat-room-screen .chat-header,
+.theme-custom #chat-room-screen .chat-header-bar,
+.theme-custom .album-header,
+.theme-custom .bili-header,
+.theme-custom .gacha-header,
+.theme-custom .games-header,
+.theme-custom .media-header,
+.theme-custom #chat-list-screen .app-header,
+.theme-custom #api-settings-screen .app-header,
+.theme-custom #api-edit-screen .app-header,
+.theme-custom #img-gen-edit-screen .app-header,
+.theme-custom #tts-edit-screen .app-header,
+.theme-custom #wallpaper-screen .app-header,
+.theme-custom #font-settings-screen .app-header,
+.theme-custom #customize-screen .app-header,
+.theme-custom #world-book-screen .app-header,
+.theme-custom #edit-world-book-screen .app-header {
+    background: var(--theme-header) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
-    border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+    border-bottom: 1px solid var(--theme-header-border) !important;
 }
 .theme-white .shop-header-bar,
 .theme-white #chat-room-screen .chat-header,
@@ -113,7 +159,7 @@
     border-bottom: 1px solid #eee !important;
 }
 
-/* ─── 粉紫主题：标题文字 ─── */
+/* ─── 粉紫/自定义：标题文字 ─── */
 .theme-purple .shop-title,
 .theme-purple #chat-room-screen .chat-header .title,
 .theme-purple #chat-room-screen .chat-header-bar .title,
@@ -131,7 +177,25 @@
 .theme-purple #font-settings-screen .app-header .title,
 .theme-purple #customize-screen .app-header .title,
 .theme-purple #world-book-screen .app-header .title,
-.theme-purple #edit-world-book-screen .app-header .title {
+.theme-purple #edit-world-book-screen .app-header .title,
+.theme-custom .shop-title,
+.theme-custom #chat-room-screen .chat-header .title,
+.theme-custom #chat-room-screen .chat-header-bar .title,
+.theme-custom .album-header .title,
+.theme-custom .bili-header .title,
+.theme-custom .gacha-header .title,
+.theme-custom .games-header .title,
+.theme-custom .media-header .title,
+.theme-custom #chat-list-screen .app-header .title,
+.theme-custom #api-settings-screen .app-header .title,
+.theme-custom #api-edit-screen .app-header .title,
+.theme-custom #img-gen-edit-screen .app-header .title,
+.theme-custom #tts-edit-screen .app-header .title,
+.theme-custom #wallpaper-screen .app-header .title,
+.theme-custom #font-settings-screen .app-header .title,
+.theme-custom #customize-screen .app-header .title,
+.theme-custom #world-book-screen .app-header .title,
+.theme-custom #edit-world-book-screen .app-header .title {
     color: #fff !important;
     text-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
 }
@@ -158,7 +222,7 @@
     text-shadow: none !important;
 }
 
-/* ─── 粉紫主题：返回按钮 ─── */
+/* ─── 粉紫/自定义：返回按钮 ─── */
 .theme-purple .shop-header-bar .back-btn,
 .theme-purple #chat-room-screen .chat-header .back-btn,
 .theme-purple #chat-room-screen .chat-header-bar .back-btn,
@@ -174,7 +238,23 @@
 .theme-purple #font-settings-screen .app-header .back-btn,
 .theme-purple #customize-screen .app-header .back-btn,
 .theme-purple #world-book-screen .app-header .back-btn,
-.theme-purple #edit-world-book-screen .app-header .back-btn {
+.theme-purple #edit-world-book-screen .app-header .back-btn,
+.theme-custom .shop-header-bar .back-btn,
+.theme-custom #chat-room-screen .chat-header .back-btn,
+.theme-custom #chat-room-screen .chat-header-bar .back-btn,
+.theme-custom .album-header .back-btn,
+.theme-custom .bili-header .back-btn,
+.theme-custom .gacha-header .back-btn,
+.theme-custom .games-header .back-btn,
+.theme-custom .media-header .back-btn,
+.theme-custom #chat-list-screen .app-header .back-btn,
+.theme-custom #api-settings-screen .app-header .back-btn,
+.theme-custom #api-edit-screen .app-header .back-btn,
+.theme-custom #wallpaper-screen .app-header .back-btn,
+.theme-custom #font-settings-screen .app-header .back-btn,
+.theme-custom #customize-screen .app-header .back-btn,
+.theme-custom #world-book-screen .app-header .back-btn,
+.theme-custom #edit-world-book-screen .app-header .back-btn {
     color: #fff !important;
 }
 .theme-white .shop-header-bar .back-btn,
@@ -197,31 +277,38 @@
     color: var(--primary-color) !important;
 }
 
-/* ─── 粉紫主题：聊天列表项 ─── */
-.theme-purple .list-item {
+/* ─── 粉紫/自定义：聊天列表项 ─── */
+.theme-purple .list-item,
+.theme-custom .list-item {
     background: rgba(255,255,255,0.08) !important;
     border-bottom: 1px solid rgba(255,255,255,0.08) !important;
     border-radius: 12px !important;
     margin: 4px 10px !important;
     padding: 12px 16px !important;
 }
-.theme-purple .list-item:hover {
+.theme-purple .list-item:hover,
+.theme-custom .list-item:hover {
     background: rgba(255,255,255,0.15) !important;
 }
-.theme-purple .list-item .item-name {
+.theme-purple .list-item .item-name,
+.theme-custom .list-item .item-name {
     color: rgba(255,255,255,0.95) !important;
 }
-.theme-purple .list-item .item-preview {
+.theme-purple .list-item .item-preview,
+.theme-custom .list-item .item-preview {
     color: rgba(255,255,255,0.5) !important;
 }
-.theme-purple .list-item .item-real-name {
+.theme-purple .list-item .item-real-name,
+.theme-custom .list-item .item-real-name {
     color: rgba(255,255,255,0.4) !important;
 }
-.theme-purple .list-item .pin-badge {
+.theme-purple .list-item .pin-badge,
+.theme-custom .list-item .pin-badge {
     background: rgba(255,255,255,0.2) !important;
     color: #fff !important;
 }
-.theme-purple .chat-avatar {
+.theme-purple .chat-avatar,
+.theme-custom .chat-avatar {
     border: 2px solid rgba(255,255,255,0.2) !important;
 }
 .theme-white .list-item {
@@ -236,21 +323,25 @@
     background: #fdf6f8 !important;
 }
 
-/* ─── 粉紫主题：世界书条目 ─── */
-.theme-purple .world-book-item {
+/* ─── 粉紫/自定义：世界书条目 ─── */
+.theme-purple .world-book-item,
+.theme-custom .world-book-item {
     background: rgba(255,255,255,0.08) !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
     border-radius: 12px !important;
     margin: 6px 10px !important;
     padding: 12px 16px !important;
 }
-.theme-purple .world-book-item:hover {
+.theme-purple .world-book-item:hover,
+.theme-custom .world-book-item:hover {
     background: rgba(255,255,255,0.15) !important;
 }
-.theme-purple .world-book-item strong {
+.theme-purple .world-book-item strong,
+.theme-custom .world-book-item strong {
     color: rgba(255,255,255,0.95) !important;
 }
-.theme-purple .world-book-item div:last-child {
+.theme-purple .world-book-item div:last-child,
+.theme-custom .world-book-item div:last-child {
     color: rgba(255,255,255,0.5) !important;
 }
 .theme-white .world-book-item {
@@ -265,120 +356,138 @@
     background: #fdf6f8 !important;
 }
 
-/* ─── 粉紫主题：输入框特效增强 ─── */
-.theme-purple .message-input-area {
+/* ─── 粉紫/自定义：输入框 ─── */
+.theme-purple .message-input-area,
+.theme-custom .message-input-area {
     background: rgba(20,15,40,0.75) !important;
     backdrop-filter: blur(30px) saturate(1.5) !important;
     -webkit-backdrop-filter: blur(30px) saturate(1.5) !important;
     border-top: 1px solid rgba(255,255,255,0.1) !important;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.15) !important;
 }
-.theme-purple .message-input-area input {
+.theme-purple .message-input-area input,
+.theme-custom .message-input-area input {
     background: rgba(255,255,255,0.1) !important;
     color: #fff !important;
     border: 1px solid rgba(255,255,255,0.15) !important;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.1) !important;
 }
-.theme-purple .message-input-area input:focus {
+.theme-purple .message-input-area input:focus,
+.theme-custom .message-input-area input:focus {
     background: rgba(255,255,255,0.15) !important;
-    border-color: rgba(240,147,251,0.6) !important;
-    box-shadow: 0 0 0 3px rgba(240,147,251,0.2), 0 0 20px rgba(240,147,251,0.15), inset 0 1px 3px rgba(0,0,0,0.1) !important;
+    border-color: hsla(var(--theme-h), 80%, 70%, 0.6) !important;
+    box-shadow: 0 0 0 3px hsla(var(--theme-h), 80%, 70%, 0.2), 0 0 20px hsla(var(--theme-h), 80%, 70%, 0.15), inset 0 1px 3px rgba(0,0,0,0.1) !important;
 }
-.theme-purple .input-glow-wrap::before {
-    background: linear-gradient(90deg, rgba(240,147,251,0.6), rgba(155,89,182,0.6), rgba(102,126,234,0.6), rgba(240,147,251,0.6)) !important;
+.theme-purple .input-glow-wrap::before,
+.theme-custom .input-glow-wrap::before {
+    background: linear-gradient(90deg, hsla(var(--theme-h),80%,70%,0.6), hsla(calc(var(--theme-h) - 20),60%,55%,0.6), hsl(var(--theme-h),var(--theme-s),var(--theme-l)), hsla(var(--theme-h),80%,70%,0.6)) !important;
     background-size: 200px 100% !important;
     opacity: 0.5 !important;
-    animation: inputGlowPurple 3s linear infinite !important;
+    animation: inputGlowTheme 3s linear infinite !important;
 }
-.theme-purple .input-glow-wrap.active::before {
+.theme-purple .input-glow-wrap.active::before,
+.theme-custom .input-glow-wrap.active::before {
     opacity: 1 !important;
 }
-.theme-purple .input-glow-wrap::after {
+.theme-purple .input-glow-wrap::after,
+.theme-custom .input-glow-wrap::after {
     background: rgba(20,15,40,0.8) !important;
 }
-@keyframes inputGlowPurple {
+@keyframes inputGlowTheme {
     from { background-position: 0 0; }
     to { background-position: -200px 0; }
 }
-.theme-purple .message-input-area .icon-btn {
-    background: linear-gradient(135deg, #e040fb 0%, #7c4dff 100%) !important;
-    box-shadow: 0 4px 15px rgba(224,64,251,0.4), 0 0 20px rgba(224,64,251,0.15) !important;
+.theme-purple .message-input-area .icon-btn,
+.theme-custom .message-input-area .icon-btn {
+    background: var(--theme-btn-gradient) !important;
+    box-shadow: 0 4px 15px var(--theme-btn-glow), 0 0 20px hsla(var(--theme-h),80%,70%,0.15) !important;
 }
-.theme-purple .message-input-area .icon-btn:hover {
-    box-shadow: 0 6px 20px rgba(224,64,251,0.5), 0 0 30px rgba(224,64,251,0.2) !important;
+.theme-purple .message-input-area .icon-btn:hover,
+.theme-custom .message-input-area .icon-btn:hover {
+    box-shadow: 0 6px 20px var(--theme-btn-glow), 0 0 30px hsla(var(--theme-h),80%,70%,0.2) !important;
 }
-.theme-purple .message-input-area .icon-btn:active {
+.theme-purple .message-input-area .icon-btn:active,
+.theme-custom .message-input-area .icon-btn:active {
     transform: scale(0.9) !important;
-    box-shadow: 0 2px 10px rgba(224,64,251,0.6) !important;
+    box-shadow: 0 2px 10px var(--theme-btn-glow) !important;
 }
-.theme-purple .sticker-bar-btn svg {
+.theme-purple .sticker-bar-btn svg,
+.theme-custom .sticker-bar-btn svg {
     fill: rgba(255,255,255,0.7) !important;
 }
 
-/* ─── 粉紫主题：发送按钮特效增强 ─── */
-.theme-purple .message-input-area .icon-btn {
-    background: linear-gradient(135deg, #e040fb 0%, #7c4dff 100%) !important;
-    box-shadow: 0 4px 15px rgba(224,64,251,0.4), 0 0 20px rgba(224,64,251,0.15) !important;
+/* ─── 粉紫/自定义：发送按钮特效 ─── */
+.theme-purple .message-input-area .icon-btn,
+.theme-custom .message-input-area .icon-btn {
+    background: var(--theme-btn-gradient) !important;
+    box-shadow: 0 4px 15px var(--theme-btn-glow), 0 0 20px hsla(var(--theme-h),80%,70%,0.15) !important;
     border: 1px solid rgba(255,255,255,0.2) !important;
     position: relative;
     overflow: hidden;
 }
-.theme-purple .message-input-area .icon-btn::before {
+.theme-purple .message-input-area .icon-btn::before,
+.theme-custom .message-input-area .icon-btn::before {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
+    top: -50%; left: -50%; width: 200%; height: 200%;
     background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
 }
-.theme-purple .message-input-area .icon-btn:hover {
-    box-shadow: 0 6px 25px rgba(224,64,251,0.5), 0 0 35px rgba(224,64,251,0.2) !important;
+.theme-purple .message-input-area .icon-btn:hover,
+.theme-custom .message-input-area .icon-btn:hover {
+    box-shadow: 0 6px 25px var(--theme-btn-glow), 0 0 35px hsla(var(--theme-h),80%,70%,0.2) !important;
     transform: scale(1.05) !important;
 }
-.theme-purple .message-input-area .icon-btn:hover::before {
+.theme-purple .message-input-area .icon-btn:hover::before,
+.theme-custom .message-input-area .icon-btn:hover::before {
     opacity: 1;
 }
-.theme-purple .message-input-area .icon-btn:active {
+.theme-purple .message-input-area .icon-btn:active,
+.theme-custom .message-input-area .icon-btn:active {
     transform: scale(0.9) !important;
-    box-shadow: 0 2px 10px rgba(224,64,251,0.6) !important;
+    box-shadow: 0 2px 10px var(--theme-btn-glow) !important;
 }
-.theme-purple .message-input-area .icon-btn.send-btn {
-    background: linear-gradient(135deg, #ff6b9d 0%, #e040fb 50%, #7c4dff 100%) !important;
-    box-shadow: 0 4px 15px rgba(255,107,157,0.4), 0 0 25px rgba(224,64,251,0.2) !important;
+.theme-purple .message-input-area .icon-btn.send-btn,
+.theme-custom .message-input-area .icon-btn.send-btn {
+    background: linear-gradient(135deg, hsl(calc(var(--theme-h) + 30), 90%, 70%), hsl(var(--theme-h), var(--theme-s), var(--theme-l)), hsl(calc(var(--theme-h) - 20), 60%, 55%)) !important;
+    box-shadow: 0 4px 15px var(--theme-btn-glow2), 0 0 25px hsla(var(--theme-h),80%,70%,0.2) !important;
 }
-.theme-purple .message-input-area .icon-btn.send-btn:hover {
-    box-shadow: 0 6px 25px rgba(255,107,157,0.5), 0 0 40px rgba(224,64,251,0.3) !important;
+.theme-purple .message-input-area .icon-btn.send-btn:hover,
+.theme-custom .message-input-area .icon-btn.send-btn:hover {
+    box-shadow: 0 6px 25px var(--theme-btn-glow2), 0 0 40px hsla(var(--theme-h),80%,70%,0.3) !important;
 }
-.theme-purple .message-input-area .icon-btn:disabled {
+.theme-purple .message-input-area .icon-btn:disabled,
+.theme-custom .message-input-area .icon-btn:disabled {
     background: rgba(255,255,255,0.15) !important;
     box-shadow: none !important;
     opacity: 0.5 !important;
 }
 
-/* ─── 粉紫主题：重新生成按钮 ─── */
-.theme-purple #regenerate-btn {
+/* ─── 粉紫/自定义：重新生成按钮 ─── */
+.theme-purple #regenerate-btn,
+.theme-custom #regenerate-btn {
     background: rgba(255,255,255,0.15) !important;
     border: 1px solid rgba(255,255,255,0.2) !important;
 }
-.theme-purple #regenerate-btn svg {
+.theme-purple #regenerate-btn svg,
+.theme-custom #regenerate-btn svg {
     fill: rgba(255,255,255,0.8) !important;
 }
-.theme-purple #regenerate-btn:hover {
+.theme-purple #regenerate-btn:hover,
+.theme-custom #regenerate-btn:hover {
     background: rgba(255,255,255,0.25) !important;
 }
 
-/* ─── 粉紫主题：气泡 ─── */
-.theme-purple .message-bubble.sent {
-    background: rgba(255,255,255,0.2) !important;
+/* ─── 粉紫/自定义：气泡 ─── */
+.theme-purple .message-bubble.sent,
+.theme-custom .message-bubble.sent {
+    background: var(--theme-bubble-sent) !important;
     color: #fff !important;
     border: 1px solid rgba(255,255,255,0.25) !important;
 }
-.theme-purple .message-bubble.received {
-    background: rgba(255,255,255,0.12) !important;
+.theme-purple .message-bubble.received,
+.theme-custom .message-bubble.received {
+    background: var(--theme-bubble-recv) !important;
     color: #fff !important;
     border: 1px solid rgba(255,255,255,0.15) !important;
 }
@@ -393,19 +502,22 @@
     border: none !important;
 }
 
-/* ─── 粉紫主题：输入栏 ─── */
-.theme-purple .message-input-area {
+/* ─── 粉紫/自定义：输入栏 ─── */
+.theme-purple .message-input-area,
+.theme-custom .message-input-area {
     background: rgba(255,255,255,0.12) !important;
     backdrop-filter: blur(20px) !important;
     border-top: 1px solid rgba(255,255,255,0.15) !important;
 }
-.theme-purple .message-input-area input {
+.theme-purple .message-input-area input,
+.theme-custom .message-input-area input {
     background: rgba(255,255,255,0.12) !important;
     color: #fff !important;
     border: 1px solid rgba(255,255,255,0.15) !important;
 }
-.theme-purple .message-input-area .icon-btn {
-    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+.theme-purple .message-input-area .icon-btn,
+.theme-custom .message-input-area .icon-btn {
+    background: var(--theme-btn-gradient) !important;
 }
 .theme-white .message-input-area {
     background: rgba(255,255,255,0.85) !important;
@@ -421,13 +533,17 @@
     background: var(--primary-color) !important;
 }
 
-/* ─── 粉紫主题：卡片 ─── */
+/* ─── 粉紫/自定义：卡片 ─── */
 .theme-purple .bili-video-card,
 .theme-purple .game-card,
 .theme-purple .media-card,
-.theme-purple .shop-card {
-    background: rgba(255,255,255,0.1) !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
+.theme-purple .shop-card,
+.theme-custom .bili-video-card,
+.theme-custom .game-card,
+.theme-custom .media-card,
+.theme-custom .shop-card {
+    background: var(--theme-card) !important;
+    border: 1px solid var(--theme-card-border) !important;
     box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important;
 }
 .theme-white .bili-video-card,
@@ -439,11 +555,15 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
 }
 
-/* ─── 粉紫主题：卡片文字 ─── */
+/* ─── 粉紫/自定义：卡片文字 ─── */
 .theme-purple .bili-video-title,
 .theme-purple .game-card .game-name,
 .theme-purple .media-card .media-title,
-.theme-purple .shop-card-label {
+.theme-purple .shop-card-label,
+.theme-custom .bili-video-title,
+.theme-custom .game-card .game-name,
+.theme-custom .media-card .media-title,
+.theme-custom .shop-card-label {
     color: #fff !important;
 }
 .theme-white .bili-video-title,
@@ -453,14 +573,16 @@
     color: #333 !important;
 }
 
-/* ─── 粉紫主题：Tab ─── */
-.theme-purple .shop-tab {
+/* ─── 粉紫/自定义：Tab ─── */
+.theme-purple .shop-tab,
+.theme-custom .shop-tab {
     background: rgba(255,255,255,0.06) !important;
     color: rgba(255,255,255,0.5) !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
 }
-.theme-purple .shop-tab.active {
-    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+.theme-purple .shop-tab.active,
+.theme-custom .shop-tab.active {
+    background: var(--theme-btn-gradient) !important;
     color: #fff !important;
     border-color: transparent !important;
 }
@@ -475,39 +597,47 @@
     border-bottom-color: var(--primary-color) !important;
 }
 
-/* ─── 粉紫主题：弹窗 ─── */
+/* ─── 粉紫/自定义：弹窗 ─── */
 .theme-purple .shop-overlay,
-.theme-purple #send-gift-modal {
+.theme-purple #send-gift-modal,
+.theme-custom .shop-overlay,
+.theme-custom #send-gift-modal {
     background: rgba(0,0,0,0.5) !important;
 }
 .theme-white .shop-overlay,
 .theme-white #send-gift-modal {
     background: rgba(0,0,0,0.4) !important;
 }
-.theme-purple .shop-modal {
-    background: linear-gradient(135deg, #1e2a3a 0%, #151d2a 100%) !important;
+.theme-purple .shop-modal,
+.theme-custom .shop-modal {
+    background: linear-gradient(135deg, hsl(calc(var(--theme-h) - 10), 30%, 15%), hsl(calc(var(--theme-h) - 10), 25%, 10%)) !important;
 }
 .theme-white .shop-modal {
     background: #fff !important;
 }
 .theme-purple .shop-modal-name,
-.theme-purple .shop-modal-desc {
+.theme-purple .shop-modal-desc,
+.theme-custom .shop-modal-name,
+.theme-custom .shop-modal-desc {
     color: rgba(255,255,255,0.9) !important;
 }
 .theme-white .shop-modal-name { color: #333 !important; }
 .theme-white .shop-modal-desc { color: #888 !important; }
 
-/* ─── 粉紫主题：购买按钮 ─── */
-.theme-purple .shop-btn-buy {
-    background: linear-gradient(135deg, #667eea 0%, #9b59b6 50%, #f093fb 100%) !important;
+/* ─── 粉紫/自定义：购买按钮 ─── */
+.theme-purple .shop-btn-buy,
+.theme-custom .shop-btn-buy {
+    background: var(--theme-btn-gradient) !important;
 }
 .theme-white .shop-btn-buy {
     background: var(--primary-color) !important;
 }
 
-/* ─── 粉紫主题：返回按钮统一风格 ─── */
+/* ─── 粉紫/自定义：返回按钮统一风格 ─── */
 .theme-purple .back-btn,
-.theme-purple .wardrobe-back-btn {
+.theme-purple .wardrobe-back-btn,
+.theme-custom .back-btn,
+.theme-custom .wardrobe-back-btn {
     background: rgba(255,255,255,0.15) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
@@ -524,7 +654,9 @@
     transition: all 0.3s !important;
 }
 .theme-purple .back-btn:hover,
-.theme-purple .wardrobe-back-btn:hover {
+.theme-purple .wardrobe-back-btn:hover,
+.theme-custom .back-btn:hover,
+.theme-custom .wardrobe-back-btn:hover {
     background: rgba(255,255,255,0.25) !important;
     transform: scale(1.05) !important;
 }
@@ -542,9 +674,10 @@
     box-shadow: none !important;
 }
 
-/* ─── 粉紫主题：头部标题渐变 ─── */
-.theme-purple .shop-title {
-    background: linear-gradient(135deg, #fff, #f093fb) !important;
+/* ─── 粉紫/自定义：头部标题渐变 ─── */
+.theme-purple .shop-title,
+.theme-custom .shop-title {
+    background: linear-gradient(135deg, #fff, hsl(var(--theme-h), 80%, 75%)) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
@@ -554,8 +687,9 @@
     -webkit-text-fill-color: var(--text-color) !important;
 }
 
-/* ─── 粉紫主题：金币显示 ─── */
-.theme-purple .shop-coins {
+/* ─── 粉紫/自定义：金币显示 ─── */
+.theme-purple .shop-coins,
+.theme-custom .shop-coins {
     background: rgba(255,255,255,0.15) !important;
     border: 1px solid rgba(255,255,255,0.25) !important;
 }
@@ -564,14 +698,14 @@
     border: 1px solid rgba(255,215,0,0.2) !important;
 }
 
-/* ─── 粉紫主题：文字颜色通用 ─── */
-.theme-purple .sender-name { color: rgba(255,255,255,0.5) !important; }
-.theme-purple .typing-indicator { color: rgba(255,255,255,0.4) !important; }
-.theme-purple .message-time { color: rgba(255,255,255,0.3) !important; }
-.theme-purple .shop-section-title { color: rgba(255,255,255,0.25) !important; }
-.theme-purple .shop-card-desc { color: rgba(255,255,255,0.3) !important; }
-.theme-purple .shop-card-price { color: #ffd700 !important; }
-.theme-purple #shop-money { color: #ffd700 !important; }
+/* ─── 粉紫/自定义：文字颜色通用 ─── */
+.theme-purple .sender-name, .theme-custom .sender-name { color: rgba(255,255,255,0.5) !important; }
+.theme-purple .typing-indicator, .theme-custom .typing-indicator { color: rgba(255,255,255,0.4) !important; }
+.theme-purple .message-time, .theme-custom .message-time { color: rgba(255,255,255,0.3) !important; }
+.theme-purple .shop-section-title, .theme-custom .shop-section-title { color: rgba(255,255,255,0.25) !important; }
+.theme-purple .shop-card-desc, .theme-custom .shop-card-desc { color: rgba(255,255,255,0.3) !important; }
+.theme-purple .shop-card-price, .theme-custom .shop-card-price { color: #ffd700 !important; }
+.theme-purple #shop-money, .theme-custom #shop-money { color: #ffd700 !important; }
 
 .theme-white .sender-name { color: #999 !important; }
 .theme-white .typing-indicator { color: #aaa !important; }
@@ -581,16 +715,18 @@
 .theme-white .shop-card-price { color: #ff9800 !important; }
 .theme-white #shop-money { color: #ff9800 !important; }
 
-/* ─── 粉紫主题：头像边框 ─── */
-.theme-purple .msg-avatar {
+/* ─── 粉紫/自定义：头像边框 ─── */
+.theme-purple .msg-avatar,
+.theme-custom .msg-avatar {
     border: 2px solid rgba(255,255,255,0.25) !important;
 }
 .theme-white .msg-avatar {
     border: none !important;
 }
 
-/* ─── 粉紫主题：表情栏 ─── */
-.theme-purple #sticker-bar {
+/* ─── 粉紫/自定义：表情栏 ─── */
+.theme-purple #sticker-bar,
+.theme-custom #sticker-bar {
     background: rgba(255,255,255,0.12) !important;
     border-top: 1px solid rgba(255,255,255,0.1) !important;
 }

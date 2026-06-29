@@ -102,7 +102,18 @@ function bindEvents() {
   document.getElementById('bubble-preset-grid')?.addEventListener('click', (e) => {
     const card = e.target.closest('.bubble-preset-card');
     if (!card) return;
-    const preset = PRESETS.find(p => p.id === card.dataset.presetId);
+    const pid = card.dataset.presetId;
+    let preset = PRESETS.find(p => p.id === pid);
+    // 动态「跟随主题」预设
+    if (!preset && pid === '_theme') {
+      const db = getDb();
+      const h = db.themeHue ?? 260, s = db.themeSat ?? 80, l = db.themeLit ?? 66;
+      preset = {
+        id: '_theme', name: '跟随主题',
+        user: { textColor: l > 60 ? hslToHex(h, 30, 25) : '#ffffff', bgColor: hslToHex(h, s, l), bgAlpha: 0.85, radius: 18, opacity: 1, padding: 10, shadow: `0 4px 15px hsla(${h},60%,50%,0.3)` },
+        ai:   { textColor: hslToHex(h, 20, 45), bgColor: hslToHex(h, Math.max(s-30,10), 95), bgAlpha: 0.9, radius: 18, opacity: 1, padding: 10, shadow: '' },
+      };
+    }
     if (!preset) return;
     applyPresetToForm(preset);
     updatePreview();
@@ -227,7 +238,24 @@ export function open(chatId, chatType) {
 function renderPresets() {
   const grid = dom['bubble-preset-grid'];
   if (!grid) return;
-  grid.innerHTML = PRESETS.map(p => {
+
+  // 动态生成「跟随主题」预设
+  const db = getDb();
+  const h = db.themeHue ?? 260;
+  const s = db.themeSat ?? 80;
+  const l = db.themeLit ?? 66;
+  const themeUserBg = `hsla(${h},${s}%,${l}%,0.85)`;
+  const themeAiBg = `hsla(${h},${Math.max(s-30,10)}%,95%,0.9)`;
+
+  const themeCard = `<div class="bubble-preset-card" data-preset-id="_theme" title="自动匹配当前主题色">
+    <div class="bubble-preset-preview">
+      <div class="bubble-mini" style="background:${themeUserBg};border-radius:18px;box-shadow:0 4px 15px hsla(${h},60%,50%,0.3)"></div>
+      <div class="bubble-mini" style="background:${themeAiBg};border-radius:18px;"></div>
+    </div>
+    <div class="bubble-preset-name">🎨 跟随主题</div>
+  </div>`;
+
+  const presetCards = PRESETS.map(p => {
     const uBg = hexToRgba(p.user.bgColor, p.user.bgAlpha);
     const aBg = hexToRgba(p.ai.bgColor, p.ai.bgAlpha);
     return `<div class="bubble-preset-card" data-preset-id="${p.id}" title="${p.desc}">
@@ -238,6 +266,8 @@ function renderPresets() {
       <div class="bubble-preset-name">${p.name}</div>
     </div>`;
   }).join('');
+
+  grid.innerHTML = themeCard + presetCards;
 }
 
 // ─── 从聊天加载 ───
@@ -476,4 +506,15 @@ function hexToRgba(hex, alpha) {
   const g = parseInt(hex.slice(2,4), 16);
   const b = parseInt(hex.slice(4,6), 16);
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
 }
