@@ -58,7 +58,7 @@ function bindEvents() {
   // 旧主题颜色选择器已废弃
 
   // 打开设置侧边栏
-  dom['chat-settings-btn'].addEventListener('click', () => {
+  dom['chat-settings-btn']?.addEventListener('click', () => {
     if (state.currentChatType === 'private') {
       loadSettingsToSidebar();
       dom['chat-settings-sidebar'].classList.add('open');
@@ -71,17 +71,17 @@ function bindEvents() {
   });
 
   // 点击侧边栏外关闭
-  document.querySelector('.phone-screen').addEventListener('click', e => {
+  document.querySelector('.phone-screen')?.addEventListener('click', e => {
     const openSidebar = document.querySelector('.settings-sidebar.open');
     if (openSidebar && !openSidebar.contains(e.target) &&
-        !dom['chat-settings-btn'].contains(e.target) &&
+        !dom['chat-settings-btn']?.contains(e.target) &&
         !e.target.closest('.modal-overlay') &&
         !e.target.closest('.action-sheet-overlay')) {
       openSidebar.classList.remove('open');
     }
   });
 
-  dom['chat-settings-form'].addEventListener('submit', e => {
+  dom['chat-settings-form']?.addEventListener('submit', e => {
     e.preventDefault();
     saveSettingsFromSidebar();
     dom['chat-settings-sidebar'].classList.remove('open');
@@ -93,18 +93,18 @@ function bindEvents() {
   const resetCss = dom['reset-custom-bubble-css-btn'];
   const previewBox = dom['private-bubble-css-preview'];
 
-  useCss.addEventListener('change', (e) => {
+  useCss?.addEventListener('change', (e) => {
     cssText.disabled = !e.target.checked;
     const c = getDb().characters.find(ch => ch.id === state.currentChatId);
     if (c) updateBubbleCssPreview(previewBox, cssText.value, !e.target.checked, colorThemes['white_pink']);
   });
 
-  cssText.addEventListener('input', (e) => {
+  cssText?.addEventListener('input', (e) => {
     const c = getDb().characters.find(ch => ch.id === state.currentChatId);
-    if (c && useCss.checked) updateBubbleCssPreview(previewBox, e.target.value, false, colorThemes['white_pink']);
+    if (c && useCss?.checked) updateBubbleCssPreview(previewBox, e.target.value, false, colorThemes['white_pink']);
   });
 
-  resetCss.addEventListener('click', () => {
+  resetCss?.addEventListener('click', () => {
     const c = getDb().characters.find(ch => ch.id === state.currentChatId);
     if (c) {
       cssText.value = '';
@@ -116,7 +116,7 @@ function bindEvents() {
   });
 
   // 头像上传
-  dom['setting-char-avatar-upload'].addEventListener('change', async (e) => {
+  dom['setting-char-avatar-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
       try { dom['setting-char-avatar-preview'].src = await compressImage(file, { quality: 0.8, maxWidth: 400, maxHeight: 400 }); }
@@ -125,7 +125,7 @@ function bindEvents() {
   });
 
   // AI 生成头像(基于角色人设)
-  dom['setting-char-avatar-ai-btn'].addEventListener('click', async () => {
+  dom['setting-char-avatar-ai-btn']?.addEventListener('click', async () => {
     const persona = dom['setting-char-persona'].value.trim();
     if (!persona) {
       showToast(dom['toast-notification'], '请先填写角色人设作为头像生成提示词');
@@ -150,7 +150,7 @@ function bindEvents() {
     }
   });
 
-  dom['setting-my-avatar-upload'].addEventListener('change', async (e) => {
+  dom['setting-my-avatar-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
       try { dom['setting-my-avatar-preview'].src = await compressImage(file, { quality: 0.8, maxWidth: 400, maxHeight: 400 }); }
@@ -159,7 +159,7 @@ function bindEvents() {
   });
 
   // 聊天背景
-  dom['setting-chat-bg-upload'].addEventListener('change', async (e) => {
+  dom['setting-chat-bg-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const c = getDb().characters.find(ch => ch.id === state.currentChatId);
@@ -174,7 +174,7 @@ function bindEvents() {
   });
 
   // 清空历史
-  dom['clear-chat-history-btn'].addEventListener('click', async () => {
+  dom['clear-chat-history-btn']?.addEventListener('click', async () => {
     const c = getDb().characters.find(ch => ch.id === state.currentChatId);
     if (c && confirm(`确定要清空与"${c.remarkName}"的所有聊天记录吗?`)) {
       c.history = [];
@@ -211,7 +211,7 @@ function bindEvents() {
   });
 
   // 世界书关联
-  dom['link-world-book-btn'].addEventListener('click', () => {
+  dom['link-world-book-btn']?.addEventListener('click', () => {
     const c = getDb().characters.find(ch => ch.id === state.currentChatId);
     if (!c) return;
     const list = dom['world-book-selection-list'];
@@ -226,7 +226,7 @@ function bindEvents() {
     dom['world-book-selection-modal'].classList.add('visible');
   });
 
-  dom['save-world-book-selection-btn'].addEventListener('click', async () => {
+  dom['save-world-book-selection-btn']?.addEventListener('click', async () => {
     const selectedIds = Array.from(dom['world-book-selection-list'].querySelectorAll('input:checked')).map(i => i.value);
     if (state.currentChatType === 'private') {
       const c = getDb().characters.find(ch => ch.id === state.currentChatId);
