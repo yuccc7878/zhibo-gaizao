@@ -372,8 +372,11 @@ function setupImportHandler() {
           const wbCount = (data.worldBooks || []).length;
           console.log('[Import] 角色:', charCount, '群聊:', groupCount, '世界书:', wbCount, 'keys:', Object.keys(data).join(','));
           await saveData(data);
+          // 验证写入是否成功
+          const verifyDb = getDb();
+          console.log('[Import] 验证 - 当前 db.characters:', verifyDb.characters?.length, 'db.groups:', verifyDb.groups?.length);
           showToast(dom?.['toast-notification'], `✅ 已导入 ${charCount} 个角色、${groupCount} 个群聊、${wbCount} 本世界书，即将刷新`);
-          setTimeout(() => window.location.reload(), 1500);
+          setTimeout(() => window.location.reload(), 2000);
         } catch (err) {
           console.error('[Import] 失败:', err);
           showToast(dom?.['toast-notification'], `导入失败: ${err.message}`);

@@ -16,6 +16,7 @@ export async function loadData() {
     await window.loadData();
   }
   _db = window.db || {};
+  console.log('[DataService] loadData 完成 - characters:', (_db.characters || []).length, 'groups:', (_db.groups || []).length, 'worldBooks:', (_db.worldBooks || []).length);
   return _db;
 }
 
