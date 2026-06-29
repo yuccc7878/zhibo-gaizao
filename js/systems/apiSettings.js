@@ -101,6 +101,54 @@ function bindEvents() {
     }
   });
 
+  // ─── 连接测试 ───
+  dom['api-edit-test-btn']?.addEventListener('click', async () => {
+    const btn = dom['api-edit-test-btn'];
+    const host = dom['api-edit-host'].value.trim();
+    const path = dom['api-edit-path'].value.trim() || '/v1/chat/completions';
+    const key = dom['api-edit-key'].value.trim();
+    const provider = dom['api-edit-provider'].value;
+    const resultEl = dom['api-test-result'];
+    if (!host || !key) { showToast(dom['toast-notification'], '请先填写地址和密钥'); return; }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ 测试中...';
+    resultEl.style.display = 'block';
+    resultEl.style.background = '#f0f0f0';
+    resultEl.style.color = '#666';
+    resultEl.textContent = '正在连接...';
+
+    const t0 = Date.now();
+    try {
+      const url = host.replace(/\/+$/, '') + (provider === 'gemini' ? '/v1beta/models?key=' + key : '/v1/models');
+      const headers = provider === 'gemini' ? {} : { 'Authorization': 'Bearer ' + key };
+      const resp = await fetch(url, { method: 'GET', headers, signal: AbortSignal.timeout(10000) });
+      const latency = Date.now() - t0;
+      if (resp.ok) {
+        const data = await resp.json();
+        let modelCount = 0;
+        if (data.data && Array.isArray(data.data)) modelCount = data.data.length;
+        else if (Array.isArray(data)) modelCount = data.length;
+        resultEl.style.background = '#e8f5e9';
+        resultEl.style.color = '#2e7d32';
+        resultEl.textContent = `✅ 连接成功 · ${latency}ms · ${modelCount ? modelCount + '个模型可用' : '接口正常'}`;
+      } else {
+        const text = await resp.text().catch(() => '');
+        resultEl.style.background = '#fce4ec';
+        resultEl.style.color = '#c62828';
+        resultEl.textContent = `❌ HTTP ${resp.status} · ${latency}ms · ${text.slice(0, 80)}`;
+      }
+    } catch (err) {
+      const latency = Date.now() - t0;
+      resultEl.style.background = '#fce4ec';
+      resultEl.style.color = '#c62828';
+      resultEl.textContent = `❌ 连接失败 · ${latency}ms · ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🔗 测试连接';
+    }
+  });
+
   // ─── TTS 设置 ───
   dom['tts-settings-card']?.addEventListener('click', () => openTtsEdit());
   dom['tts-edit-btn']?.addEventListener('click', (e) => { e.stopPropagation(); openTtsEdit(); });

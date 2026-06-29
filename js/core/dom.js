@@ -85,7 +85,7 @@ const IDS = [
   'add-api-preset-btn', 'api-preset-list', 'img-gen-settings-card', 'img-gen-edit-btn',
   'api-edit-back-btn', 'delete-api-preset-btn', 'api-edit-title',
   'api-edit-form', 'api-edit-id', 'api-edit-name', 'api-edit-provider',
-  'api-edit-host', 'api-edit-path', 'api-edit-key', 'api-edit-fetch-btn', 'api-edit-model',
+  'api-edit-host', 'api-edit-path', 'api-edit-key', 'api-edit-fetch-btn', 'api-edit-test-btn', 'api-test-result', 'api-edit-model',
   'img-gen-edit-screen', 'img-gen-back-btn', 'img-gen-form',
   'img-gen-url', 'img-gen-key', 'img-gen-model', 'img-gen-reset-btn',
   // 壁纸
