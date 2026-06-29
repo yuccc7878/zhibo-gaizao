@@ -1,47 +1,91 @@
 /* ========================================
-   BubbleWorkshop - 气泡工坊
-   可视化气泡样式编辑器
+   BubbleWorkshop - 气泡工坊 v2
+   可视化气泡样式编辑器（增强版）
    ======================================== */
 
 import { getDb, saveData } from '../core/dataService.js';
-import { showToast, colorThemes } from '../core/utils.js';
+import { showToast } from '../core/utils.js';
 
 let dom = null;
 let currentChatId = null;
 let currentChatType = null;
+let savedSnapshot = null; // B面板快照
 
-// ─── 预设模板 ───
+// ─── 预设模板（10 套）───
 const PRESETS = [
   {
-    id: 'default', name: '默认',
-    user: { textColor: '#A56767', bgColor: 'rgba(255,204,204,0.9)', radius: 18, opacity: 1, shadow: '' },
-    ai:   { textColor: '#6D6D6D', bgColor: 'rgba(255,255,255,0.9)', radius: 18, opacity: 1, shadow: '' },
+    id: 'default', name: '默认', desc: '经典粉白配色',
+    user: { textColor: '#A56767', bgColor: '#ffcccc', bgAlpha: 0.9, radius: 18, opacity: 1, padding: 10, shadow: '' },
+    ai:   { textColor: '#6D6D6D', bgColor: '#ffffff', bgAlpha: 0.9, radius: 18, opacity: 1, padding: 10, shadow: '' },
   },
   {
-    id: 'glass', name: '毛玻璃',
-    user: { textColor: '#0f172a', bgColor: 'rgba(191,219,254,0.78)', radius: 18, opacity: 0.98, shadow: '0 10px 28px rgba(30,41,59,0.16)' },
-    ai:   { textColor: '#0f172a', bgColor: 'rgba(255,255,255,0.72)', radius: 18, opacity: 0.98, shadow: '0 8px 22px rgba(30,41,59,0.13)' },
+    id: 'cream', name: '奶油', desc: '温暖低饱和，柔和阴影',
+    user: { textColor: '#7c2d12', bgColor: '#fef3c7', bgAlpha: 0.92, radius: 20, opacity: 1, padding: 12, shadow: '0 8px 24px rgba(217,119,6,0.18)' },
+    ai:   { textColor: '#78350f', bgColor: '#fffbeb', bgAlpha: 0.9, radius: 20, opacity: 1, padding: 12, shadow: '0 6px 20px rgba(180,83,9,0.14)' },
   },
   {
-    id: 'neon', name: '霓虹',
-    user: { textColor: '#faf5ff', bgColor: 'rgba(88,28,135,0.9)', radius: 16, opacity: 1, shadow: '0 0 18px rgba(217,70,239,0.55)' },
-    ai:   { textColor: '#e0f2fe', bgColor: 'rgba(12,74,110,0.9)', radius: 16, opacity: 1, shadow: '0 0 18px rgba(14,165,233,0.55)' },
+    id: 'glass', name: '玻璃', desc: '半透明磨砂，轻薄边缘',
+    user: { textColor: '#0f172a', bgColor: '#bfdbfe', bgAlpha: 0.78, radius: 18, opacity: 0.98, padding: 12, shadow: '0 10px 28px rgba(30,41,59,0.16)' },
+    ai:   { textColor: '#0f172a', bgColor: '#ffffff', bgAlpha: 0.72, radius: 18, opacity: 0.98, padding: 12, shadow: '0 8px 22px rgba(30,41,59,0.13)' },
   },
   {
-    id: 'warm', name: '暖阳',
-    user: { textColor: '#7c2d12', bgColor: 'rgba(254,243,199,0.92)', radius: 20, opacity: 1, shadow: '0 8px 24px rgba(217,119,6,0.18)' },
-    ai:   { textColor: '#78350f', bgColor: 'rgba(255,251,235,0.9)', radius: 20, opacity: 1, shadow: '0 6px 20px rgba(180,83,9,0.14)' },
+    id: 'neon', name: '霓虹', desc: '高对比荧光，发光轮廓',
+    user: { textColor: '#faf5ff', bgColor: '#581c87', bgAlpha: 0.9, radius: 16, opacity: 1, padding: 10, shadow: '0 0 18px rgba(217,70,239,0.55)' },
+    ai:   { textColor: '#e0f2fe', bgColor: '#0c4a6e', bgAlpha: 0.9, radius: 16, opacity: 1, padding: 10, shadow: '0 0 18px rgba(14,165,233,0.55)' },
   },
   {
-    id: 'minimal', name: '极简',
-    user: { textColor: '#0f172a', bgColor: 'rgba(226,232,240,0.86)', radius: 20, opacity: 0.97, shadow: '0 2px 8px rgba(15,23,42,0.08)' },
-    ai:   { textColor: '#1e293b', bgColor: 'rgba(248,250,252,0.85)', radius: 20, opacity: 0.97, shadow: '0 2px 8px rgba(15,23,42,0.06)' },
+    id: 'dark', name: '暗黑', desc: '深色背景，低对比',
+    user: { textColor: '#fff', bgColor: '#6366f1', bgAlpha: 0.85, radius: 16, opacity: 1, padding: 10, shadow: '0 4px 15px rgba(99,102,241,0.3)' },
+    ai:   { textColor: '#e0e0e0', bgColor: '#1e1e1e', bgAlpha: 0.85, radius: 16, opacity: 1, padding: 10, shadow: '0 4px 15px rgba(0,0,0,0.3)' },
   },
   {
-    id: 'dark', name: '暗黑',
-    user: { textColor: '#fff', bgColor: 'rgba(99,102,241,0.85)', radius: 16, opacity: 1, shadow: '0 4px 15px rgba(99,102,241,0.3)' },
-    ai:   { textColor: '#e0e0e0', bgColor: 'rgba(30,30,30,0.85)', radius: 16, opacity: 1, shadow: '0 4px 15px rgba(0,0,0,0.3)' },
+    id: 'minimal', name: '极简', desc: '低阴影，清爽留白',
+    user: { textColor: '#0f172a', bgColor: '#e2e8f0', bgAlpha: 0.86, radius: 20, opacity: 0.97, padding: 14, shadow: '0 2px 8px rgba(15,23,42,0.08)' },
+    ai:   { textColor: '#1e293b', bgColor: '#f8fafc', bgAlpha: 0.85, radius: 20, opacity: 0.97, padding: 14, shadow: '0 2px 8px rgba(15,23,42,0.06)' },
   },
+  {
+    id: 'paper', name: '纸感', desc: '微黄纸张，颗粒质感',
+    user: { textColor: '#3f3f46', bgColor: '#fef9c3', bgAlpha: 0.93, radius: 14, opacity: 1, padding: 10, shadow: '2px 2px 0 rgba(120,113,108,0.32)' },
+    ai:   { textColor: '#44403c', bgColor: '#fefce8', bgAlpha: 0.93, radius: 14, opacity: 1, padding: 10, shadow: '2px 2px 0 rgba(113,113,122,0.26)' },
+  },
+  {
+    id: 'mint', name: '薄荷', desc: '清新薄荷绿',
+    user: { textColor: '#065f46', bgColor: '#a7f3d0', bgAlpha: 0.85, radius: 18, opacity: 1, padding: 12, shadow: '0 6px 16px rgba(16,185,129,0.15)' },
+    ai:   { textColor: '#064e3b', bgColor: '#ecfdf5', bgAlpha: 0.9, radius: 18, opacity: 1, padding: 12, shadow: '0 4px 12px rgba(16,185,129,0.1)' },
+  },
+  {
+    id: 'lavender', name: '薰衣草', desc: '柔和紫调',
+    user: { textColor: '#4c1d95', bgColor: '#ddd6fe', bgAlpha: 0.88, radius: 20, opacity: 1, padding: 12, shadow: '0 8px 20px rgba(139,92,246,0.15)' },
+    ai:   { textColor: '#5b21b6', bgColor: '#f5f3ff', bgAlpha: 0.9, radius: 20, opacity: 1, padding: 12, shadow: '0 6px 16px rgba(139,92,246,0.1)' },
+  },
+  {
+    id: 'sunset', name: '日落', desc: '暖橘渐变',
+    user: { textColor: '#fff', bgColor: '#f97316', bgAlpha: 0.88, radius: 16, opacity: 1, padding: 10, shadow: '0 8px 20px rgba(249,115,22,0.25)' },
+    ai:   { textColor: '#7c2d12', bgColor: '#ffedd5', bgAlpha: 0.92, radius: 16, opacity: 1, padding: 10, shadow: '0 6px 16px rgba(249,115,22,0.12)' },
+  },
+];
+
+// ─── 阴影预设 ───
+const SHADOW_PRESETS = [
+  { name: '无', value: '' },
+  { name: '轻柔', value: '0 2px 8px rgba(0,0,0,0.08)' },
+  { name: '中等', value: '0 6px 16px rgba(0,0,0,0.12)' },
+  { name: '强烈', value: '0 10px 28px rgba(0,0,0,0.18)' },
+  { name: '发光', value: '0 0 16px rgba(99,102,241,0.4)' },
+  { name: '霓虹粉', value: '0 0 18px rgba(236,72,153,0.5)' },
+  { name: '霓虹蓝', value: '0 0 18px rgba(59,130,246,0.5)' },
+  { name: '内陷', value: 'inset 0 2px 6px rgba(0,0,0,0.1)' },
+  { name: '硬边', value: '3px 3px 0 rgba(0,0,0,0.2)' },
+];
+
+// ─── 快速 CSS 片段 ───
+const CSS_SNIPPETS = [
+  { name: '🧊 毛玻璃', code: `.message-bubble.sent, .message-bubble.received {\n  backdrop-filter: blur(10px);\n  border: 1px solid rgba(255,255,255,0.4);\n}\n.message-bubble.sent { background: rgba(255,128,171,0.6) !important; }\n.message-bubble.received { background: rgba(255,255,255,0.6) !important; }` },
+  { name: '💜 霓虹边框', code: `.message-bubble.sent { border: 2px solid #a855f7; box-shadow: 0 0 10px #a855f7; background: #2e1065 !important; color: #fff !important; }\n.message-bubble.received { border: 2px solid #3b82f6; box-shadow: 0 0 10px #3b82f6; background: #172554 !important; color: #fff !important; }` },
+  { name: '🎮 像素风', code: `.message-bubble.sent, .message-bubble.received {\n  border-radius: 0 !important;\n  border: 3px solid #2d2d2d;\n  box-shadow: 4px 4px 0 #2d2d2d;\n  font-family: 'Courier New', monospace;\n  image-rendering: pixelated;\n}` },
+  { name: '🌈 渐变', code: `.message-bubble.sent { background: linear-gradient(135deg, #6366f1, #8b5cf6) !important; color: #fff !important; }\n.message-bubble.received { background: linear-gradient(135deg, #fff, #e2e8f0) !important; }` },
+  { name: '✨ 描边', code: `.message-bubble.sent, .message-bubble.received {\n  border: 1px solid rgba(148,163,184,0.45);\n}` },
+  { name: '📰 报纸', code: `.message-bubble.sent, .message-bubble.received {\n  background: #fefce8 !important;\n  border: 1px solid #d4d4d8;\n  font-family: Georgia, serif;\n  box-shadow: 2px 2px 0 rgba(0,0,0,0.1);\n}` },
 ];
 
 // ─── 初始化 ───
@@ -51,29 +95,20 @@ export function init(_dom) {
 }
 
 function bindEvents() {
-  // 返回按钮
-  document.getElementById('bubble-workshop-back')?.addEventListener('click', () => {
-    const target = currentChatType === 'group' ? 'group-settings-sidebar' : 'chat-settings-sidebar';
-    if (currentChatType === 'group') {
-      document.getElementById(target)?.classList.add('open');
-    } else {
-      dom['chat-settings-sidebar']?.classList.add('open');
-    }
-    document.getElementById('bubble-workshop-screen')?.classList.remove('active');
-  });
+  // 返回
+  document.getElementById('bubble-workshop-back')?.addEventListener('click', goBack);
 
   // 预设点击
   document.getElementById('bubble-preset-grid')?.addEventListener('click', (e) => {
     const card = e.target.closest('.bubble-preset-card');
     if (!card) return;
-    const presetId = card.dataset.presetId;
-    const preset = PRESETS.find(p => p.id === presetId);
+    const preset = PRESETS.find(p => p.id === card.dataset.presetId);
     if (!preset) return;
     applyPresetToForm(preset);
     updatePreview();
   });
 
-  // 用户/AI 标签切换
+  // 角色标签
   document.getElementById('bubble-role-tabs')?.addEventListener('click', (e) => {
     const tab = e.target.closest('.bubble-role-tab');
     if (!tab) return;
@@ -83,178 +118,240 @@ function bindEvents() {
     document.querySelectorAll('.bubble-role-panel').forEach(p => p.classList.toggle('active', p.dataset.role === role));
   });
 
-  // 实时预览绑定 + 颜色值显示
-  ['bu-text-color','bu-bg-color','ba-text-color','ba-bg-color'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', (e) => {
+  // 实时预览
+  const allInputs = [
+    'bu-text-color','bu-bg-color','bu-bg-alpha','bu-radius','bu-opacity','bu-padding','bu-shadow',
+    'ba-text-color','ba-bg-color','ba-bg-alpha','ba-radius','ba-opacity','ba-padding','ba-shadow',
+  ];
+  allInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      // 更新显示值
       const valEl = document.getElementById(id + '-val');
-      if (valEl) valEl.textContent = e.target.value;
+      if (valEl) {
+        let v = el.value;
+        if (id.includes('alpha') || id.includes('opacity')) v = Math.round(parseFloat(v) * 100) + '%';
+        else if (id.includes('radius') || id.includes('padding')) v = v + 'px';
+        valEl.textContent = v;
+      }
+      // 同步开关
+      if (id.startsWith('bu-') && document.getElementById('bubble-sync-toggle')?.checked) {
+        const aiId = 'ba-' + id.slice(3);
+        const aiEl = document.getElementById(aiId);
+        if (aiEl) { aiEl.value = el.value; aiEl.dispatchEvent(new Event('input')); }
+      }
       updatePreview();
     });
-  });
-  ['bu-radius','bu-opacity','ba-radius','ba-opacity'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', (e) => {
-      const valEl = document.getElementById(id + '-val');
-      if (valEl) valEl.textContent = e.target.value;
-      updatePreview();
-    });
-  });
-  ['bu-shadow','ba-shadow'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', updatePreview);
   });
 
-  // 同步用户→AI 开关
-  document.getElementById('bubble-sync-toggle')?.addEventListener('change', (e) => {
-    if (e.target.checked) syncUserToAi();
-    updatePreview();
+  // 渲染阴影预设按钮
+  ['user','ai'].forEach(role => {
+    const container = document.getElementById(`bubble-shadow-presets-${role}`);
+    if (container) {
+      container.innerHTML = SHADOW_PRESETS.map(s =>
+        `<button type="button" class="shadow-preset-btn" data-role="${role}" data-shadow="${s.value}" title="${s.value||'无阴影'}">${s.name}</button>`
+      ).join('');
+      container.addEventListener('click', (e) => {
+        const btn = e.target.closest('.shadow-preset-btn');
+        if (!btn) return;
+        const input = document.getElementById(btn.dataset.role === 'user' ? 'bu-shadow' : 'ba-shadow');
+        if (input) { input.value = btn.dataset.shadow; input.dispatchEvent(new Event('input')); }
+      });
+    }
   });
+
+  // 渲染快速 CSS 片段
+  const snippetContainer = document.getElementById('bubble-css-snippets');
+  if (snippetContainer) {
+    snippetContainer.innerHTML = CSS_SNIPPETS.map(s =>
+      `<button type="button" class="css-snippet-btn" data-name="${s.name}">${s.name}</button>`
+    ).join('');
+  }
+
+  // 快速 CSS
+  document.getElementById('bubble-css-snippets')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.css-snippet-btn');
+    if (!btn) return;
+    const snippet = CSS_SNIPPETS.find(s => s.name === btn.dataset.name);
+    if (!snippet) return;
+    const textarea = document.getElementById('bubble-custom-css');
+    if (textarea) { textarea.value = snippet.code; textarea.dispatchEvent(new Event('input')); }
+  });
+
+  // 自定义 CSS
+  document.getElementById('bubble-custom-css')?.addEventListener('input', updatePreview);
 
   // 保存
   document.getElementById('bubble-workshop-save')?.addEventListener('click', handleSave);
 
-  // 导出 CSS
+  // 导出
   document.getElementById('bubble-workshop-export')?.addEventListener('click', handleExport);
 
-  // 自定义 CSS 输入实时预览
-  document.getElementById('bubble-custom-css')?.addEventListener('input', updatePreview);
+  // 导入
+  document.getElementById('bubble-workshop-import')?.addEventListener('click', handleImport);
+
+  // 对比按钮
+  document.getElementById('bubble-compare-toggle')?.addEventListener('click', toggleCompare);
+
+  // 预览深色切换
+  document.getElementById('bubble-preview-dark')?.addEventListener('change', (e) => {
+    const preview = document.getElementById('bubble-workshop-preview');
+    if (preview) preview.style.background = e.target.checked ? '#1a1a2e' : '#f5f5f5';
+  });
+}
+
+// ─── 返回 ───
+function goBack() {
+  const screen = document.getElementById('bubble-workshop-screen');
+  if (screen) screen.classList.remove('active');
+  if (currentChatType === 'group') {
+    document.getElementById('group-settings-sidebar')?.classList.add('open');
+  } else {
+    dom['chat-settings-sidebar']?.classList.add('open');
+  }
 }
 
 // ─── 打开工坊 ───
 export function open(chatId, chatType) {
   currentChatId = chatId;
   currentChatType = chatType;
-
-  // 渲染预设卡片
   renderPresets();
-
-  // 加载当前值到表单
   loadFromChat();
-
-  // 更新预览
   updatePreview();
+  // 保存B面板快照
+  savedSnapshot = getFormData();
 }
 
-// ─── 渲染预设卡片 ───
+// ─── 渲染预设 ───
 function renderPresets() {
   const grid = dom['bubble-preset-grid'];
   if (!grid) return;
-  grid.innerHTML = PRESETS.map(p => `
-    <div class="bubble-preset-card" data-preset-id="${p.id}">
+  grid.innerHTML = PRESETS.map(p => {
+    const uBg = hexToRgba(p.user.bgColor, p.user.bgAlpha);
+    const aBg = hexToRgba(p.ai.bgColor, p.ai.bgAlpha);
+    return `<div class="bubble-preset-card" data-preset-id="${p.id}" title="${p.desc}">
       <div class="bubble-preset-preview">
-        <div class="bubble-mini" style="background:${p.user.bgColor};border-radius:${p.user.radius}px;${p.user.shadow ? 'box-shadow:'+p.user.shadow : ''}"></div>
-        <div class="bubble-mini" style="background:${p.ai.bgColor};border-radius:${p.ai.radius}px;${p.ai.shadow ? 'box-shadow:'+p.ai.shadow : ''}"></div>
+        <div class="bubble-mini" style="background:${uBg};border-radius:${p.user.radius}px;${p.user.shadow?'box-shadow:'+p.user.shadow:''}"></div>
+        <div class="bubble-mini" style="background:${aBg};border-radius:${p.ai.radius}px;${p.ai.shadow?'box-shadow:'+p.ai.shadow:''}"></div>
       </div>
       <div class="bubble-preset-name">${p.name}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
-// ─── 从聊天数据加载 ───
+// ─── 从聊天加载 ───
 function loadFromChat() {
   const db = getDb();
   const chat = currentChatType === 'group'
     ? (db.groups || []).find(g => g.id === currentChatId)
     : (db.characters || []).find(c => c.id === currentChatId);
   if (!chat) return;
-
   const cfg = chat.bubbleStyle || {};
-  const user = cfg.user || {};
-  const ai = cfg.ai || {};
+  const u = cfg.user || {};
+  const a = cfg.ai || {};
 
-  // 用户气泡
-  setValue('bu-text-color', user.textColor || '#A56767');
-  setValue('bu-bg-color', user.bgColor || 'rgba(255,204,204,0.9)');
-  setValue('bu-radius', user.radius ?? 18);
-  setValue('bu-opacity', user.opacity ?? 1);
-  setValue('bu-shadow', user.shadow || '');
+  setVal('bu-text-color', u.textColor || '#A56767');
+  setVal('bu-bg-color', u.bgColor || '#ffcccc');
+  setVal('bu-bg-alpha', u.bgAlpha ?? 0.9);
+  setVal('bu-radius', u.radius ?? 18);
+  setVal('bu-opacity', u.opacity ?? 1);
+  setVal('bu-padding', u.padding ?? 10);
+  setVal('bu-shadow', u.shadow || '');
 
-  // AI 气泡
-  setValue('ba-text-color', ai.textColor || '#6D6D6D');
-  setValue('ba-bg-color', ai.bgColor || 'rgba(255,255,255,0.9)');
-  setValue('ba-radius', ai.radius ?? 18);
-  setValue('ba-opacity', ai.opacity ?? 1);
-  setValue('ba-shadow', ai.shadow || '');
+  setVal('ba-text-color', a.textColor || '#6D6D6D');
+  setVal('ba-bg-color', a.bgColor || '#ffffff');
+  setVal('ba-bg-alpha', a.bgAlpha ?? 0.9);
+  setVal('ba-radius', a.radius ?? 18);
+  setVal('ba-opacity', a.opacity ?? 1);
+  setVal('ba-padding', a.padding ?? 10);
+  setVal('ba-shadow', a.shadow || '');
 
-  // 自定义 CSS
   const cssEl = document.getElementById('bubble-custom-css');
   if (cssEl) cssEl.value = chat.customBubbleCss || '';
-
-  // 同步开关
-  const syncEl = document.getElementById('bubble-sync-toggle');
-  if (syncEl) syncEl.checked = cfg.syncUserToAi || false;
 }
 
 // ─── 预设应用到表单 ───
-function applyPresetToForm(preset) {
-  setValue('bu-text-color', preset.user.textColor);
-  setValue('bu-bg-color', preset.user.bgColor);
-  setValue('bu-radius', preset.user.radius);
-  setValue('bu-opacity', preset.user.opacity);
-  setValue('bu-shadow', preset.user.shadow);
-  setValue('ba-text-color', preset.ai.textColor);
-  setValue('ba-bg-color', preset.ai.bgColor);
-  setValue('ba-radius', preset.ai.radius);
-  setValue('ba-opacity', preset.ai.opacity);
-  setValue('ba-shadow', preset.ai.shadow);
-}
-
-// ─── 同步用户到 AI ───
-function syncUserToAi() {
-  setValue('ba-text-color', getValue('bu-text-color'));
-  setValue('ba-bg-color', getValue('bu-bg-color'));
-  setValue('ba-radius', getValue('bu-radius'));
-  setValue('ba-opacity', getValue('bu-opacity'));
-  setValue('ba-shadow', getValue('bu-shadow'));
+function applyPresetToForm(p) {
+  setVal('bu-text-color', p.user.textColor);
+  setVal('bu-bg-color', p.user.bgColor);
+  setVal('bu-bg-alpha', p.user.bgAlpha);
+  setVal('bu-radius', p.user.radius);
+  setVal('bu-opacity', p.user.opacity);
+  setVal('bu-padding', p.user.padding);
+  setVal('bu-shadow', p.user.shadow);
+  setVal('ba-text-color', p.ai.textColor);
+  setVal('ba-bg-color', p.ai.bgColor);
+  setVal('ba-bg-alpha', p.ai.bgAlpha);
+  setVal('ba-radius', p.ai.radius);
+  setVal('ba-opacity', p.ai.opacity);
+  setVal('ba-padding', p.ai.padding);
+  setVal('ba-shadow', p.ai.shadow);
 }
 
 // ─── 更新预览 ───
 function updatePreview() {
   const preview = document.getElementById('bubble-workshop-preview');
   if (!preview) return;
-
-  const userStyle = buildBubbleStyle('bu');
-  const aiStyle = buildBubbleStyle('ba');
+  const uStyle = buildStyle('bu');
+  const aStyle = buildStyle('ba');
   const customCss = document.getElementById('bubble-custom-css')?.value || '';
-
-  // 注入自定义 CSS
-  let styleTag = preview.querySelector('#bubble-workshop-custom-style');
-  if (!styleTag) {
-    styleTag = document.createElement('style');
-    styleTag.id = 'bubble-workshop-custom-style';
-    preview.appendChild(styleTag);
-  }
-  styleTag.textContent = customCss
-    .replace(/\.message-bubble\.sent/g, '#bubble-workshop-preview .bws-sent')
-    .replace(/\.message-bubble\.received/g, '#bubble-workshop-preview .bws-received');
+  const scopedCss = customCss
+    .replace(/\.message-bubble\.sent/g, '#bws-preview .bws-sent')
+    .replace(/\.message-bubble\.received/g, '#bws-preview .bws-received');
 
   preview.innerHTML = `
-    <style id="bubble-workshop-custom-style">${customCss
-      .replace(/\.message-bubble\.sent/g, '#bubble-workshop-preview .bws-sent')
-      .replace(/\.message-bubble\.received/g, '#bubble-workshop-preview .bws-received')}</style>
-    <div class="bws-received" style="${aiStyle}">
-      <span style="font-size:11px;opacity:0.6;">AI</span><br>你好！这是角色的回复消息 ✨
-    </div>
-    <div class="bws-sent" style="${userStyle}">
-      这是我发送的消息~
-    </div>
-    <div class="bws-received" style="${aiStyle}">
-      第二条回复，可以观察换行和长文本的显示效果是否舒适。
-    </div>
-    <div class="bws-sent" style="${userStyle}">
-      👍
-    </div>
-  `;
+    <style>${scopedCss}</style>
+    <div id="bws-preview" style="display:flex;flex-direction:column;gap:2px;">
+      <div class="bws-received" style="${aStyle}">你好！这是角色的回复消息 ✨</div>
+      <div class="bws-sent" style="${uStyle}">这是我的消息~</div>
+      <div class="bws-received" style="${aStyle}">第二条回复，观察长文本的换行和可读性表现。</div>
+      <div class="bws-sent" style="${uStyle}">👍</div>
+    </div>`;
 }
 
-// ─── 构建气泡样式字符串 ───
-function buildBubbleStyle(prefix) {
-  const color = getValue(prefix + '-text-color');
-  const bg = getValue(prefix + '-bg-color');
-  const radius = getValue(prefix + '-radius');
-  const opacity = getValue(prefix + '-opacity');
-  const shadow = getValue(prefix + '-shadow');
-  return `color:${color};background:${bg};border-radius:${radius}px;opacity:${opacity};` +
+// ─── 构建样式 ───
+function buildStyle(prefix) {
+  const color = getVal(prefix + '-text-color');
+  const bg = getVal(prefix + '-bg-color');
+  const alpha = parseFloat(getVal(prefix + '-bg-alpha'));
+  const radius = parseInt(getVal(prefix + '-radius'));
+  const opacity = parseFloat(getVal(prefix + '-opacity'));
+  const padding = parseInt(getVal(prefix + '-padding'));
+  const shadow = getVal(prefix + '-shadow');
+  const rgba = hexToRgba(bg, alpha);
+  return `color:${color};background:${rgba};border-radius:${radius}px;opacity:${opacity};` +
+    `padding:${padding}px ${padding + 4}px;` +
     (shadow ? `box-shadow:${shadow};` : '') +
-    `padding:10px 14px;margin:4px 12px;max-width:75%;word-break:break-word;line-height:1.5;font-size:14px;`;
+    `max-width:75%;word-break:break-word;line-height:1.5;font-size:14px;`;
+}
+
+// ─── A/B 对比 ───
+function toggleCompare() {
+  if (!savedSnapshot) { showToast(dom?.['toast-notification'], '没有保存记录可对比'); return; }
+  const preview = document.getElementById('bubble-workshop-preview');
+  if (!preview) return;
+  const current = getFormData();
+  const uStyle = buildStyleFromData(savedSnapshot, 'user');
+  const aStyle = buildStyleFromData(savedSnapshot, 'ai');
+  const uCur = buildStyle('bu');
+  const aCur = buildStyle('ba');
+
+  preview.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <div style="flex:1;font-size:11px;color:#c2185b;font-weight:bold;text-align:center;">当前编辑</div>
+      <div style="flex:1;font-size:11px;color:#666;font-weight:bold;text-align:center;">上次保存</div>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+        <div class="bws-received" style="${aCur}">对方回复</div>
+        <div class="bws-sent" style="${uCur}">我方消息</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+        <div class="bws-received" style="${aStyle}">对方回复</div>
+        <div class="bws-sent" style="${uStyle}">我方消息</div>
+      </div>
+    </div>`;
 }
 
 // ─── 保存 ───
@@ -265,59 +362,118 @@ async function handleSave() {
     : (db.characters || []).find(c => c.id === currentChatId);
   if (!chat) return;
 
-  chat.bubbleStyle = {
-    user: {
-      textColor: getValue('bu-text-color'),
-      bgColor: getValue('bu-bg-color'),
-      radius: parseInt(getValue('bu-radius')),
-      opacity: parseFloat(getValue('bu-opacity')),
-      shadow: getValue('bu-shadow'),
-    },
-    ai: {
-      textColor: getValue('ba-text-color'),
-      bgColor: getValue('ba-bg-color'),
-      radius: parseInt(getValue('ba-radius')),
-      opacity: parseFloat(getValue('ba-opacity')),
-      shadow: getValue('ba-shadow'),
-    },
-    syncUserToAi: document.getElementById('bubble-sync-toggle')?.checked || false,
-  };
-
-  const customCss = document.getElementById('bubble-custom-css')?.value || '';
-  if (customCss) {
-    chat.customBubbleCss = customCss;
-    chat.useCustomBubbleCss = true;
-  }
+  chat.bubbleStyle = getFormData();
+  const css = document.getElementById('bubble-custom-css')?.value || '';
+  if (css) { chat.customBubbleCss = css; chat.useCustomBubbleCss = true; }
 
   await saveData();
+  savedSnapshot = getFormData();
   showToast(dom?.['toast-notification'], '✅ 气泡样式已保存');
 }
 
-// ─── 导出 CSS ───
+// ─── 导出 ───
 function handleExport() {
-  const user = buildBubbleStyle('bu');
-  const ai = buildBubbleStyle('ba');
-  const css = `/* 我方气泡 */\n.message-bubble.sent {\n  ${user.split(';').filter(Boolean).join(';\n  ')};\n}\n\n/* 对方气泡 */\n.message-bubble.received {\n  ${ai.split(';').filter(Boolean).join(';\n  ')};\n}`;
-  navigator.clipboard?.writeText(css).then(() => {
-    showToast(dom?.['toast-notification'], '📋 CSS 已复制到剪贴板');
-  }).catch(() => {
-    prompt('复制以下 CSS：', css);
-  });
+  const data = getFormData();
+  data.customCss = document.getElementById('bubble-custom-css')?.value || '';
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `气泡样式_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(dom?.['toast-notification'], '📦 样式已导出');
 }
 
-// ─── 工具函数 ───
-function setValue(id, val) {
+// ─── 导入 ───
+function handleImport() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (data.user) {
+        setVal('bu-text-color', data.user.textColor || '#A56767');
+        setVal('bu-bg-color', data.user.bgColor || '#ffcccc');
+        setVal('bu-bg-alpha', data.user.bgAlpha ?? 0.9);
+        setVal('bu-radius', data.user.radius ?? 18);
+        setVal('bu-opacity', data.user.opacity ?? 1);
+        setVal('bu-padding', data.user.padding ?? 10);
+        setVal('bu-shadow', data.user.shadow || '');
+      }
+      if (data.ai) {
+        setVal('ba-text-color', data.ai.textColor || '#6D6D6D');
+        setVal('ba-bg-color', data.ai.bgColor || '#ffffff');
+        setVal('ba-bg-alpha', data.ai.bgAlpha ?? 0.9);
+        setVal('ba-radius', data.ai.radius ?? 18);
+        setVal('ba-opacity', data.ai.opacity ?? 1);
+        setVal('ba-padding', data.ai.padding ?? 10);
+        setVal('ba-shadow', data.ai.shadow || '');
+      }
+      if (data.customCss) {
+        const cssEl = document.getElementById('bubble-custom-css');
+        if (cssEl) cssEl.value = data.customCss;
+      }
+      updatePreview();
+      showToast(dom?.['toast-notification'], '✅ 样式已导入');
+    } catch (err) {
+      showToast(dom?.['toast-notification'], '❌ 导入失败: ' + err.message);
+    }
+  };
+  input.click();
+}
+
+// ─── 获取表单数据 ───
+function getFormData() {
+  return {
+    user: {
+      textColor: getVal('bu-text-color'), bgColor: getVal('bu-bg-color'),
+      bgAlpha: parseFloat(getVal('bu-bg-alpha')), radius: parseInt(getVal('bu-radius')),
+      opacity: parseFloat(getVal('bu-opacity')), padding: parseInt(getVal('bu-padding')),
+      shadow: getVal('bu-shadow'),
+    },
+    ai: {
+      textColor: getVal('ba-text-color'), bgColor: getVal('ba-bg-color'),
+      bgAlpha: parseFloat(getVal('ba-bg-alpha')), radius: parseInt(getVal('ba-radius')),
+      opacity: parseFloat(getVal('ba-opacity')), padding: parseInt(getVal('ba-padding')),
+      shadow: getVal('ba-shadow'),
+    },
+  };
+}
+
+function buildStyleFromData(data, role) {
+  const d = data[role] || {};
+  const rgba = hexToRgba(d.bgColor || '#fff', d.bgAlpha ?? 0.9);
+  return `color:${d.textColor||'#333'};background:${rgba};border-radius:${d.radius||18}px;opacity:${d.opacity??1};` +
+    `padding:${d.padding||10}px ${(d.padding||10)+4}px;` +
+    (d.shadow ? `box-shadow:${d.shadow};` : '') +
+    `max-width:75%;word-break:break-word;line-height:1.5;font-size:14px;`;
+}
+
+// ─── 工具 ───
+function setVal(id, val) {
   const el = document.getElementById(id);
   if (!el) return;
   el.value = val;
-  // 更新 range 的显示值
-  if (el.type === 'range') {
-    const label = document.getElementById(id + '-val');
-    if (label) label.textContent = val;
+  const valEl = document.getElementById(id + '-val');
+  if (valEl) {
+    if (id.includes('alpha') || id.includes('opacity')) valEl.textContent = Math.round(parseFloat(val) * 100) + '%';
+    else if (id.includes('radius') || id.includes('padding')) valEl.textContent = val + 'px';
+    else valEl.textContent = val;
   }
 }
+function getVal(id) { return document.getElementById(id)?.value || ''; }
 
-function getValue(id) {
-  const el = document.getElementById(id);
-  return el ? el.value : '';
+function hexToRgba(hex, alpha) {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  const r = parseInt(hex.slice(0,2), 16);
+  const g = parseInt(hex.slice(2,4), 16);
+  const b = parseInt(hex.slice(4,6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }

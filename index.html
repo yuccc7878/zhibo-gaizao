@@ -422,33 +422,51 @@
             <!-- 用户气泡设置 -->
             <div class="bubble-role-panel active" data-role="user">
                 <div class="form-group"><label>文字颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="bu-text-color" value="#A56767" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="bu-text-color-val" style="font-size:12px;color:#666;">#A56767</span></div></div>
-                <div class="form-group"><label>背景颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="bu-bg-color" value="#ffcccc" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="bu-bg-color-val" style="font-size:12px;color:#666;">rgba(255,204,204,0.9)</span></div></div>
-                <div class="form-group"><label>圆角 <span id="bu-radius-val" style="color:#999;">18</span>px</label><input type="range" id="bu-radius" min="0" max="30" value="18" style="width:100%;"></div>
-                <div class="form-group"><label>透明度 <span id="bu-opacity-val" style="color:#999;">1</span></label><input type="range" id="bu-opacity" min="0.3" max="1" step="0.05" value="1" style="width:100%;"></div>
-                <div class="form-group"><label>阴影（CSS box-shadow）</label><input type="text" id="bu-shadow" placeholder="如：0 4px 12px rgba(0,0,0,0.1)" style="width:100%;font-size:12px;font-family:monospace;"></div>
+                <div class="form-group"><label>背景颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="bu-bg-color" value="#ffcccc" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="bu-bg-color-val" style="font-size:12px;color:#666;">#ffcccc</span></div></div>
+                <div class="form-group"><label>背景透明度 <span id="bu-bg-alpha-val" style="color:#999;">90%</span></label><input type="range" id="bu-bg-alpha" min="0" max="1" step="0.05" value="0.9" style="width:100%;"></div>
+                <div class="form-group"><label>气泡透明度 <span id="bu-opacity-val" style="color:#999;">100%</span></label><input type="range" id="bu-opacity" min="0.3" max="1" step="0.05" value="1" style="width:100%;"></div>
+                <div class="form-group"><label>圆角 <span id="bu-radius-val" style="color:#999;">18px</span></label><input type="range" id="bu-radius" min="0" max="30" value="18" style="width:100%;"></div>
+                <div class="form-group"><label>内边距 <span id="bu-padding-val" style="color:#999;">10px</span></label><input type="range" id="bu-padding" min="4" max="24" value="10" style="width:100%;"></div>
+                <div class="form-group"><label>阴影</label><input type="text" id="bu-shadow" placeholder="点击下方预设或自定义" style="width:100%;font-size:12px;font-family:monospace;"><div class="bubble-shadow-row" data-role="user" id="bubble-shadow-presets-user"></div></div>
             </div>
             <!-- AI 气泡设置 -->
             <div class="bubble-role-panel" data-role="ai">
                 <div class="form-group"><label>文字颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="ba-text-color" value="#6D6D6D" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="ba-text-color-val" style="font-size:12px;color:#666;">#6D6D6D</span></div></div>
-                <div class="form-group"><label>背景颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="ba-bg-color" value="#ffffff" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="ba-bg-color-val" style="font-size:12px;color:#666;">rgba(255,255,255,0.9)</span></div></div>
-                <div class="form-group"><label>圆角 <span id="ba-radius-val" style="color:#999;">18</span>px</label><input type="range" id="ba-radius" min="0" max="30" value="18" style="width:100%;"></div>
-                <div class="form-group"><label>透明度 <span id="ba-opacity-val" style="color:#999;">1</span></label><input type="range" id="ba-opacity" min="0.3" max="1" step="0.05" value="1" style="width:100%;"></div>
-                <div class="form-group"><label>阴影（CSS box-shadow）</label><input type="text" id="ba-shadow" placeholder="如：0 4px 12px rgba(0,0,0,0.1)" style="width:100%;font-size:12px;font-family:monospace;"></div>
+                <div class="form-group"><label>背景颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="ba-bg-color" value="#ffffff" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="ba-bg-color-val" style="font-size:12px;color:#666;">#ffffff</span></div></div>
+                <div class="form-group"><label>背景透明度 <span id="ba-bg-alpha-val" style="color:#999;">90%</span></label><input type="range" id="ba-bg-alpha" min="0" max="1" step="0.05" value="0.9" style="width:100%;"></div>
+                <div class="form-group"><label>气泡透明度 <span id="ba-opacity-val" style="color:#999;">100%</span></label><input type="range" id="ba-opacity" min="0.3" max="1" step="0.05" value="1" style="width:100%;"></div>
+                <div class="form-group"><label>圆角 <span id="ba-radius-val" style="color:#999;">18px</span></label><input type="range" id="ba-radius" min="0" max="30" value="18" style="width:100%;"></div>
+                <div class="form-group"><label>内边距 <span id="ba-padding-val" style="color:#999;">10px</span></label><input type="range" id="ba-padding" min="4" max="24" value="10" style="width:100%;"></div>
+                <div class="form-group"><label>阴影</label><input type="text" id="ba-shadow" placeholder="点击下方预设或自定义" style="width:100%;font-size:12px;font-family:monospace;"><div class="bubble-shadow-row" data-role="ai" id="bubble-shadow-presets-ai"></div></div>
             </div>
-            <!-- 同步开关 -->
-            <div style="margin:14px 0;padding:12px 14px;background:linear-gradient(135deg,#fce4ec,#f3e5f5);border-radius:10px;display:flex;align-items:center;gap:8px;">
-                <input type="checkbox" id="bubble-sync-toggle" style="width:auto;">
-                <label for="bubble-sync-toggle" style="font-size:13px;margin:0;color:#7b1fa2;">对方跟随我方设置</label>
+            <!-- 同步开关 + 对比按钮 -->
+            <div style="display:flex;gap:8px;margin:14px 0;">
+                <div style="flex:1;padding:10px 12px;background:linear-gradient(135deg,#fce4ec,#f3e5f5);border-radius:10px;display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="bubble-sync-toggle" style="width:auto;">
+                    <label for="bubble-sync-toggle" style="font-size:12px;margin:0;color:#7b1fa2;">对方跟随我方</label>
+                </div>
+                <button type="button" id="bubble-compare-toggle" style="padding:10px 14px;background:#fff;border:1px solid #f8bbd0;border-radius:10px;font-size:12px;cursor:pointer;color:#c2185b;">⚖️ AB对比</button>
+            </div>
+            <!-- 快速 CSS 片段 -->
+            <div style="margin-bottom:14px;">
+                <div style="font-size:12px;font-weight:bold;color:#c2185b;margin-bottom:8px;">⚡ 快速样式</div>
+                <div id="bubble-css-snippets" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
             </div>
             <!-- 自定义 CSS -->
             <div class="form-group"><label style="color:#c2185b;">高级 CSS</label><textarea id="bubble-custom-css" rows="4" placeholder=".message-bubble.sent { ... }" style="width:100%;font-size:12px;font-family:monospace;resize:vertical;border-color:#f8bbd0;"></textarea></div>
             <!-- 实时预览 -->
             <div style="margin:16px 0;">
-                <div style="font-size:13px;font-weight:bold;color:#c2185b;margin-bottom:10px;">👀 实时预览</div>
-                <div id="bubble-workshop-preview" style="background:#fff;border:1px solid #f8bbd0;border-radius:14px;padding:16px;min-height:120px;"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:13px;font-weight:bold;color:#c2185b;">👀 实时预览</span>
+                    <label style="font-size:11px;color:#999;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="bubble-preview-dark" style="width:auto;">深色</label>
+                </div>
+                <div id="bubble-workshop-preview" style="background:#f5f5f5;border:1px solid #f8bbd0;border-radius:14px;padding:16px;min-height:120px;transition:background 0.3s;"></div>
             </div>
-            <!-- 保存按钮 -->
-            <button type="button" class="btn btn-primary" id="bubble-workshop-save" style="width:100%;padding:14px;font-size:15px;border-radius:12px;background:linear-gradient(135deg,#ff80ab,#ce93d8);border:none;">💾 保存气泡样式</button>
+            <!-- 操作按钮 -->
+            <div style="display:flex;gap:8px;">
+                <button type="button" class="btn btn-primary" id="bubble-workshop-save" style="flex:2;padding:14px;font-size:15px;border-radius:12px;background:linear-gradient(135deg,#ff80ab,#ce93d8);border:none;">💾 保存</button>
+                <button type="button" class="btn btn-neutral" id="bubble-workshop-import" style="flex:1;padding:14px;font-size:13px;border-radius:12px;">📥 导入</button>
+            </div>
         </main>
     </div>
     <div id="shop-screen" class="screen"></div>
@@ -687,7 +705,7 @@
 <script src="js/systems/ttsService.js"></script>
 <script src="js/systems/activeWorld.js"></script>
 <!-- 模块化入口 -->
-<script type="module" src="js/app.js?v=10"></script>
+<script type="module" src="js/app.js?v=11"></script>
 
 <!-- 启动 -->
 <script>
