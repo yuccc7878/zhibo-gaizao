@@ -18,6 +18,7 @@ Engine.register({
         'tops':     { left: 15, top: 80,  width: 120, height: 120 },
         'bottoms':  { left: 20, top: 195, width: 110, height: 100 },
         'fullbody': { left: 10, top: 75,  width: 130, height: 260 },
+        'shoes':    { left: 20, top: 420, width: 110, height: 80 },
     },
     init() {
         const screen = document.getElementById(this.screen);
@@ -63,6 +64,7 @@ Engine.register({
                             <button class="wardrobe-tab active" data-tab="hair">💇 发型</button>
                             <button class="wardrobe-tab" data-tab="tops">👕 上衣</button>
                             <button class="wardrobe-tab" data-tab="bottoms">👖 下装</button>
+                            <button class="wardrobe-tab" data-tab="shoes">👟 鞋子</button>
                             <button class="wardrobe-tab" data-tab="fullbody">👗 全身</button>
                         </div>
                     </div>
@@ -71,6 +73,7 @@ Engine.register({
                             <div class="wardrobe-tab-panel active" data-panel="hair"></div>
                             <div class="wardrobe-tab-panel" data-panel="tops"></div>
                             <div class="wardrobe-tab-panel" data-panel="bottoms"></div>
+                            <div class="wardrobe-tab-panel" data-panel="shoes"></div>
                             <div class="wardrobe-tab-panel" data-panel="fullbody"></div>
                         </div>
                     </div>
@@ -92,6 +95,7 @@ Engine.register({
                                     <button class="wardrobe-cat-btn" data-cat="hair">💇 发型</button>
                                     <button class="wardrobe-cat-btn active" data-cat="tops">👕 上衣</button>
                                     <button class="wardrobe-cat-btn" data-cat="bottoms">👖 下装</button>
+                                    <button class="wardrobe-cat-btn" data-cat="shoes">👟 鞋子</button>
                                     <button class="wardrobe-cat-btn" data-cat="fullbody">👗 全身</button>
                                 </div>
                             </div>
@@ -144,9 +148,10 @@ Engine.register({
             hair: ['黑长直', '金色双马尾', '粉色双丸子', '银白短发', '棕色大波浪', '蓝色高马尾', '紫色高马尾', '橙色波波头'],
             tops: ['水手服', 'JK制服', '粉色卫衣', '洛丽塔上衣', '米色卫衣', '绿色卫衣', '开衫毛衣', '蓝色夹克', '黑色吊带', '白色吊带', '粉色露肩', '红色旗袍'],
             bottoms: ['粉色百褶裙', '蓝色牛仔裤', '牛仔短裤', '运动长裤', '军绿工装裤', '洛丽塔裙', '紫色蓬蓬裙', '粉色短裙', '紫色阔腿裤', '蓝色背带裤'],
+            shoes: [],
             fullbody: ['粉色公主裙', '女仆装', '白色婚纱', '红色礼服', 'JK连衣裙', '紫色和服', '蓝色和服', '紫白和服', '樱花和服', '粉色浴衣', '紫色哥特裙', '黑红哥特裙', '粉色吊带裙', '粉色睡衣', '白色睡衣']
         };
-        const folderMap = { hair: 'Hair', tops: 'Tops', bottoms: 'Bottoms', fullbody: 'Full-body' };
+        const folderMap = { hair: 'Hair', tops: 'Tops', bottoms: 'Bottoms', shoes: 'Shoes', fullbody: 'Full-body' };
         for (const [key, items] of Object.entries(categories)) {
             const panel = document.querySelector(`[data-panel="${key}"]`);
             let html = items.map(name => {
