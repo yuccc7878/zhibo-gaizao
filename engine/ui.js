@@ -30,11 +30,11 @@ function switchScreen(targetId) {
         targetEl = document.getElementById('home-screen');
         if (targetEl) targetEl.classList.add('active');
         // 不保存无效的屏幕 ID
-        if (typeof db !== 'undefined' && typeof saveData !== 'undefined') {
-            db._currentScreen = 'home-screen';
-            db._currentChatId = '';
-            db._currentChatType = '';
-            saveData();
+        if (window.db && window.saveData) {
+            window.db._currentScreen = 'home-screen';
+            window.db._currentChatId = '';
+            window.db._currentChatType = '';
+            window.saveData();
         }
         return;
     }
@@ -42,10 +42,10 @@ function switchScreen(targetId) {
     document.querySelectorAll('.modal-overlay, .action-sheet-overlay, .settings-sidebar')
         .forEach(o => o.classList.remove('visible', 'open'));
     // 保存当前屏幕状态，刷新后恢复
-    if (typeof db !== 'undefined' && typeof saveData !== 'undefined') {
-        db._currentScreen = targetId;
-        if (targetId !== 'chat-room-screen') { db._currentChatId = ''; db._currentChatType = ''; }
-        saveData();
+    if (window.db && window.saveData) {
+        window.db._currentScreen = targetId;
+        if (targetId !== 'chat-room-screen') { window.db._currentChatId = ''; window.db._currentChatType = ''; }
+        window.saveData();
     }
 }
 

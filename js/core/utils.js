@@ -90,12 +90,12 @@ export function switchScreen(dom, targetId) {
   target.classList.add('active');
   document.querySelectorAll('.modal-overlay, .action-sheet-overlay, .settings-sidebar')
     .forEach(o => o.classList.remove('visible', 'open'));
-  // 保存屏幕状态（使用全局 db/saveData，由 engine/db.js 提供）
+  // 保存屏幕状态（通过 window 全局桥接，所有非模块/模块脚本共用）
   try {
-    if (typeof db !== 'undefined' && typeof saveData !== 'undefined') {
-      db._currentScreen = targetId;
-      if (targetId !== 'chat-room-screen') { db._currentChatId = ''; db._currentChatType = ''; }
-      saveData();
+    if (window.db && window.saveData) {
+      window.db._currentScreen = targetId;
+      if (targetId !== 'chat-room-screen') { window.db._currentChatId = ''; window.db._currentChatType = ''; }
+      window.saveData();
     }
   } catch (e) { /* ignore */ }
 }

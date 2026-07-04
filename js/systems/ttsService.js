@@ -22,19 +22,19 @@ const SPEED_MAP = { 1: 15, 2: 10, 3: 5, 4: 3, 5: 1 };
 // ─── 配置 ──────────────────────────────
 
 /** 设置全局配置 */
-export function setConfig(cfg) {
+function setConfig(cfg) {
   if (cfg.engine !== undefined) config.engine = cfg.engine;
   if (cfg.sogouSpeaker !== undefined) config.sogouSpeaker = cfg.sogouSpeaker;
   if (cfg.sogouSpeed !== undefined) config.sogouSpeed = cfg.sogouSpeed;
 }
 
 /** 获取当前全局配置 */
-export function getConfig() {
+function getConfig() {
   return { ...config };
 }
 
 /** 获取音色名列表（供 UI 使用） */
-export function getSpeakerNames() {
+function getSpeakerNames() {
   return { ...SPEAKER_NAMES };
 }
 
@@ -53,7 +53,7 @@ export function getSpeakerNames() {
  * @param {number} [options.volume] - 本地 TTS 音量
  * @param {function} [options.onEnd] - 朗读结束回调
  */
-export function speak(text, options = {}) {
+function speak(text, options = {}) {
   const engine = options.engine || config.engine;
 
   if (engine === 'sogou') {
@@ -164,7 +164,7 @@ function speakLocal(text, options) {
 
 // ─── 停止 ──────────────────────────────
 
-export function stop() {
+function stop() {
   // 停止搜狗音频
   if (currentAudio) {
     try { currentAudio.pause(); } catch (_) {}
@@ -180,7 +180,7 @@ export function stop() {
 
 // ─── 状态 ──────────────────────────────
 
-export function isSpeaking() {
+function isSpeaking() {
   if (currentAudio && !currentAudio.paused) return true;
   if (window.speechSynthesis && window.speechSynthesis.speaking) return true;
   return speaking;

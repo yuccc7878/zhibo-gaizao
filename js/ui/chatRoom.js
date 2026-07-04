@@ -235,14 +235,26 @@ export function createMessageBubbleElement(message) {
   let avatarUrl = '';
   let senderNickname = '';
   if (isSent || message.senderId === 'user_me') {
-    avatarUrl = chat.myAvatar || '';
-    senderNickname = chat.myName || '我';
+    const profile = db.myProfile || {};
+    avatarUrl = profile.avatar || (state.currentChatType === 'group' ? chat.me?.avatar : chat.myAvatar) || 'assets/icons/default-avatar.png';
+    senderNickname = profile.name || chat.myName || '我';
   } else {
     if (state.currentChatType === 'private') {
       avatarUrl = chat.avatar;
     } else {
       const sender = (chat.members || []).find(m => m.id === message.senderId);
-      if (sender) { avatarUrl = sender.avatar; senderNickname = sender.groupNickname; }
+      if (sender) {
+        // 群成员统一从 originalCharId 反查人物卡片获取最新数据
+        const originalChar = sender.originalCharId ? (db.characters || []).find(c => c.id === sender.originalCharId) : null;
+        if (originalChar) {
+          avatarUrl = originalChar.avatar || sender.avatar || 'assets/icons/default-avatar.png';
+          senderNickname = sender.groupNickname || originalChar.remarkName;
+        } else {
+          // 没有对应人物卡片的群专属成员，使用群内快照
+          avatarUrl = sender.avatar || 'assets/icons/default-avatar.png';
+          senderNickname = sender.groupNickname;
+        }
+      }
       else avatarUrl = 'assets/icons/default-avatar.png';
     }
   }
@@ -251,7 +263,7 @@ export function createMessageBubbleElement(message) {
   const bubbleRow = document.createElement('div');
   bubbleRow.className = 'bubble-row ' + (isSent ? 'sent-row' : 'received-row');
 
-  // 头像：sent和received都创建，sent用CSS visibility:hidden占位保持布局对称
+  // 头像：sent和received都创建头像元素
   if (avatarUrl) {
     const avatar = document.createElement('img');
     avatar.className = 'msg-avatar' + (isSent ? ' sent-avatar' : '');
@@ -259,10 +271,10 @@ export function createMessageBubbleElement(message) {
     avatar.addEventListener('click', (e) => { e.stopPropagation(); });
     avatar.onerror = function(){ this.outerHTML = '<div class="msg-avatar' + (isSent ? ' sent-avatar' : '') + '" style="background:#eee;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">👤</div>'; };
     bubbleRow.appendChild(avatar);
-  } else if (isSent) {
-    // sent消息没有头像URL时也创建占位元素
+  } else {
+    // 无头像时也创建占位元素，保证布局对称
     const placeholder = document.createElement('div');
-    placeholder.className = 'msg-avatar sent-avatar';
+    placeholder.className = 'msg-avatar' + (isSent ? ' sent-avatar' : '');
     placeholder.style.cssText = 'width:36px;height:36px;flex-shrink:0;';
     bubbleRow.appendChild(placeholder);
   }
@@ -462,9 +474,9 @@ export function createMessageBubbleElement(message) {
     speakBtn.addEventListener('mouseleave', () => speakBtn.style.opacity = '0.4');
     speakBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      import('../systems/ttsService.js').then(tts => {
-        if (tts.isSpeaking()) {
-          tts.stop();
+      if (window.ttsService) {
+        if (window.ttsService.isSpeaking()) {
+          window.ttsService.stop();
           speakBtn.textContent = '🔊';
         } else {
           const text = bubble.textContent || bubble.innerText || '';
@@ -486,10 +498,10 @@ export function createMessageBubbleElement(message) {
             ttsOpts.sogouSpeed = globalCfg.sogouSpeed;
           }
           ttsOpts.onEnd = () => { speakBtn.textContent = '🔊'; };
-          tts.speak(text, ttsOpts);
+          window.ttsService.speak(text, ttsOpts);
           speakBtn.textContent = '🔇';
         }
-      });
+      }
     });
     bubbleGroup.appendChild(speakBtn);
   }
@@ -1023,7 +1035,11 @@ async function generateImageForMessage(msgId, prompt, chat) {
 export function enterMultiSelectMode(initialMessageId) {
   state.isInMultiSelectMode = true;
   selectedMessageIds.clear();
-  if (initialMessageId) selectedMessageIds.add(initialMessageId);
+  if (initialMessageId) {
+    selectedMessageIds.add(initialMessageId);
+    const wrapper = document.querySelector(`.message-wrapper[data-message-id="${initialMessageId}"]`);
+    if (wrapper) wrapper.classList.add('multi-select-selected');
+  }
   dom['message-area']?.classList.add('multi-select-active');
   dom['multi-select-bar'].style.display = 'flex';
   dom['chat-room-header-default'].style.display = 'none';
@@ -1035,6 +1051,7 @@ export function enterMultiSelectMode(initialMessageId) {
 export function exitMultiSelectMode() {
   state.isInMultiSelectMode = false;
   selectedMessageIds.clear();
+  document.querySelectorAll('.message-wrapper.multi-select-selected').forEach(el => el.classList.remove('multi-select-selected'));
   dom['message-area']?.classList.remove('multi-select-active');
   dom['multi-select-bar'].style.display = 'none';
   dom['chat-room-header-default'].style.display = 'flex';
@@ -1048,8 +1065,12 @@ function updateMultiSelectCount() {
 export function toggleMessageSelection(messageId) {
   if (selectedMessageIds.has(messageId)) {
     selectedMessageIds.delete(messageId);
+    const wrapper = document.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+    if (wrapper) wrapper.classList.remove('multi-select-selected');
   } else {
     selectedMessageIds.add(messageId);
+    const wrapper = document.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+    if (wrapper) wrapper.classList.add('multi-select-selected');
   }
   updateMultiSelectCount();
 }

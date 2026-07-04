@@ -21,7 +21,7 @@ function getConfig() {
 }
 
 // ─── 启动/停止 ──────────────────────────
-export function start() {
+function start() {
     stop();
     const cfg = getConfig();
     if (!cfg.enabled) return;
@@ -30,11 +30,11 @@ export function start() {
     console.log('[ActiveWorld] 已启动,间隔', cfg.interval / 1000, '秒');
 }
 
-export function stop() {
+function stop() {
     if (timerId) { clearInterval(timerId); timerId = null; }
 }
 
-export function isRunning() {
+function isRunning() {
     return timerId !== null;
 }
 

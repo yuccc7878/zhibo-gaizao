@@ -500,9 +500,9 @@ body {
     width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
     flex-shrink: 0; margin-top: 2px;
 }
-/* sent 消息隐藏头像但保留占位宽度保持对齐 */
+/* sent 消息显示用户头像 */
 .bubble-row.sent-row .msg-avatar {
-    visibility: hidden; /* 保留占位，让两边气泡对齐 */
+    /* visibility: hidden 已移除 —— 让用户头像可见 */
 }
 
 /* ─── 气泡组（昵称 + 气泡）─── */
@@ -551,22 +551,26 @@ body {
 
 /* ─── 多选复选框 ─── */
 .msg-select-check {
-    position: absolute; left: -28px; top: 50%; transform: translateY(-50%);
+    position: absolute; left: 4px; top: 12px;
     width: 22px; height: 22px; border-radius: 50%;
     border: 2px solid #ccc; background: #fff;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; color: transparent; cursor: pointer;
     transition: all 0.2s; z-index: 5;
 }
+/* 默认隐藏复选框，避免非多选模式下显示圆圈 */
+.message-area:not(.multi-select-active) .msg-select-check {
+    display: none;
+}
 .message-wrapper.multi-select-selected .msg-select-check {
     border-color: var(--primary-color); background: var(--primary-color);
     color: #fff;
 }
 /* 进入多选模式时给 message-wrapper 左边留空 */
-#chat-room-screen.multi-select-active .message-wrapper {
+.message-area.multi-select-active .message-wrapper {
     padding-left: 36px;
 }
-#chat-room-screen.multi-select-active .message-wrapper.sent {
+.message-area.multi-select-active .message-wrapper.sent {
     padding-left: 36px; padding-right: 0;
 }
 

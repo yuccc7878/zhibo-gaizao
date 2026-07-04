@@ -3,35 +3,35 @@
    替代原 app.js，接管所有初始化
    ======================================== */
 
-import { state } from './core/state.js?v=11';
-import { initDomCache } from './core/dom.js?v=11';
-import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js?v=11';
-import * as dataService from './core/dataService.js?v=11';
+import { state } from './core/state.js?v=12';
+import { initDomCache } from './core/dom.js?v=12';
+import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js?v=12';
+import * as dataService from './core/dataService.js?v=12';
 // aiService 已通过全局 script 加载，使用 window.AiService
 
-import * as chatRoom from './ui/chatRoom.js?v=11';
-import * as chatList from './ui/chatList.js?v=11';
-import * as homeScreen from './ui/homeScreen.js?v=11';
-import { updateActiveWorldStatus } from './ui/homeScreen.js?v=11';
-import * as PromptDefaults from './ui/promptDefaults.js?v=11';
-import * as settings from './ui/settings.js?v=11';
-import * as wallpaper from './ui/wallpaper.js?v=11';
-import * as customize from './ui/customize.js?v=11';
-import * as fontSettings from './ui/fontSettings.js?v=11';
-import * as bubbleWorkshop from './ui/bubbleWorkshop.js?v=11';
+import * as chatRoom from './ui/chatRoom.js?v=12';
+import * as chatList from './ui/chatList.js?v=12';
+import * as homeScreen from './ui/homeScreen.js?v=12';
+import { updateActiveWorldStatus } from './ui/homeScreen.js?v=12';
+import * as PromptDefaults from './ui/promptDefaults.js?v=12';
+import * as settings from './ui/settings.js?v=12';
+import * as wallpaper from './ui/wallpaper.js?v=12';
+import * as customize from './ui/customize.js?v=12';
+import * as fontSettings from './ui/fontSettings.js?v=12';
+import * as bubbleWorkshop from './ui/bubbleWorkshop.js?v=12';
 
-import * as worldBook from './systems/worldBook.js?v=11';
-import * as apiSettings from './systems/apiSettings.js?v=11';
-import * as imgGenSettings from './systems/imgGenSettings.js?v=11';
-import * as stickers from './systems/stickers.js?v=11';
-import * as voice from './systems/voice.js?v=11';
-import * as photoVideo from './systems/photoVideo.js?v=11';
-import * as wallet from './systems/wallet.js?v=11';
-import * as gift from './systems/gift.js?v=11';
-import * as timeSkip from './systems/timeSkip.js?v=11';
-import * as imageRecognition from './systems/imageRecognition.js?v=11';
-import * as group from './systems/group.js?v=11';
-import * as videoCall from './systems/videoCall.js?v=11';
+import * as worldBook from './systems/worldBook.js?v=12';
+import * as apiSettings from './systems/apiSettings.js?v=12';
+import * as imgGenSettings from './systems/imgGenSettings.js?v=12';
+import * as stickers from './systems/stickers.js?v=12';
+import * as voice from './systems/voice.js?v=12';
+import * as photoVideo from './systems/photoVideo.js?v=12';
+import * as wallet from './systems/wallet.js?v=12';
+import * as gift from './systems/gift.js?v=12';
+import * as timeSkip from './systems/timeSkip.js?v=12';
+import * as imageRecognition from './systems/imageRecognition.js?v=12';
+import * as group from './systems/group.js?v=12';
+import * as videoCall from './systems/videoCall.js?v=12';
 
 async function initApp() {
   console.log('[App] initApp 开始');
