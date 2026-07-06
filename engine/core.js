@@ -125,10 +125,11 @@ const Engine = {
          * @param {string} url - API 地址
          * @param {string} key - 密钥
          * @param {string} provider - 服务商名
+         * @param {string} [modelsPath] - 自定义模型列表路径
          * @returns {Promise<string[]>}
          */
-        async aiFetchModels(url, key, provider) {
-            return AiService.fetchModels(url, key, provider);
+        async aiFetchModels(url, key, provider, modelsPath) {
+            return AiService.fetchModels(url, key, provider, modelsPath);
         },
     }
 };

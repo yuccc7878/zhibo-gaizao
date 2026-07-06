@@ -1,369 +1,697 @@
 /* ========================================
-   ChatList - 聊天列表模块
+   ChatList - 聊天列表模块（Tab 分页 + 左滑交互）
    ======================================== */
 
 import { state } from '../core/state.js';
 import { getDb, saveData } from '../core/dataService.js';
-import { showToast, createContextMenu, compressImage } from '../core/utils.js';
+import { showToast, createContextMenu, compressImage, switchScreen } from '../core/utils.js';
+import { createGroupChat } from '../systems/group.js';
 
 let dom = null;
-let _openChatRoom = null; // 由 app.js 注入
+let _openChatRoom = null;
+let _swipedCard = null;
 
-// ─── HTML 转义 ───
 function escHtml(str) {
-  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(str || '').replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"');
 }
 
 export function init(_dom, openChatRoom) {
   dom = _dom;
   _openChatRoom = openChatRoom;
-  bindEvents();
-  setupImportCard();
+  bindTabEvents();
+  bindNewCardEvents();
+  bindWizardEvents();
+  bindPickerEvents();
+  bindGroupCreateEvents();
+  bindGlobalSwipeReset();
 }
 
-function bindEvents() {
-  dom['add-chat-btn']?.addEventListener('click', () => {
-    // 确保手动创建 tab 默认激活
-    dom['add-char-modal'].querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-    dom['add-char-modal'].querySelector('[data-tab="manual"]').classList.add('active');
-    dom['add-char-form'].style.display = '';
-    dom['import-tab-panel'].style.display = 'none';
-    dom['add-char-modal-window'].style.maxWidth = '340px';
-    dom['add-char-modal']?.classList.add('visible');
-    dom['add-char-form'].reset();
-    resetImport();
+function bindTabEvents() {
+  const tabBar = dom['chat-tab-bar'];
+  if (!tabBar) return;
+  tabBar.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
   });
+}
 
-  // 点击聊天列表项
-  dom['chat-list-container']?.addEventListener('click', (e) => {
-    const item = e.target.closest('[data-chat-id]');
-    if (!item) return;
-    const chatId = item.dataset.chatId;
-    const chatType = item.dataset.chatType;
-    if (_openChatRoom) _openChatRoom(chatId, chatType);
-  });
+function setActiveTab(tabName) {
+  closeSwipeCard();
+  const tabBar = dom['chat-tab-bar'];
+  if (tabBar) {
+    tabBar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const activeBtn = tabBar.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+  document.querySelectorAll('#chat-list-screen .tab-panel').forEach(p => p.classList.remove('active'));
+  const activePanel = document.querySelector(`#chat-list-screen .tab-panel[data-tab="${tabName}"]`);
+  if (activePanel) activePanel.classList.add('active');
+  const titles = { contacts: '联系人', private: '私聊', group: '群聊' };
+  if (dom['chat-list-title']) dom['chat-list-title'].textContent = titles[tabName] || '聊天';
+}
 
-  // 右键长按菜单
-  dom['chat-list-container']?.addEventListener('contextmenu', (e) => {
-    const item = e.target.closest('[data-chat-id]');
-    if (item) { e.preventDefault(); handleChatListLongPress(item.dataset.chatId, item.dataset.chatType, e.clientX, e.clientY); }
-  });
+function bindNewCardEvents() {
+  dom['new-contact-card']?.addEventListener('click', () => openContactWizard());
+  dom['new-private-card']?.addEventListener('click', () => openContactPicker('single'));
+  dom['new-group-card']?.addEventListener('click', () => openContactPicker('multi'));
+}
 
-  dom['chat-list-container']?.addEventListener('touchstart', (e) => {
-    const item = e.target.closest('[data-chat-id]');
-    if (item) {
-      state._longPressTimer = setTimeout(() => {
-        const rect = item.getBoundingClientRect();
-        handleChatListLongPress(item.dataset.chatId, item.dataset.chatType, rect.left + 20, rect.top + 20);
-      }, 500);
+function bindGlobalSwipeReset() {
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.swipe-card__inner') && !e.target.closest('.swipe-card__action-btn')) {
+      closeSwipeCard();
     }
   });
+}
 
-  dom['chat-list-container']?.addEventListener('touchend', () => clearTimeout(state._longPressTimer));
-  dom['chat-list-container']?.addEventListener('touchmove', () => clearTimeout(state._longPressTimer));
-
-  // 添加角色表单
-  dom['add-char-form']?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const newChar = {
-      id: `char_${Date.now()}`,
-      realName: dom['char-real-name'].value,
-      remarkName: dom['char-remark-name'].value,
-      persona: '',
-      avatar: 'assets/icons/default-avatar.png',
-      myName: dom['my-name-for-char'].value,
-      myPersona: '',
-      myAvatar: 'assets/icons/default-avatar.png',
-      theme: 'white_pink', maxMemory: 100, chatBg: '', history: [],
-      isPinned: false, status: '在线', worldBookIds: [],
-      useCustomBubbleCss: false, customBubbleCss: '',
-      aiImgGen: false,
-    };
-    const db = getDb();
-    if (!db.characters) db.characters = [];
-    if (!db.characters) db.characters = []; db.characters.push(newChar);
-    await saveData();
-    renderChatList();
-    dom['add-char-modal']?.classList.remove('visible');
-    showToast(dom['toast-notification'], `角色"${newChar.remarkName}"创建成功！`);
+function renderContactsList() {
+  const db = getDb();
+  const container = dom['contacts-list-container'];
+  const empty = dom['contacts-empty'];
+  if (!container) return;
+  container.innerHTML = '';
+  const chars = db.characters || [];
+  if (chars.length === 0) {
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  chars.forEach(char => {
+    const card = createSwipeCard(
+      char.id, 'contact', char.avatar,
+      char.remarkName || char.realName || '未知',
+      char.realName ? escHtml(char.realName) : '',
+      char.isPinned, null
+    );
+    container.appendChild(card);
   });
+}
+
+function renderPrivateList() {
+  const db = getDb();
+  const container = dom['private-list-container'];
+  const empty = dom['private-empty'];
+  if (!container) return;
+  container.innerHTML = '';
+  const chars = db.characters || [];
+  if (chars.length === 0) {
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  const sorted = [...chars].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    const aLast = a.history && a.history.length ? a.history[a.history.length - 1].timestamp : 0;
+    const bLast = b.history && b.history.length ? b.history[b.history.length - 1].timestamp : 0;
+    return bLast - aLast;
+  });
+  sorted.forEach(char => {
+    const history = char.history || [];
+    const lastMsg = history.length > 0 ? history[history.length - 1] : null;
+    let lastText = '';
+    if (lastMsg) {
+      lastText = lastMsg.content.replace(/\[.*?\]/g, '').trim().substring(0, 30);
+      if (!lastText) {
+        if (/\[.*?更新状态为/.test(lastMsg.content)) lastText = '更新了状态';
+        else if (/\[.*?的转账/.test(lastMsg.content)) lastText = '有一笔转账';
+        else if (/\[.*?(?:送来的礼物|已接收礼物|已接收转账)/.test(lastMsg.content)) lastText = '收到一个礼物';
+        else lastText = '[特殊消息]';
+      }
+    }
+    const card = createSwipeCard(
+      char.id, 'private', char.avatar,
+      char.remarkName || char.realName || '未知',
+      lastText, char.isPinned,
+      (id) => { if (_openChatRoom) _openChatRoom(id, 'private'); }
+    );
+    container.appendChild(card);
+  });
+}
+
+function renderGroupList() {
+  const db = getDb();
+  const container = dom['group-list-container'];
+  const empty = dom['group-empty'];
+  if (!container) return;
+  container.innerHTML = '';
+  const groups = db.groups || [];
+  if (groups.length === 0) {
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  const sorted = [...groups].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    const aLast = a.history && a.history.length ? a.history[a.history.length - 1].timestamp : 0;
+    const bLast = b.history && b.history.length ? b.history[b.history.length - 1].timestamp : 0;
+    return bLast - aLast;
+  });
+  sorted.forEach(group => {
+    const history = group.history || [];
+    const lastMsg = history.length > 0 ? history[history.length - 1] : null;
+    let lastText = '';
+    if (lastMsg) {
+      lastText = lastMsg.content.replace(/\[.*?\]/g, '').trim().substring(0, 30);
+      if (!lastText) {
+        if (/\[.*?更新状态为/.test(lastMsg.content)) lastText = '更新了状态';
+        else lastText = '[系统消息]';
+      }
+    }
+    const subtitle = `${(group.members || []).length} 人` + (lastText ? ' · ' + lastText : '');
+    const card = createSwipeCard(
+      group.id, 'group', group.avatar,
+      group.name || '未命名群聊',
+      subtitle, group.isPinned,
+      (id) => { if (_openChatRoom) _openChatRoom(id, 'group'); }
+    );
+    container.appendChild(card);
+  });
+}
+
+function createSwipeCard(id, type, avatar, name, subtitle, isPinned, onClick) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'swipe-card';
+  wrapper.dataset.cardId = id;
+  wrapper.dataset.cardType = type;
+
+  const actionsDiv = document.createElement('div');
+  actionsDiv.className = 'swipe-card__actions';
+
+  if (type === 'contact') {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'swipe-card__action-btn action-pin';
+    editBtn.textContent = '编辑';
+    editBtn.dataset.action = 'edit';
+    actionsDiv.appendChild(editBtn);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'swipe-card__action-btn action-delete';
+    delBtn.textContent = '删除';
+    delBtn.dataset.action = 'delete';
+    actionsDiv.appendChild(delBtn);
+  } else {
+    const pinBtn = document.createElement('button');
+    pinBtn.className = 'swipe-card__action-btn action-pin';
+    pinBtn.textContent = isPinned ? '取消置顶' : '置顶';
+    pinBtn.dataset.action = 'pin';
+    actionsDiv.appendChild(pinBtn);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'swipe-card__action-btn action-delete';
+    delBtn.textContent = '删除';
+    delBtn.dataset.action = 'delete';
+    actionsDiv.appendChild(delBtn);
+  }
+  wrapper.appendChild(actionsDiv);
+
+  const cardOuter = document.createElement('div');
+  cardOuter.className = 'swipe-card__wrapper';
+  const cardInner = document.createElement('div');
+  cardInner.className = 'swipe-card__inner';
+  cardInner.dataset.id = id;
+  cardInner.dataset.type = type;
+
+  const avatarClass = type === 'group' ? 'chat-avatar group-avatar' : 'chat-avatar';
+  const img = document.createElement('img');
+  img.src = avatar;
+  img.alt = name;
+  img.className = avatarClass;
+  img.onerror = function () {
+    this.outerHTML = '<div class="chat-avatar" style="background:#eee;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">👤</div>';
+  };
+  cardInner.appendChild(img);
+
+  const details = document.createElement('div');
+  details.className = 'item-details';
+  const nameRow = document.createElement('div');
+  nameRow.className = 'item-details-row';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'item-name';
+  nameEl.textContent = name;
+  nameRow.appendChild(nameEl);
+  details.appendChild(nameRow);
+
+  if (subtitle) {
+    const pw = document.createElement('div');
+    pw.className = 'item-preview-wrapper';
+    const prev = document.createElement('div');
+    prev.className = 'item-preview';
+    prev.textContent = subtitle;
+    pw.appendChild(prev);
+    if (isPinned) {
+      const badge = document.createElement('span');
+      badge.className = 'pin-badge';
+      badge.textContent = '置顶';
+      pw.appendChild(badge);
+    }
+    details.appendChild(pw);
+  } else if (isPinned) {
+    const pw = document.createElement('div');
+    pw.className = 'item-preview-wrapper';
+    const badge = document.createElement('span');
+    badge.className = 'pin-badge';
+    badge.textContent = '置顶';
+    pw.appendChild(badge);
+    details.appendChild(pw);
+  }
+  cardInner.appendChild(details);
+  cardOuter.appendChild(cardInner);
+  wrapper.appendChild(cardOuter);
+
+  cardInner.addEventListener('click', (e) => {
+    if (_swipedCard === wrapper) { closeSwipeCard(); return; }
+    if (_swipedCard) closeSwipeCard();
+    if (onClick) onClick(id);
+  });
+
+  let startX = 0, startY = 0, deltaX = 0;
+  let isDragging = false, isScrolling = null;
+  const threshold = 40;
+
+  cardOuter.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    deltaX = 0; isDragging = true; isScrolling = null;
+    cardInner.classList.add('dragging');
+  }, { passive: true });
+
+  cardOuter.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (isScrolling === null) isScrolling = Math.abs(dy) > Math.abs(dx);
+    if (isScrolling) return;
+    e.preventDefault();
+    deltaX = dx;
+    const translateX = Math.max(-180, Math.min(0, dx));
+    cardInner.style.transform = 'translateX(' + translateX + 'px)';
+  }, { passive: false });
+
+  cardOuter.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    cardInner.classList.remove('dragging');
+    if (isScrolling) { cardInner.style.transform = ''; return; }
+    if (deltaX < -threshold) {
+      if (_swipedCard && _swipedCard !== wrapper) closeSwipeCard();
+      cardInner.classList.add('swiped');
+      cardInner.style.transform = '';
+      _swipedCard = wrapper;
+    } else {
+      cardInner.classList.remove('swiped');
+      cardInner.style.transform = '';
+      if (_swipedCard === wrapper) _swipedCard = null;
+    }
+  }, { passive: true });
+
+  actionsDiv.querySelectorAll('.swipe-card__action-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      const db = getDb();
+      if (type === 'contact' || type === 'private') {
+        const char = (db.characters || []).find(c => c.id === id);
+        if (!char) return;
+        if (action === 'delete') {
+          if (confirm('确定删除"' + (char.remarkName || char.realName) + '"吗？')) {
+            db.characters = (db.characters || []).filter(c => c.id !== id);
+            await saveData();
+            renderAllLists();
+            showToast(dom['toast-notification'], '已删除 ' + (char.remarkName || char.realName));
+          }
+        } else if (action === 'edit') {
+          state.currentChatId = char.id;
+          state.currentChatType = 'private';
+          dom['chat-settings-btn']?.click();
+        } else if (action === 'pin') {
+          char.isPinned = !char.isPinned;
+          await saveData();
+          renderAllLists();
+        }
+      } else if (type === 'group') {
+        const group = (db.groups || []).find(g => g.id === id);
+        if (!group) return;
+        if (action === 'delete') {
+          if (confirm('确定删除群聊"' + group.name + '"吗？')) {
+            db.groups = (db.groups || []).filter(g => g.id !== id);
+            await saveData();
+            renderAllLists();
+            showToast(dom['toast-notification'], '已删除 ' + group.name);
+          }
+        } else if (action === 'pin') {
+          group.isPinned = !group.isPinned;
+          await saveData();
+          renderAllLists();
+        }
+      }
+      closeSwipeCard();
+    });
+  });
+
+  return wrapper;
+}
+
+function closeSwipeCard() {
+  if (_swipedCard) {
+    const inner = _swipedCard.querySelector('.swipe-card__inner');
+    if (inner) { inner.classList.remove('swiped'); inner.style.transform = ''; }
+    _swipedCard = null;
+  }
 }
 
 export function renderChatList() {
-  const db = getDb();
-  const container = dom['chat-list-container'];
-  const placeholder = dom['no-chats-placeholder'];
-  console.log('[ChatList] renderChatList called, characters:', (db.characters||[]).length, 'groups:', (db.groups||[]).length, 'container:', !!container);
-  if (!container) { console.error('[ChatList] container not found!'); return; }
-  container.innerHTML = '';
+  renderAllLists();
+}
 
-  // 合并私聊和群聊
-  const items = [
-    ...(db.characters || []).map(c => ({ ...c, type: 'private' })),
-    ...(db.groups || []).map(g => ({ ...g, type: 'group' })),
-  ];
+function renderAllLists() {
+  closeSwipeCard();
+  renderContactsList();
+  renderPrivateList();
+  renderGroupList();
+}
+let _wizardData = {};
 
-  // 置顶优先，按创建时间倒序
-  items.sort((a, b) => {
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
-    return (b.id || '').localeCompare(a.id || '');
-  });
-
-  if (items.length === 0) {
-    if (placeholder) placeholder.style.display = 'block';
-    return;
+function openContactWizard() {
+  _wizardData = {};
+  const modal = dom['contact-wizard-modal'];
+  if (!modal) return;
+  dom['wizard-import-preview'].style.display = 'none';
+  dom['wizard-char-realname'].value = '';
+  dom['wizard-char-nickname'].value = '';
+  dom['wizard-char-persona'].value = '';
+  dom['wizard-avatar-preview'].src = 'assets/icons/default-avatar.png';
+  dom['wizard-step1-next'].disabled = true;
+  const wbList = dom['wizard-wb-list'];
+  if (wbList) {
+    const db = getDb();
+    wbList.innerHTML = '';
+    (db.worldBooks || []).forEach(book => {
+      const item = document.createElement('div');
+      item.className = 'wizard-wb-item';
+      item.innerHTML = '<input type="checkbox" id="wiz-wb-' + book.id + '" value="' + book.id + '"><label for="wiz-wb-' + book.id + '">' + escHtml(book.name) + '</label>';
+      wbList.appendChild(item);
+    });
   }
-  if (placeholder) placeholder.style.display = 'none';
+  showWizardStep(1);
+  modal.classList.add('visible');
+}
 
-  items.forEach(chat => {
-    const li = document.createElement('li');
-    li.className = 'list-item';
-    li.dataset.chatId = chat.id;
-    li.dataset.chatType = chat.type;
+function showWizardStep(step) {
+  const modal = dom['contact-wizard-modal'];
+  modal.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+  const target = modal.querySelector('.wizard-step[data-step="' + step + '"]');
+  if (target) target.classList.add('active');
+  modal.querySelectorAll('.wizard-dot').forEach(d => {
+    const ds = parseInt(d.dataset.step);
+    d.classList.remove('active', 'done');
+    if (ds === step) d.classList.add('active');
+    else if (ds < step) d.classList.add('done');
+  });
+}
 
-    const history = chat.history || [];
-    const lastMsg = history.length > 0 ? history[history.length - 1] : null;
-    let lastMessageText = '';
-    if (lastMsg) {
-      lastMessageText = lastMsg.content.replace(/\[.*?\]/g, '').trim().substring(0, 30);
-      if (!lastMessageText) {
-        if (/\[.*?更新状态为/.test(lastMsg.content)) lastMessageText = '更新了状态';
-        else if (/\[.*?的转账/.test(lastMsg.content)) lastMessageText = '有一笔转账';
-        else if (/\[.*?(?:送来的礼物|已接收礼物|已接收转账)/.test(lastMsg.content)) lastMessageText = '收到一个礼物';
-        else lastMessageText = '[特殊消息]';
+function bindWizardEvents() {
+  const importZone = dom['wizard-import-zone'];
+  const importFile = dom['wizard-import-file'];
+  if (importZone && importFile) {
+    importZone.addEventListener('click', () => importFile.click());
+  }
+  if (importFile) {
+    importFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      await handleWizardImport(file);
+      importFile.value = '';
+    });
+  }
+  dom['wizard-skip-import']?.addEventListener('click', () => {
+    dom['wizard-step1-next'].disabled = false;
+    showWizardStep(2);
+  });
+  dom['wizard-step1-next']?.addEventListener('click', () => {
+    // 导入后：自动将卡片信息填入步骤 2
+    const card = _wizardData.importedCard;
+    if (card) {
+      if (card.name) {
+        dom['wizard-char-realname'].value = card.name;
+        dom['wizard-char-nickname'].value = card.name;
+        _wizardData.realName = card.name;
+        _wizardData.remarkName = card.name;
+      }
+      if (card.avatar) {
+        dom['wizard-avatar-preview'].src = card.avatar;
+        _wizardData.avatar = card.avatar;
+      }
+      if (card.description) {
+        dom['wizard-char-persona'].value = card.description;
+        _wizardData.persona = card.description;
       }
     }
-
-    const avatarClass = chat.type === 'group' ? 'group-avatar' : '';
-    const itemName = chat.type === 'private' ? chat.remarkName : chat.name;
-
-    li.innerHTML = `<img src="${chat.avatar}" alt="${itemName}" class="chat-avatar ${avatarClass}" onerror="this.outerHTML='<div class=chat-avatar style=background:#eee;border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:24px;>👤</div>'">
-      <div class="item-details">
-        <div class="item-details-row"><div class="item-name">${itemName}</div></div>
-        ${chat.type === 'private' && chat.realName ? `<div class="item-real-name">${chat.realName}</div>` : ''}
-        <div class="item-preview-wrapper">
-          <div class="item-preview">${lastMessageText}</div>
-          ${chat.isPinned ? '<span class="pin-badge">置顶</span>' : ''}
-        </div>
-      </div>`;
-    container.appendChild(li);
+    showWizardStep(2);
   });
-}
-
-function handleChatListLongPress(chatId, chatType, x, y) {
-  const db = getDb();
-  const chat = chatType === 'private'
-    ? (db.characters || []).find(c => c.id === chatId)
-    : (db.groups || []).find(g => g.id === chatId);
-  if (!chat) return;
-
-  const items = [
-    { label: chat.isPinned ? '📌 取消置顶' : '📌 置顶', action: async () => {
-      chat.isPinned = !chat.isPinned;
-      await saveData();
-      renderChatList();
-    }},
-  ];
-
-  if (chatType === 'private') {
-    items.push({ label: '✏️ 编辑', action: () => {
-      state.currentChatId = chat.id;
-      state.currentChatType = 'private';
-      dom['chat-settings-btn']?.click();
-    }});
-    items.push({ label: '❌ 删除', danger: true, action: async () => {
-      if (confirm(`确定删除"${chat.remarkName}"吗？`)) {
-        db.characters = (db.characters || []).filter(c => c.id !== chatId);
-        await saveData();
-        renderChatList();
-        showToast(dom['toast-notification'], `已删除 ${chat.remarkName}`);
-      }
-    }});
-  } else {
-    items.push({ label: '❌ 删除', danger: true, action: async () => {
-      if (confirm(`确定删除群聊"${chat.name}"吗？`)) {
-        db.groups = (db.groups || []).filter(g => g.id !== chatId);
-        await saveData();
-        renderChatList();
-        showToast(dom['toast-notification'], `已删除 ${chat.name}`);
-      }
-    }});
-  }
-
-  createContextMenu(items, x, y);
-}
-
-// ─── 酒馆角色卡导入 ──────────────────────
-
-function setupImportCard() {
-  const modal = dom['add-char-modal'];
-  const form = dom['add-char-form'];
-  const importPanel = dom['import-tab-panel'];
-  const dropzone = dom['import-dropzone'];
-  const fileInput = dom['import-card-file'];
-  const selectBtn = dom['import-select-btn'];
-
-  modal.querySelectorAll('.modal-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      modal.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const isImport = tab.dataset.tab === 'import';
-      form.style.display = isImport ? 'none' : '';
-      importPanel.style.display = isImport ? '' : 'none';
-      dom['add-char-modal-window'].style.maxWidth = isImport ? '420px' : '340px';
-      if (!isImport) resetImport();
-    });
+  dom['wizard-step2-back']?.addEventListener('click', () => showWizardStep(1));
+  dom['wizard-step2-next']?.addEventListener('click', () => {
+    const realname = dom['wizard-char-realname']?.value.trim();
+    const nickname = dom['wizard-char-nickname']?.value.trim();
+    if (!realname || !nickname) {
+      showToast(dom['toast-notification'], '请填写真实姓名和昵称');
+      return;
+    }
+    _wizardData.realName = realname;
+    _wizardData.remarkName = nickname;
+    showWizardStep(3);
   });
-
-  if (selectBtn && fileInput) selectBtn.addEventListener('click', () => fileInput.click());
-  if (dropzone && fileInput) dropzone.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT') fileInput.click(); });
-  if (fileInput) fileInput.addEventListener('change', async (e) => {
+  dom['wizard-step3-back']?.addEventListener('click', () => showWizardStep(2));
+  dom['wizard-step3-finish']?.addEventListener('click', async () => await finishWizard());
+  dom['wizard-avatar-upload']?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    await handleImportFile(file);
-    fileInput.value = '';
+    try {
+      const dataUrl = await compressImage(file, { quality: 0.8, maxWidth: 400, maxHeight: 400 });
+      dom['wizard-avatar-preview'].src = dataUrl;
+      _wizardData.avatar = dataUrl;
+    } catch (err) {
+      showToast(dom['toast-notification'], '头像压缩失败');
+    }
   });
 }
 
-function resetImport() {
-  const previewEl = dom['import-preview'];
-  const errorEl = dom['import-error'];
-  const dropzone = dom['import-dropzone'];
-  previewEl.style.display = 'none';
-  errorEl.style.display = 'none';
-  dropzone.style.display = '';
-  // 保留 fileInput，只更新提示内容
-  const existingInput = document.getElementById('import-card-file');
-  dropzone.innerHTML = '<div class="import-dropzone-icon">📂</div><div class="import-dropzone-text">点击选择或拖拽 .png / .json 角色卡</div>';
-  if (existingInput) dropzone.appendChild(existingInput);
-  else {
-    const newInput = document.createElement('input');
-    newInput.type = 'file'; newInput.id = 'import-card-file';
-    newInput.accept = '.png,.json'; newInput.style.display = 'none';
-    dropzone.appendChild(newInput);
-  }
-  previewEl.innerHTML = '';
-  errorEl.innerHTML = '';
-  window._lastImportedCard = null;
-  window._lastImportedWorldBooks = null;
-}
-
-async function handleImportFile(file) {
-  const dropzone = dom['import-dropzone'];
-  const previewEl = dom['import-preview'];
-  const errorEl = dom['import-error'];
-  dropzone.style.display = 'none';
-  errorEl.style.display = 'none';
-  previewEl.style.display = 'none';
-  previewEl.innerHTML = '';
-  errorEl.innerHTML = '';
-  const savedInput2 = document.getElementById('import-card-file');
-  dropzone.innerHTML = '<div style="padding:30px;text-align:center;color:#888;"><div style="font-size:28px;margin-bottom:8px;">⏳</div><div>正在解析角色卡...</div></div>';
-  if (savedInput2) dropzone.appendChild(savedInput2);
-  dropzone.style.display = '';
+async function handleWizardImport(file) {
   try {
+    if (!window.SillyTavernImporter) {
+      showToast(dom['toast-notification'], '导入模块未加载');
+      return;
+    }
     const card = await window.SillyTavernImporter.parseCardFile(file);
-    window._lastImportedCard = card;
-    const wbEntries = window.SillyTavernImporter.extractBuiltinWorldBook(card.character_book);
-    window._lastImportedWorldBooks = wbEntries;
-    dropzone.style.display = 'none';
-    renderImportPreview(card, wbEntries);
+    _wizardData.importedCard = card;
+    const previewEl = dom['wizard-import-preview'];
+    if (previewEl) {
+      previewEl.style.display = 'block';
+      previewEl.innerHTML = '<div class="import-card-header">' +
+        '<img src="' + escHtml(card.avatar || '') + '" class="import-card-avatar" onerror="this.src=\'assets/icons/default-avatar.png\'">' +
+        '<div class="import-card-name">' + escHtml(card.name || '未命名') + '</div>' +
+        '</div>' +
+        '<div style="font-size:12px;color:#888;padding:4px 0;">已解析成功，点击下一步继续</div>';
+    }
+    dom['wizard-step1-next'].disabled = false;
   } catch (err) {
-    console.error('[Import]', err);
-    errorEl.style.display = '';
-    errorEl.innerHTML = `<div style="font-size:24px;margin-bottom:8px;">⚠️</div><div style="font-size:13px;color:#e53935;word-break:break-word;">${escHtml(err.message)}</div><button type="button" class="btn btn-primary" onclick="document.getElementById('import-card-file').click()" style="margin-top:12px;width:auto;display:inline-block;padding:8px 20px;">重新选择</button>`;
-    // 保留 fileInput，只更新提示内容
-  const existingInput = document.getElementById('import-card-file');
-  dropzone.innerHTML = '<div class="import-dropzone-icon">📂</div><div class="import-dropzone-text">点击选择或拖拽 .png / .json 角色卡</div>';
-  if (existingInput) dropzone.appendChild(existingInput);
-  else {
-    const newInput = document.createElement('input');
-    newInput.type = 'file'; newInput.id = 'import-card-file';
-    newInput.accept = '.png,.json'; newInput.style.display = 'none';
-    dropzone.appendChild(newInput);
-  }
+    console.error('[Wizard Import]', err);
+    showToast(dom['toast-notification'], '导入失败: ' + err.message);
   }
 }
 
-function renderImportPreview(card, wbEntries) {
-  const previewEl = dom['import-preview'];
-  previewEl.style.display = '';
-  previewEl.innerHTML = '';
-
-  const header = document.createElement('div');
-  header.className = 'import-card-header';
-  header.innerHTML = `<img src="${escHtml(card.avatar || '')}" class="import-card-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22><rect fill=%22%23f0f0f0%22 width=%2248%22 height=%2248%22/><text x=%2224%22 y=%2232%22 text-anchor=%22middle%22 font-size=%2224%22>👤</text></svg>'"><div class="import-card-name">${escHtml(card.name || '未命名')}</div>`;
-  previewEl.appendChild(header);
-
-  const checks = document.createElement('div');
-  checks.className = 'import-section';
-  checks.innerHTML += `<div class="import-checkbox-row disabled"><input type="checkbox" checked disabled><span>基本信息（名字 + 人设）</span><span class="count-badge">必选</span></div>`;
-  if (card.scenario) checks.innerHTML += `<div class="import-checkbox-row"><input type="checkbox" id="import-include-scenario" checked><label for="import-include-scenario">场景设定</label></div>`;
-  if (card.mes_example) {
-    const lineCount = card.mes_example.split('\n').filter(l => l.trim()).length;
-    checks.innerHTML += `<div class="import-checkbox-row"><input type="checkbox" id="import-include-examples" checked><label for="import-include-examples">对话示例</label><span class="count-badge">${lineCount} 行</span></div>`;
+async function finishWizard() {
+  const persona = dom['wizard-char-persona']?.value.trim() || '';
+  _wizardData.persona = persona;
+  const selectedWB = [];
+  const wbChecks = dom['wizard-wb-list']?.querySelectorAll('input:checked') || [];
+  wbChecks.forEach(cb => selectedWB.push(cb.value));
+  const db = getDb();
+  const importedCard = _wizardData.importedCard;
+  let newChar;
+  if (importedCard && !_wizardData.realName) {
+    newChar = {
+      id: 'char_' + Date.now(),
+      realName: importedCard.name || '',
+      remarkName: importedCard.name || '',
+      persona: importedCard.description || '',
+      avatar: importedCard.avatar || 'assets/icons/default-avatar.png',
+      myName: db.characters?.[0]?.myName || '我',
+      myPersona: db.characters?.[0]?.myPersona || '',
+      myAvatar: db.characters?.[0]?.myAvatar || 'assets/icons/default-avatar.png',
+      theme: 'white_pink', maxMemory: 100, chatBg: '', history: [],
+      isPinned: false, status: '在线', worldBookIds: selectedWB,
+      useCustomBubbleCss: false, customBubbleCss: '',
+      aiImgGen: false,
+      scenario: importedCard.scenario || '',
+      systemPrompt: importedCard.system_prompt || '',
+      mesExample: importedCard.mes_example || '',
+    };
+  } else {
+    newChar = {
+      id: 'char_' + Date.now(),
+      realName: _wizardData.realName || '',
+      remarkName: _wizardData.remarkName || _wizardData.realName || '',
+      persona: _wizardData.persona || '',
+      avatar: _wizardData.avatar || 'assets/icons/default-avatar.png',
+      myName: db.characters?.[0]?.myName || '我',
+      myPersona: db.characters?.[0]?.myPersona || '',
+      myAvatar: db.characters?.[0]?.myAvatar || 'assets/icons/default-avatar.png',
+      theme: 'white_pink', maxMemory: 100, chatBg: '', history: [],
+      isPinned: false, status: '在线', worldBookIds: selectedWB,
+      useCustomBubbleCss: false, customBubbleCss: '',
+      aiImgGen: false,
+    };
   }
-  if (card.system_prompt) checks.innerHTML += `<div class="import-checkbox-row"><input type="checkbox" id="import-include-system" checked><label for="import-include-system">系统指令</label></div>`;
-  previewEl.appendChild(checks);
+  if (!db.characters) db.characters = [];
+  db.characters.push(newChar);
+  await saveData();
+  renderAllLists();
+  dom['contact-wizard-modal']?.classList.remove('visible');
+  showToast(dom['toast-notification'], '联系人"' + newChar.remarkName + '"创建成功！');
+}
 
-  if (card.description || card.personality) {
-    const desc = document.createElement('div');
-    desc.className = 'import-section';
-    desc.innerHTML = `<div class="import-section-label">📋 人设摘要</div><div class="import-section-text">${escHtml(card.description || '')}${card.personality ? '\n\n' + escHtml(card.personality) : ''}</div>`;
-    previewEl.appendChild(desc);
+let _pickerMode = 'single';
+let _pickerResolve = null;
+
+function openContactPicker(mode) {
+  _pickerMode = mode;
+  const modal = dom['contact-picker-modal'];
+  if (!modal) return;
+  const title = dom['picker-modal-title'];
+  const subtitle = dom['picker-modal-subtitle'];
+  if (mode === 'single') {
+    title.textContent = '选择联系人';
+    subtitle.textContent = '选择一个联系人开始私聊';
+  } else {
+    title.textContent = '选择群成员';
+    subtitle.textContent = '已选择 0 位成员（至少 1 位）';
   }
-
-  if (wbEntries.length > 0) {
-    const wbSection = document.createElement('div');
-    wbSection.className = 'import-section';
-    wbSection.innerHTML = `<div class="import-section-label">📖 内嵌世界书（${wbEntries.length} 条）</div><div class="import-checkbox-row" style="border-bottom:1px solid #f0f0f0;margin-bottom:4px;padding-bottom:4px;"><input type="checkbox" id="import-wb-select-all" checked style="width:auto;flex-shrink:0;"><label for="import-wb-select-all" style="font-size:12px;color:#666;">全选/取消全选</label></div>`;
-    requestAnimationFrame(() => {
-      const selAll = wbSection.querySelector('#import-wb-select-all');
-      if (selAll) selAll.addEventListener('change', function() {
-        wbSection.querySelectorAll('[data-wb-index]').forEach(cb => {
-          cb.checked = this.checked;
-          const row = cb.closest('.import-wb-item');
-          if (row) row.style.opacity = this.checked ? '1' : '0.4';
+  const list = dom['picker-list'];
+  list.innerHTML = '';
+  const db = getDb();
+  const chars = db.characters || [];
+  if (chars.length === 0) {
+    list.innerHTML = '<li style="color:#aaa;text-align:center;padding:20px;">还没有联系人，请先创建</li>';
+    dom['picker-confirm-btn'].disabled = true;
+  } else {
+    dom['picker-confirm-btn'].disabled = false;
+    chars.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'contact-picker-item';
+      const inputType = mode === 'single' ? 'radio' : 'checkbox';
+      li.innerHTML = '<input type="' + inputType + '" name="picker-char" value="' + c.id + '" class="picker-check">' +
+        '<img src="' + c.avatar + '" alt="' + c.remarkName + '" onerror="this.src=\'assets/icons/default-avatar.png\'">' +
+        '<span class="picker-name">' + escHtml(c.remarkName || c.realName) + '</span>';
+      if (mode === 'single') {
+        li.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const radio = li.querySelector('input');
+            if (radio) radio.checked = true;
+          }
         });
-      });
+      } else {
+        li.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const cb = li.querySelector('input');
+            if (cb) cb.checked = !cb.checked;
+          }
+          updatePickerCount();
+        });
+      }
+      list.appendChild(li);
     });
-    wbEntries.forEach((entry, idx) => {
-      const item = document.createElement('div');
-      item.className = 'import-wb-item';
-      item.innerHTML = `<input type="checkbox" checked data-wb-index="${idx}" style="width:auto;margin:2px 0 0 0;flex-shrink:0;"><div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:12px;">${escHtml(entry.name)}</div><div style="font-size:11px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(entry.content.substring(0, 80))}${entry.content.length > 80 ? '…' : ''}</div></div>`;
-      item.querySelector('input').addEventListener('change', function() { this.parentElement.style.opacity = this.checked ? '1' : '0.4'; });
-      wbSection.appendChild(item);
-    });
-    previewEl.appendChild(wbSection);
   }
-
-  const actions = document.createElement('div');
-  actions.className = 'import-actions';
-  actions.innerHTML = `<button type="button" class="btn btn-secondary" onclick="document.getElementById('import-card-file').click()">重新选择</button><button type="button" class="btn btn-primary" id="import-confirm-btn">✅ 确认导入</button>`;
-  previewEl.appendChild(actions);
-
-  document.getElementById('import-confirm-btn').addEventListener('click', async () => {
-    const card = window._lastImportedCard;
-    if (!card) return;
-    const selectedWBIndices = [];
-    previewEl.querySelectorAll('[data-wb-index]').forEach(cb => {
-      if (cb.checked) selectedWBIndices.push(parseInt(cb.dataset.wbIndex));
-    });
-    try {
-      const result = window.SillyTavernImporter.saveImportedCard(card, {
-        includeScenario: document.getElementById('import-include-scenario')?.checked ?? true,
-        includeExamples: document.getElementById('import-include-examples')?.checked ?? true,
-        includeSystemPrompt: document.getElementById('import-include-system')?.checked ?? true,
-        selectedWorldBookIndices: selectedWBIndices,
+  const search = dom['picker-search'];
+  if (search) {
+    search.value = '';
+    search.oninput = () => {
+      const q = search.value.toLowerCase();
+      list.querySelectorAll('.contact-picker-item').forEach(item => {
+        const name = item.querySelector('.picker-name')?.textContent?.toLowerCase() || '';
+        item.style.display = name.includes(q) ? '' : 'none';
       });
-      await saveData();
-      renderChatList();
-      dom['add-char-modal']?.classList.remove('visible');
-      showToast(dom['toast-notification'], `✅ 成功导入角色"${card.name}"${result.builtinWorldBookIds.length > 0 ? ` + ${result.builtinWorldBookIds.length} 条世界书` : ''}`);
-      resetImport();
-    } catch (err) {
-      showToast(dom['toast-notification'], '导入失败: ' + err.message);
+    };
+  }
+  modal.classList.add('visible');
+  return new Promise((resolve) => { _pickerResolve = resolve; });
+}
+
+function updatePickerCount() {
+  if (_pickerMode !== 'multi') return;
+  const checked = dom['picker-list']?.querySelectorAll('input:checked')?.length || 0;
+  const subtitle = dom['picker-modal-subtitle'];
+  if (subtitle) subtitle.textContent = '已选择 ' + checked + ' 位成员（至少 1 位）';
+}
+
+function bindPickerEvents() {
+  dom['picker-cancel-btn']?.addEventListener('click', () => {
+    dom['contact-picker-modal']?.classList.remove('visible');
+    if (_pickerResolve) _pickerResolve([]);
+  });
+  dom['picker-confirm-btn']?.addEventListener('click', () => {
+    const checked = dom['picker-list']?.querySelectorAll('input:checked, input[type="radio"]:checked') || [];
+    const ids = Array.from(checked).map(i => i.value);
+    if (_pickerMode === 'single') {
+      if (ids.length === 0) {
+        showToast(dom['toast-notification'], '请选择一个联系人');
+        return;
+      }
+      dom['contact-picker-modal']?.classList.remove('visible');
+      if (_openChatRoom) _openChatRoom(ids[0], 'private');
+      if (_pickerResolve) _pickerResolve(ids);
+    } else {
+      if (ids.length < 1) {
+        showToast(dom['toast-notification'], '至少选择 1 位成员');
+        return;
+      }
+      dom['contact-picker-modal']?.classList.remove('visible');
+      openGroupCreateModal(ids);
+      if (_pickerResolve) _pickerResolve(ids);
     }
+  });
+  dom['picker-search']?.addEventListener('click', (e) => e.stopPropagation());
+}
+
+let _pendingGroupMemberIds = [];
+
+function openGroupCreateModal(memberIds) {
+  _pendingGroupMemberIds = memberIds;
+  const modal = dom['group-create-modal'];
+  if (!modal) return;
+  dom['group-create-members-count'].textContent = '已选择 ' + memberIds.length + ' 位成员';
+  dom['group-create-name-input'].value = '';
+  modal.classList.add('visible');
+  setTimeout(() => dom['group-create-name-input']?.focus(), 100);
+}
+
+function bindGroupCreateEvents() {
+  dom['group-create-cancel-btn']?.addEventListener('click', () => {
+    dom['group-create-modal']?.classList.remove('visible');
+    _pendingGroupMemberIds = [];
+  });
+  dom['group-create-confirm-btn']?.addEventListener('click', async () => {
+    const name = dom['group-create-name-input']?.value.trim();
+    if (!name) {
+      showToast(dom['toast-notification'], '请输入群聊名称');
+      return;
+    }
+    if (_pendingGroupMemberIds.length < 1) {
+      showToast(dom['toast-notification'], '请选择至少一位成员');
+      return;
+    }
+    const db = getDb();
+    const validIds = _pendingGroupMemberIds.filter(id =>
+      (db.characters || []).some(c => c.id === id)
+    );
+    if (validIds.length < 1) {
+      showToast(dom['toast-notification'], '所选联系人已不存在');
+      dom['group-create-modal']?.classList.remove('visible');
+      return;
+    }
+    await createGroupChat(name, validIds);
+    dom['group-create-modal']?.classList.remove('visible');
+    _pendingGroupMemberIds = [];
+  });
+  dom['group-create-name-input']?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') dom['group-create-confirm-btn']?.click();
   });
 }

@@ -3,35 +3,35 @@
    替代原 app.js，接管所有初始化
    ======================================== */
 
-import { state } from './core/state.js?v=12';
-import { initDomCache } from './core/dom.js?v=12';
-import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js?v=12';
-import * as dataService from './core/dataService.js?v=12';
+import { state } from './core/state.js';
+import { initDomCache } from './core/dom.js';
+import { applyGlobalFont, showToast, switchScreen, removeContextMenu } from './core/utils.js';
+import * as dataService from './core/dataService.js';
 // aiService 已通过全局 script 加载，使用 window.AiService
 
-import * as chatRoom from './ui/chatRoom.js?v=12';
-import * as chatList from './ui/chatList.js?v=12';
-import * as homeScreen from './ui/homeScreen.js?v=12';
-import { updateActiveWorldStatus } from './ui/homeScreen.js?v=12';
-import * as PromptDefaults from './ui/promptDefaults.js?v=12';
-import * as settings from './ui/settings.js?v=12';
-import * as wallpaper from './ui/wallpaper.js?v=12';
-import * as customize from './ui/customize.js?v=12';
-import * as fontSettings from './ui/fontSettings.js?v=12';
-import * as bubbleWorkshop from './ui/bubbleWorkshop.js?v=12';
+import * as chatRoom from './ui/chatRoom.js';
+import * as chatList from './ui/chatList.js';
+import * as homeScreen from './ui/homeScreen.js';
+import { updateActiveWorldStatus } from './ui/homeScreen.js';
+import * as PromptDefaults from './ui/promptDefaults.js';
+import * as settings from './ui/settings.js';
+import * as wallpaper from './ui/wallpaper.js';
+import * as customize from './ui/customize.js';
+import * as fontSettings from './ui/fontSettings.js';
+import * as bubbleWorkshop from './ui/bubbleWorkshop.js';
 
-import * as worldBook from './systems/worldBook.js?v=12';
-import * as apiSettings from './systems/apiSettings.js?v=12';
-import * as imgGenSettings from './systems/imgGenSettings.js?v=12';
-import * as stickers from './systems/stickers.js?v=12';
-import * as voice from './systems/voice.js?v=12';
-import * as photoVideo from './systems/photoVideo.js?v=12';
-import * as wallet from './systems/wallet.js?v=12';
-import * as gift from './systems/gift.js?v=12';
-import * as timeSkip from './systems/timeSkip.js?v=12';
-import * as imageRecognition from './systems/imageRecognition.js?v=12';
-import * as group from './systems/group.js?v=12';
-import * as videoCall from './systems/videoCall.js?v=12';
+import * as worldBook from './systems/worldBook.js';
+import * as apiSettings from './systems/apiSettings.js';
+import * as imgGenSettings from './systems/imgGenSettings.js';
+import * as stickers from './systems/stickers.js';
+import * as voice from './systems/voice.js';
+import * as photoVideo from './systems/photoVideo.js';
+import * as wallet from './systems/wallet.js';
+import * as gift from './systems/gift.js';
+import * as timeSkip from './systems/timeSkip.js';
+import * as imageRecognition from './systems/imageRecognition.js';
+import * as group from './systems/group.js';
+import * as videoCall from './systems/videoCall.js';
 
 async function initApp() {
   console.log('[App] initApp 开始');
@@ -51,7 +51,13 @@ async function initApp() {
 
   // ─── 注入 7 个屏幕的 HTML（避免白屏） ───
   dom['api-settings-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="home-screen">‹</button><div class="title-container"><h1 class="title">API 设置</h1></div><button class="action-btn" id="add-api-preset-btn">+</button></header><main class="content"><div class="api-preset-list" id="api-preset-list"></div><div style="margin-top:16px;padding:0 4px;"><div class="api-preset-card" id="img-gen-settings-card" style="cursor:pointer;border-left:3px solid var(--accent-color,#ff80ab);"><div class="api-preset-info"><div class="api-preset-name">🎨 生图 API 设置</div><div class="api-preset-meta" id="img-gen-status">独立于聊天API，可配置不同的服务商</div></div><div class="api-preset-actions"><button class="api-preset-edit-btn" id="img-gen-edit-btn">设置</button></div></div><div class="api-preset-card" id="tts-settings-card" style="cursor:pointer;border-left:3px solid var(--accent-color,#90caf9);margin-top:10px;"><div class="api-preset-info"><div class="api-preset-name">🔊 语音朗读设置</div><div class="api-preset-meta" id="tts-global-status">当前：本地浏览器</div></div><div class="api-preset-actions"><button class="api-preset-edit-btn" id="tts-edit-btn">设置</button></div></div></div></main>`;
-  dom['api-edit-screen'].innerHTML = `<header class="app-header"><button class="back-btn" id="api-edit-back-btn">‹</button><div class="title-container"><h1 class="title" id="api-edit-title">编辑配置</h1></div><button class="action-btn" id="delete-api-preset-btn" style="color:#ff4444;">删除</button></header><main class="content"><form id="api-edit-form"><input type="hidden" id="api-edit-id"><div class="form-group"><label for="api-edit-name">配置名称</label><input type="text" id="api-edit-name" placeholder="如：DeepSeek主配置" required></div><div class="form-group"><label for="api-edit-provider">API 服务商</label><select id="api-edit-provider"><option value="newapi">NewAPI (自定义)</option><option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option><option value="claude">Claude (Anthropic)</option><option value="gemini">Gemini (Google)</option><option value="zhipu">智谱 (GLM)</option><option value="moonshot">月之暗面 (Kimi)</option><option value="qwen">通义千问</option><option value="ollama">Ollama (本地)</option></select></div><div class="form-group"><label>API 地址</label><div style="display:flex;gap:0;border:1px solid #ddd;border-radius:8px;overflow:hidden;"><input type="text" id="api-edit-host" placeholder="https://api.deepseek.com" style="flex:1;border:none;outline:none;padding:10px 12px;font-size:14px;min-width:0;" required><input type="text" id="api-edit-path" placeholder="/v1/chat/completions" style="width:200px;border:none;border-left:1px solid #eee;outline:none;padding:10px 12px;font-size:14px;color:#666;background:#fafafa;"></div><div style="font-size:11px;color:#999;margin-top:4px;">完整地址：主机 + 路径自动拼接，路径留空则使用默认值</div></div><div class="form-group"><label for="api-edit-key">密钥 (Key)</label><input type="text" id="api-edit-key" placeholder="sk-xxxxxxxxxxxxxxxx" required style="font-family:monospace;"></div><div style="display:flex;gap:8px;"><button type="button" class="btn btn-secondary" id="api-edit-fetch-btn" style="flex:1;"><span class="btn-text">拉取模型</span><div class="spinner"></div></button><button type="button" class="btn btn-neutral" id="api-edit-test-btn" style="flex:1;">🔗 测试连接</button></div><div id="api-test-result" style="font-size:12px;margin-top:6px;display:none;padding:8px 10px;border-radius:6px;"></div><div class="form-group"><label for="api-edit-model">选择模型</label><select id="api-edit-model" required><option value="">请先拉取模型列表</option></select></div><button type="submit" class="btn btn-primary">保存配置</button></form></main>`;
+  dom['api-edit-screen'].innerHTML = `<header class="app-header"><button class="back-btn" id="api-edit-back-btn">‹</button><div class="title-container"><h1 class="title" id="api-edit-title">编辑配置</h1></div><button class="action-btn" id="delete-api-preset-btn" style="color:#ff4444;">删除</button></header><main class="content"><form id="api-edit-form"><input type="hidden" id="api-edit-id"><div class="form-group"><label for="api-edit-name">配置名称</label><input type="text" id="api-edit-name" placeholder="如：DeepSeek主配置" required></div><div class="form-group"><label for="api-edit-provider">API 服务商</label><select id="api-edit-provider"><option value="newapi">NewAPI (自定义)</option><option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option><option value="claude">Claude (Anthropic)</option><option value="gemini">Gemini (Google)</option><option value="zhipu">智谱 (GLM)</option><option value="moonshot">月之暗面 (Kimi)</option><option value="qwen">通义千问</option><option value="ollama">Ollama (本地)</option></select></div><div class="form-group"><label>API 地址</label><div style="display:flex;gap:0;border:1px solid #ddd;border-radius:8px;overflow:hidden;"><input type="text" id="api-edit-host" placeholder="https://api.deepseek.com" style="flex:1;border:none;outline:none;padding:10px 12px;font-size:14px;min-width:0;" required><input type="text" id="api-edit-path" placeholder="/v1/chat/completions" style="width:200px;border:none;border-left:1px solid #eee;outline:none;padding:10px 12px;font-size:14px;color:#666;background:#fafafa;"></div><div style="font-size:11px;color:#999;margin-top:4px;">完整地址：主机 + 路径自动拼接，路径留空则使用默认值</div></div><div class="form-group"><label for="api-edit-key">密钥 (Key)</label><input type="text" id="api-edit-key" placeholder="sk-xxxxxxxxxxxxxxxx" required style="font-family:monospace;"></div><div style="display:flex;gap:8px;"><button type="button" class="btn btn-secondary" id="api-edit-fetch-btn" style="flex:1;"><span class="btn-text">拉取模型</span><div class="spinner"></div></button><button type="button" class="btn btn-neutral" id="api-edit-test-btn" style="flex:1;">🔗 测试连接</button></div><div id="api-test-result" style="font-size:12px;margin-top:6px;display:none;padding:8px 10px;border-radius:6px;"></div><div class="form-group"><label>选择模型</label>
+          <div style="display:flex;gap:12px;margin-bottom:6px;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="radio" name="api-model-mode" value="fetch" checked> <span>拉取</span></label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;"><input type="radio" name="api-model-mode" value="manual"> <span>手动</span></label>
+          </div>
+          <select id="api-edit-model"><option value="">请先拉取模型列表</option></select>
+          <input type="text" id="api-edit-model-manual" placeholder="手动输入模型名称" style="display:none;"></div><button type="submit" class="btn btn-primary">保存配置</button></form></main>`;
   dom['img-gen-edit-screen'].innerHTML = `<header class="app-header"><button class="back-btn" id="img-gen-back-btn">‹</button><div class="title-container"><h1 class="title">🎨 生图 API 设置</h1></div><div class="placeholder"></div></header><main class="content"><form id="img-gen-form"><p style="font-size:13px;color:#888;margin-bottom:16px;">独立于聊天API配置，可使用不同的服务商进行图片生成。</p><div class="form-group"><label for="img-gen-url">生图接口地址</label><input type="url" id="img-gen-url" placeholder="如：https://image.pollinations.ai/prompt/"></div><div class="form-group"><label for="img-gen-key">密钥 (Key)</label><input type="password" id="img-gen-key" placeholder="请输入生图API密钥"></div><div class="form-group"><label for="img-gen-model">模型名称</label><input type="text" id="img-gen-model" placeholder="如：black-forest-labs/FLUX.1-schnell"></div><p style="font-size:11px;color:#999;margin:-8px 0 16px;">支持 OpenAI 兼容格式（SiliconFlow、DALL·E 等）。留空地址则不启用生图功能。</p><button type="submit" class="btn btn-primary">保存设置</button><button type="button" class="btn btn-neutral" id="img-gen-reset-btn" style="margin-top:12px;">🔄 重置为默认（Pollinations 免费）</button></form></main>`;
   // TTS 设置页
   dom['tts-edit-screen'].innerHTML = `<header class="app-header"><button class="back-btn" data-target="api-settings-screen">‹</button><div class="title-container"><h1 class="title">🔊 语音朗读设置</h1></div><div class="placeholder"></div></header><main class="content"><div style="margin-bottom:16px;"><div class="form-group"><label>朗读引擎</label><div style="display:flex;gap:8px;margin-top:6px;"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 16px;border:2px solid #eee;border-radius:10px;flex:1;justify-content:center;"><input type="radio" name="tts-engine" value="local" checked style="width:auto;"> 🖥️ 本地浏览器</label><label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:10px 16px;border:2px solid #eee;border-radius:10px;flex:1;justify-content:center;"><input type="radio" name="tts-engine" value="sogou" style="width:auto;"> 🌐 搜狗 TTS</label></div></div></div><div id="tts-sogou-options" style="display:none;"><div class="form-group"><label for="tts-sogou-speaker">音色选择</label><select id="tts-sogou-speaker"><option value="1">🎙️ 标准女声</option><option value="2">🎀 温柔女声</option><option value="3">🍬 甜美女声</option><option value="4">🎤 标准男声</option><option value="5">📢 沉稳男声</option><option value="6">🧲 磁性男声</option></select></div><div class="form-group"><label>语速</label><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:12px;color:#999;">慢</span><input type="range" id="tts-sogou-speed" min="1" max="5" value="3" style="flex:1;"><span style="font-size:12px;color:#999;">快</span><span id="tts-speed-label" style="font-size:12px;color:#666;min-width:20px;text-align:center;">3</span></div></div></div><div style="display:flex;gap:10px;margin-top:20px;"><button type="button" class="btn btn-secondary" id="tts-preview-btn" style="flex:1;">🔊 试听</button><button type="button" class="btn btn-primary" id="tts-save-btn" style="flex:1;">💾 保存</button></div><p style="font-size:11px;color:#999;text-align:center;margin-top:12px;">搜狗 TTS 免费无需密钥，支持6种音色<br>每角色可在聊天设置中单独覆盖</p></main>`;
@@ -67,7 +73,7 @@ async function initApp() {
    'add-api-preset-btn', 'api-preset-list', 'img-gen-settings-card', 'img-gen-edit-btn',
    'tts-preview-btn', 'tts-save-btn', 'tts-sogou-speaker', 'tts-sogou-speed', 'tts-speed-label',
    'api-edit-back-btn', 'delete-api-preset-btn', 'api-edit-form', 'api-edit-id', 'api-edit-title',
-   'api-edit-name', 'api-edit-provider', 'api-edit-host', 'api-edit-path', 'api-edit-key', 'api-edit-fetch-btn', 'api-edit-test-btn', 'api-test-result', 'api-edit-model',
+   'api-edit-name', 'api-edit-provider', 'api-edit-host', 'api-edit-path', 'api-edit-key', 'api-edit-fetch-btn', 'api-edit-test-btn', 'api-test-result', 'api-edit-model', 'api-edit-model-manual',
    'img-gen-back-btn', 'img-gen-form', 'img-gen-url', 'img-gen-key', 'img-gen-model', 'img-gen-reset-btn',
    'wallpaper-preview', 'wallpaper-upload', 'font-settings-form', 'font-url', 'restore-default-font-btn',
    'customize-form', 'check-update-btn'].forEach(id => {

@@ -5,10 +5,28 @@
 const IDS = [
   // 主屏幕
   'home-screen',
-  // 聊天列表
+  // 聊天列表（Tab 分页）
+  'chat-list-title', 'chat-tab-bar',
+  'contacts-wrapper', 'contacts-list-container', 'contacts-empty',
+  'private-wrapper', 'private-list-container', 'private-empty',
+  'group-wrapper', 'group-list-container', 'group-empty',
+  'new-contact-card', 'new-private-card', 'new-group-card',
+  // 旧兼容（已替换为 Tab，保留避免引用报错）
   'chat-list-container', 'no-chats-placeholder', 'add-chat-btn',
   'add-char-modal', 'add-char-modal-window', 'add-char-form', 'char-real-name', 'char-remark-name', 'my-name-for-char',
-  'import-tab-panel', 'import-dropzone', 'import-card-file', 'import-select-btn', 'import-preview', 'import-error', 
+  'import-tab-panel', 'import-dropzone', 'import-card-file', 'import-select-btn', 'import-preview', 'import-error',
+  // 联系人创建向导
+  'contact-wizard-modal', 'wizard-indicator', 'wizard-import-zone', 'wizard-import-file',
+  'wizard-import-preview', 'wizard-skip-import', 'wizard-step1-next',
+  'wizard-avatar-preview', 'wizard-avatar-upload', 'wizard-char-realname', 'wizard-char-nickname',
+  'wizard-step2-back', 'wizard-step2-next',
+  'wizard-char-persona', 'wizard-wb-list', 'wizard-step3-back', 'wizard-step3-finish',
+  // 联系人选择器
+  'contact-picker-modal', 'picker-modal-title', 'picker-modal-subtitle',
+  'picker-search', 'picker-list', 'picker-cancel-btn', 'picker-confirm-btn',
+  // 群聊快速创建
+  'group-create-modal', 'group-create-members-count', 'group-create-name-input',
+  'group-create-cancel-btn', 'group-create-confirm-btn',
   // 聊天室
   'chat-room-screen', 'chat-room-header-default', 'chat-room-header-select',
   'cancel-multi-select-btn', 'multi-select-title',

@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="css/module-theme.css">
     <link rel="stylesheet" href="css/theme-controller.css">
     <link rel="stylesheet" href="css/effects-upgrade.css">
+    <link rel="stylesheet" href="css/chat-tabs.css">
     <script>
     // 主题预加载：防止白色闪烁
     (function() {
@@ -58,22 +59,158 @@
         <div class="dock" id="home-dock"></div>
     </div>
 
-    <!-- 聊天列表 -->
+    <!-- 聊天列表（Tab 分页） -->
     <div id="chat-list-screen" class="screen">
         <header class="app-header">
             <button class="back-btn" data-target="home-screen">‹</button>
-            <div class="title-container"><h1 class="title">聊天</h1></div>
-            <div class="action-btn-group">
-                <button class="action-btn" id="create-group-btn">群聊</button>
-                <button class="action-btn" id="add-chat-btn">+</button>
-            </div>
+            <div class="title-container"><h1 class="title" id="chat-list-title">私聊</h1></div>
+            <div class="placeholder"></div>
         </header>
-        <main class="content">
-            <ul class="list-container" id="chat-list-container"></ul>
-            <div class="placeholder-text" id="no-chats-placeholder" style="display:none;">
-                <p>还没有聊天对象哦~</p><p>点击右上角的"+"创建一个吧！</p>
+        <nav class="tab-bar" id="chat-tab-bar">
+            <button class="tab-btn" data-tab="contacts">联系人</button>
+            <button class="tab-btn active" data-tab="private">私聊</button>
+            <button class="tab-btn" data-tab="group">群聊</button>
+        </nav>
+        <main class="content" style="padding:0;display:flex;flex-direction:column;overflow:hidden;">
+            <!-- 联系人 Tab -->
+            <div class="tab-panel" data-tab="contacts">
+                <div class="tab-content-wrapper" id="contacts-wrapper">
+                    <div class="new-card" id="new-contact-card">
+                        <span class="new-card__icon">➕</span>
+                        <span class="new-card__text">新建联系人</span>
+                    </div>
+                    <div id="contacts-list-container"></div>
+                    <div class="tab-empty-state" id="contacts-empty" style="display:none;">
+                        <div class="empty-icon">👤</div>
+                        <div class="empty-text">还没有联系人<br>点击上方卡片添加</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 私聊 Tab -->
+            <div class="tab-panel active" data-tab="private">
+                <div class="tab-content-wrapper" id="private-wrapper">
+                    <div class="new-card" id="new-private-card">
+                        <span class="new-card__icon">💬</span>
+                        <span class="new-card__text">新建私聊</span>
+                    </div>
+                    <div id="private-list-container"></div>
+                    <div class="tab-empty-state" id="private-empty" style="display:none;">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-text">还没有私聊<br>选择一位联系人开始对话</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 群聊 Tab -->
+            <div class="tab-panel" data-tab="group">
+                <div class="tab-content-wrapper" id="group-wrapper">
+                    <div class="new-card" id="new-group-card">
+                        <span class="new-card__icon">👥</span>
+                        <span class="new-card__text">发起群聊</span>
+                    </div>
+                    <div id="group-list-container"></div>
+                    <div class="tab-empty-state" id="group-empty" style="display:none;">
+                        <div class="empty-icon">👥</div>
+                        <div class="empty-text">还没有群聊<br>选择多位联系人发起群聊</div>
+                    </div>
+                </div>
             </div>
         </main>
+    </div>
+
+    <!-- ===== 联系人创建向导 (3步) ===== -->
+    <div id="contact-wizard-modal" class="modal-overlay wizard-modal">
+        <div class="modal-window">
+            <div class="wizard-indicator" id="wizard-indicator">
+                <div class="wizard-dot active" data-step="1"></div>
+                <div class="wizard-dot" data-step="2"></div>
+                <div class="wizard-dot" data-step="3"></div>
+            </div>
+            <!-- 步骤 1: 导入/手动创建 -->
+            <div class="wizard-step active" data-step="1">
+                <h3>📥 添加联系人</h3>
+                <p class="wizard-subtitle">导入角色卡或手动填写</p>
+                <div class="wizard-import-zone" id="wizard-import-zone">
+                    <div class="import-icon">📂</div>
+                    <div class="import-text">点击选择或拖拽 .png / .json 角色卡</div>
+                    <input type="file" id="wizard-import-file" accept=".png,.json" style="display:none;">
+                </div>
+                <div id="wizard-import-preview" style="display:none;"></div>
+                <div class="wizard-separator">或者</div>
+                <button type="button" class="wizard-manual-btn" id="wizard-skip-import">✏️ 手动填写</button>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-primary" id="wizard-step1-next" disabled>下一步</button>
+                </div>
+            </div>
+            <!-- 步骤 2: 头像 + 姓名 -->
+            <div class="wizard-step" data-step="2">
+                <h3>👤 头像与称呼</h3>
+                <p class="wizard-subtitle">设置联系人的头像和称呼</p>
+                <div class="wizard-avatar-upload">
+                    <img src="assets/icons/default-avatar.png" id="wizard-avatar-preview" class="wizard-avatar-preview">
+                    <input type="file" id="wizard-avatar-upload" accept="image/*">
+                    <label for="wizard-avatar-upload" class="btn btn-secondary" style="font-size:13px;padding:6px 16px;">📷 选择头像</label>
+                </div>
+                <div class="form-group">
+                    <label for="wizard-char-realname">真实姓名</label>
+                    <input type="text" id="wizard-char-realname" placeholder="角色的真实姓名" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+                </div>
+                <div class="form-group">
+                    <label for="wizard-char-nickname">昵称（备注）</label>
+                    <input type="text" id="wizard-char-nickname" placeholder="你如何称呼TA" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-neutral" id="wizard-step2-back">← 上一步</button>
+                    <button type="button" class="btn btn-primary" id="wizard-step2-next">下一步</button>
+                </div>
+            </div>
+            <!-- 步骤 3: 基础资料 + 世界书 -->
+            <div class="wizard-step" data-step="3">
+                <h3>📋 基础资料</h3>
+                <p class="wizard-subtitle">完善人设和关联世界书</p>
+                <div class="form-group">
+                    <label for="wizard-char-persona">人设描述</label>
+                    <textarea id="wizard-char-persona" rows="3" placeholder="描述角色的性格、背景、说话风格等" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">📖 关联世界书（可选）</label>
+                    <div class="wizard-wb-list" id="wizard-wb-list"></div>
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-neutral" id="wizard-step3-back">← 上一步</button>
+                    <button type="button" class="btn btn-primary" id="wizard-step3-finish">✅ 完成创建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 联系人选择器 (用于新建私聊/群聊选人) ===== -->
+    <div id="contact-picker-modal" class="modal-overlay">
+        <div class="modal-window" style="max-width:360px;padding:16px;">
+            <h3 id="picker-modal-title" style="margin:0 0 4px;font-size:16px;">选择联系人</h3>
+            <p id="picker-modal-subtitle" class="picker-selected-count" style="margin:0 0 8px;">请选择</p>
+            <input type="text" class="picker-search" id="picker-search" placeholder="🔍 搜索联系人...">
+            <ul class="picker-list" id="picker-list" style="max-height:50vh;"></ul>
+            <div class="picker-actions">
+                <button type="button" class="btn btn-neutral" id="picker-cancel-btn">取消</button>
+                <button type="button" class="btn btn-primary" id="picker-confirm-btn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 群聊快速创建（输入群名） ===== -->
+    <div id="group-create-modal" class="modal-overlay">
+        <div class="modal-window" style="max-width:340px;">
+            <h3>👥 创建群聊</h3>
+            <p class="wizard-subtitle" id="group-create-members-count">已选择 0 位成员</p>
+            <div class="form-group">
+                <label for="group-create-name-input">群聊名称</label>
+                <input type="text" id="group-create-name-input" class="group-create-name-input" placeholder="输入群聊名称" style="margin-top:4px;">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <button type="button" class="btn btn-neutral" id="group-create-cancel-btn" style="flex:1;">取消</button>
+                <button type="button" class="btn btn-primary" id="group-create-confirm-btn" style="flex:1;">✅ 立即创建</button>
+            </div>
+        </div>
     </div>
 
     <!-- 聊天室 -->
@@ -135,7 +272,7 @@
                 <div class="avatar-setting"><img src="" alt="角色头像" id="setting-char-avatar-preview" class="avatar-preview"><input type="file" id="setting-char-avatar-upload" accept="image/*" style="display:none;"><label for="setting-char-avatar-upload" class="btn btn-primary" style="flex:1;height:44px;padding:10px 14px;font-size:13px;white-space:nowrap;">📁 本地上传</label><button type="button" class="btn-ai" id="setting-char-avatar-ai-btn">🤖 AI生成</button></div>
                 <div class="form-group"><label for="setting-char-real-name">角色姓名</label><input type="text" id="setting-char-real-name" placeholder="角色的真实姓名"></div>
                 <div class="form-group"><label for="setting-char-remark">角色备注 (昵称)</label><input type="text" id="setting-char-remark"></div>
-                <div class="form-group"><label for="setting-char-persona">角色人设</label><textarea id="setting-char-persona" rows="4" placeholder="详细描述角色的性格、背景、说话风格等（此内容会作为 AI 生成头像的提示词）。"></textarea></div>
+                <div class="form-group"><label for="setting-char-persona">角色人设</label><textarea id="setting-char-persona" rows="10" placeholder="详细描述角色的性格、背景、说话风格等（此内容会作为 AI 生成头像的提示词）。"></textarea></div>
                 <div class="avatar-setting"><img src="" alt="我的头像" id="setting-my-avatar-preview" class="avatar-preview"><input type="file" id="setting-my-avatar-upload" accept="image/*" style="display:none;"><label for="setting-my-avatar-upload" class="btn btn-secondary" style="flex-grow:1;">更换我的头像</label></div>
                 <div class="form-group"><label for="setting-my-name">我的姓名</label><input type="text" id="setting-my-name"></div>
                 <div class="form-group"><label for="setting-my-persona">我的人设</label><textarea id="setting-my-persona" rows="3" placeholder="描述你希望在对话中扮演的形象。"></textarea></div>

@@ -369,7 +369,9 @@ function loadSettingsToSidebar() {
     cssText.value = c.customBubbleCss || '';
     cssText.disabled = !(useCss && useCss.checked);
   }
-  updateBubbleCssPreview(previewBox, c.customBubbleCss, !c.useCustomBubbleCss, colorThemes['white_pink']);
+  if (previewBox) {
+    updateBubbleCssPreview(previewBox, c.customBubbleCss, !c.useCustomBubbleCss, colorThemes['white_pink']);
+  }
 
   // 渲染气泡预设
   renderBubblePresets(c);

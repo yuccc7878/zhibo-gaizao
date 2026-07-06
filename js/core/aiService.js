@@ -384,9 +384,10 @@
    * @param {string} url API 地址
    * @param {string} key 密钥
    * @param {string} provider 服务商
+   * @param {string} [modelsPath] 自定义模型列表路径（默认 /v1/models）
    * @returns {Promise<string[]>}
    */
-  async function fetchModels(url, key, provider) {
+  async function fetchModels(url, key, provider, modelsPath) {
     if (provider === 'gemini') {
       const endpoint = url.replace(/\/+$/, '') + '/v1beta/models?key=' + key;
       const resp = await fetch(endpoint, { method: 'GET' });
@@ -397,12 +398,28 @@
         .map(m => m.name.replace('models/', ''));
     }
 
-    const endpoint = url.replace(/\/+$/, '') + '/v1/models';
+    // 使用自定义路径，没有则默认 /v1/models
+    const endpoint = url.replace(/\/+$/, '') + (modelsPath || '/v1/models');
     const headers = { 'Authorization': 'Bearer ' + key };
     const resp = await fetch(endpoint, { method: 'GET', headers });
     if (!resp.ok) throw new AiServiceError('API_ERROR', '获取模型列表失败: ' + resp.status, resp.status);
     const json = await resp.json();
-    return (json.data || []).map(m => m.id || m);
+    // 兼容多种返回格式
+    let models = [];
+    if (Array.isArray(json)) {
+      // 纯数组
+      models = json;
+    } else if (Array.isArray(json.data)) {
+      // OpenAI 标准: { data: [{ id: '...' }] }
+      models = json.data;
+    } else if (Array.isArray(json.models)) {
+      // 部分中转: { models: [{ id: '...' }] }
+      models = json.models;
+    } else if (json.id) {
+      // 单个模型对象
+      models = [json];
+    }
+    return models.map(m => m.id || m.model || m.name || (typeof m === 'string' ? m : JSON.stringify(m))).filter(Boolean);
   }
 
   // ─── 挂载到全局 ────────────────────────

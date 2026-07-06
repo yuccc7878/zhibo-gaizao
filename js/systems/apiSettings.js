@@ -62,10 +62,14 @@ function bindEvents() {
       qwen:     { host: 'https://dashscope.aliyuncs.com',         path: '/compatible-mode/v1/chat/completions' },
       ollama:   { host: 'http://localhost:11434',                  path: '/v1/chat/completions' },
     };
-    const p = presets[this.value];
-    if (p) {
-      dom['api-edit-host'].value = p.host;
-      dom['api-edit-path'].value = p.path;
+    if (this.value === 'newapi') {
+      // newapi（自定义）保留用户已填写的内容，不覆盖
+    } else {
+      const p = presets[this.value];
+      if (p) {
+        dom['api-edit-host'].value = p.host;
+        dom['api-edit-path'].value = p.path;
+      }
     }
   });
 
@@ -99,6 +103,24 @@ function bindEvents() {
       btn.classList.remove('loading');
       btn.querySelector('.btn-text').textContent = '点击拉取模型';
     }
+  });
+
+  // ─── 模型选择模式切换（拉取/手动） ───
+  document.querySelectorAll('input[name="api-model-mode"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const isFetch = this.value === 'fetch';
+      const select = document.getElementById('api-edit-model');
+      const manual = document.getElementById('api-edit-model-manual');
+      select.style.display = isFetch ? '' : 'none';
+      manual.style.display = isFetch ? 'none' : '';
+      select.required = isFetch;
+      manual.required = !isFetch;
+      if (isFetch) {
+        manual.value = '';
+      } else {
+        select.value = '';
+      }
+    });
   });
 
   // ─── 连接测试 ───
@@ -206,7 +228,9 @@ function bindEvents() {
       url: host,
       apiPath: path,
       key: dom['api-edit-key'].value.trim(),
-      model: dom['api-edit-model'].value,
+      model: document.querySelector('input[name="api-model-mode"]:checked').value === 'fetch'
+        ? dom['api-edit-model'].value
+        : document.getElementById('api-edit-model-manual').value,
     };
     if (editId) {
       const idx = db.apiPresets.findIndex(p => p.id === editId);
@@ -300,8 +324,14 @@ function openApiEdit(presetId) {
       dom['api-edit-host'].value = preset.url || '';
       dom['api-edit-path'].value = preset.apiPath || '/v1/chat/completions';
       dom['api-edit-key'].value = preset.key || '';
-      // 拉取模型列表
-      fetchAndPopulateModels(preset.url, preset.key, preset.provider, preset.model);
+      // 根据已保存的模型值选择模式
+      if (preset.model) {
+        document.querySelector('input[name="api-model-mode"][value="manual"]').checked = true;
+        document.getElementById('api-edit-model').style.display = 'none';
+        document.getElementById('api-edit-model-manual').style.display = '';
+        document.getElementById('api-edit-model-manual').value = preset.model;
+      }
+      // 已有模型名时默认手动模式，不自动拉取（避免 CORS 错误）
     }
   } else {
     dom['api-edit-title'].textContent = '新增配置';
@@ -313,6 +343,11 @@ function openApiEdit(presetId) {
     dom['api-edit-path'].value = '/v1/chat/completions';
     const select = dom['api-edit-model'];
     select.innerHTML = '<option value="">请先拉取模型列表</option>';
+    document.getElementById('api-edit-model-manual').value = '';
+    // newapi（自定义）默认手动模式，避免 CORS 报错
+    document.querySelector('input[name="api-model-mode"][value="manual"]').checked = true;
+    document.getElementById('api-edit-model').style.display = 'none';
+    document.getElementById('api-edit-model-manual').style.display = '';
   }
 }
 

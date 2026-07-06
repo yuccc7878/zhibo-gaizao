@@ -11,9 +11,14 @@ function ss(id) { utilsSwitchScreen({ screens: document.querySelectorAll('.scree
 
 let dom = null;
 
+// 左滑状态（独立于 chatList.js）
+let _swipedCard = null;
+
 export function init(_dom) {
   dom = _dom;
   bindEvents();
+  // 初始渲染（数据可能已准备好）
+  renderWorldBookList();
 }
 
 function bindEvents() {
@@ -165,20 +170,7 @@ function bindEvents() {
     showToast(dom['toast-notification'], '世界书已保存');
   });
 
-  dom['world-book-list-container']?.addEventListener('click', e => {
-    const item = e.target.closest('.world-book-item');
-    if (!item) return;
-    const id = item.dataset.id;
-    const db = getDb();
-    const book = db.worldBooks?.find(b => b.id === id);
-    if (!book) return;
-    state.currentEditingWorldBookId = book.id;
-    dom['world-book-name-input'].value = book.name;
-    dom['world-book-content-input'].value = book.content;
-    const posRadio = document.querySelector(`input[name="world-book-position"][value="${book.position}"]`);
-    if (posRadio) posRadio.checked = true;
-    ss('edit-world-book-screen');
-  });
+  // 旧的世界书点击事件已迁移到 renderWorldBookList 中的 swipe-card__inner 点击
 
   // 长按弹出菜单（鼠标 + 触摸）
   function showWBContextMenu(id, x, y) {
@@ -299,33 +291,229 @@ export function renderWorldBookList() {
   }
   if (placeholder) placeholder.style.display = 'none';
 
-  container.innerHTML = '<ul class="list-container">' +
-    books.map(b => {
-      const isEnabled = b.enabled !== false;
-      return `<li class="world-book-item" data-id="${b.id}" style="display:flex;align-items:center;gap:10px;">
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:6px;"><strong>${b.name}</strong><span style="font-size:12px;color:#999;">${b.position === 'before' ? '🔹' : '🔸'}</span>${!isEnabled ? '<span style="font-size:10px;color:#ccc;background:#f5f5f5;padding:1px 6px;border-radius:4px;">已停用</span>' : ''}</div>
-          <div style="font-size:12px;color:#888;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${b.content}</div>
-        </div>
-        <label class="wb-toggle-switch" title="${isEnabled ? '点击停用' : '点击启用'}" style="flex-shrink:0;">
-          <input type="checkbox" ${isEnabled ? 'checked' : ''} data-wb-toggle="${b.id}">
-          <span class="wb-toggle-slider"></span>
-        </label>
-      </li>`;
-    }).join('') +
-    '</ul>';
+  container.innerHTML = '';
+  container.className = '';
 
-  // 开关事件
-  container.querySelectorAll('[data-wb-toggle]').forEach(cb => {
-    cb.addEventListener('change', async () => {
-      const id = cb.dataset.wbToggle;
-      const db = getDb();
-      const book = (db.worldBooks || []).find(b => b.id === id);
-      if (book) {
-        book.enabled = cb.checked;
-        await saveData();
-        showToast(dom['toast-notification'], cb.checked ? '✅ 已启用' : '⛔ 已停用');
-      }
+  const list = document.createElement('div');
+  list.className = 'swipe-card-list';
+
+  books.forEach(b => {
+    const isEnabled = b.enabled !== false;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'swipe-card';
+    wrapper.dataset.cardId = b.id;
+
+    // 左滑操作按钮（背后，顺序：编辑 → 复制 → 删除）
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'swipe-card__actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'swipe-card__action-btn action-pin';
+    editBtn.textContent = '编辑';
+    editBtn.dataset.action = 'edit';
+    actionsDiv.appendChild(editBtn);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'swipe-card__action-btn action-read';
+    copyBtn.textContent = '复制';
+    copyBtn.dataset.action = 'copy';
+    actionsDiv.appendChild(copyBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'swipe-card__action-btn action-delete';
+    delBtn.textContent = '删除';
+    delBtn.dataset.action = 'delete';
+    actionsDiv.appendChild(delBtn);
+
+    wrapper.appendChild(actionsDiv);
+
+    const cardOuter = document.createElement('div');
+    cardOuter.className = 'swipe-card__wrapper';
+
+    const cardInner = document.createElement('div');
+    cardInner.className = 'swipe-card__inner';
+
+    // 内容行：开关(左) | 文字内容(中)
+    const contentDiv = document.createElement('div');
+    contentDiv.style.cssText = 'flex:1;min-width:0;display:flex;align-items:center;gap:10px;';
+
+    // 开关放在最左侧
+    const toggleLabel = document.createElement('label');
+    toggleLabel.className = 'wb-toggle-switch';
+    toggleLabel.title = isEnabled ? '点击停用' : '点击启用';
+    toggleLabel.style.cssText = 'flex-shrink:0;margin-right:8px;';
+    const toggleInput = document.createElement('input');
+    toggleInput.type = 'checkbox';
+    toggleInput.checked = isEnabled;
+    toggleInput.dataset.wbToggle = b.id;
+    const toggleSlider = document.createElement('span');
+    toggleSlider.className = 'wb-toggle-slider';
+    toggleLabel.appendChild(toggleInput);
+    toggleLabel.appendChild(toggleSlider);
+    contentDiv.appendChild(toggleLabel);
+
+    // 文字内容
+    const textDiv = document.createElement('div');
+    textDiv.style.cssText = 'flex:1;min-width:0;';
+    const nameRow = document.createElement('div');
+    nameRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    const nameSpan = document.createElement('strong');
+    nameSpan.textContent = b.name;
+    nameRow.appendChild(nameSpan);
+    const posSpan = document.createElement('span');
+    posSpan.style.cssText = 'font-size:12px;color:#999;';
+    posSpan.textContent = b.position === 'before' ? '🔹' : '🔸';
+    nameRow.appendChild(posSpan);
+    if (!isEnabled) {
+      const disabledSpan = document.createElement('span');
+      disabledSpan.style.cssText = 'font-size:10px;color:#ccc;background:#f5f5f5;padding:1px 6px;border-radius:4px;';
+      disabledSpan.textContent = '已停用';
+      nameRow.appendChild(disabledSpan);
+    }
+    textDiv.appendChild(nameRow);
+
+    const previewSpan = document.createElement('div');
+    previewSpan.style.cssText = 'font-size:12px;color:#888;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    previewSpan.textContent = b.content;
+    textDiv.appendChild(previewSpan);
+
+    contentDiv.appendChild(textDiv);
+
+    cardInner.appendChild(contentDiv);
+    cardOuter.appendChild(cardInner);
+    wrapper.appendChild(cardOuter);
+
+    // 点击卡片不触发编辑（仅供关闭左滑状态）
+    cardInner.addEventListener('click', (e) => {
+      if (e.target.closest('.wb-toggle-switch')) return;
+      if (_swipedCard === wrapper) { closeSwipeCardGlobal(); return; }
+      if (_swipedCard) closeSwipeCardGlobal();
+      // 不做任何跳转，仅关闭左滑
     });
+
+    // 左滑手势
+    let startX = 0, startY = 0, deltaX = 0;
+    let isDragging = false, isScrolling = null;
+    const threshold = 40;
+
+    cardOuter.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      deltaX = 0; isDragging = true; isScrolling = null;
+      cardInner.classList.add('dragging');
+    }, { passive: true });
+
+    cardOuter.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (isScrolling === null) isScrolling = Math.abs(dy) > Math.abs(dx);
+      if (isScrolling) return;
+      e.preventDefault();
+      deltaX = dx;
+      const translateX = Math.max(-260, Math.min(0, dx));
+      cardInner.style.transform = 'translateX(' + translateX + 'px)';
+    }, { passive: false });
+
+    cardOuter.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      cardInner.classList.remove('dragging');
+      if (isScrolling) { cardInner.style.transform = ''; return; }
+      if (deltaX < -threshold) {
+        if (_swipedCard && _swipedCard !== wrapper) closeSwipeCardGlobal();
+        cardInner.classList.add('swiped');
+        cardInner.style.transform = '';
+        _swipedCard = wrapper;
+      } else {
+        cardInner.classList.remove('swiped');
+        cardInner.style.transform = '';
+        if (_swipedCard === wrapper) _swipedCard = null;
+      }
+    }, { passive: true });
+
+    list.appendChild(wrapper);
   });
+
+  container.appendChild(list);
+
+  // 开关变更事件（委托）
+  container.addEventListener('change', async (e) => {
+    const input = e.target.closest('[data-wb-toggle]');
+    if (!input) return;
+    const id = input.dataset.wbToggle;
+    const db2 = getDb();
+    const book = (db2.worldBooks || []).find(wb => wb.id === id);
+    if (book) {
+      book.enabled = input.checked;
+      await saveData();
+      showToast(dom['toast-notification'], input.checked ? '✅ 已启用' : '⛔ 已停用');
+    }
+  });
+
+  // 操作按钮事件（委托）
+  container.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.swipe-card__action-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    const wrapper2 = btn.closest('.swipe-card');
+    if (!wrapper2) return;
+    const id = wrapper2.dataset.cardId;
+    const action = btn.dataset.action;
+    const db2 = getDb();
+    const book = (db2.worldBooks || []).find(wb => wb.id === id);
+    if (!book) return;
+
+    if (action === 'edit') {
+      state.currentEditingWorldBookId = book.id;
+      dom['world-book-name-input'].value = book.name;
+      dom['world-book-content-input'].value = book.content;
+      const posRadio = document.querySelector('input[name="world-book-position"][value="' + book.position + '"]');
+      if (posRadio) posRadio.checked = true;
+      ss('edit-world-book-screen');
+    } else if (action === 'copy') {
+      const text = book.name + '\n\n' + book.content;
+      if (navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast(dom['toast-notification'], '已复制到剪贴板');
+        } catch (_) {
+          fallbackCopy(text);
+        }
+      } else {
+        fallbackCopy(text);
+      }
+    } else if (action === 'delete') {
+      if (!confirm('确定删除世界书"' + book.name + '"吗？')) {
+        closeSwipeCardGlobal();
+        return;
+      }
+      db2.worldBooks = (db2.worldBooks || []).filter(wb => wb.id !== id);
+      (db2.characters || []).forEach(c => c.worldBookIds = (c.worldBookIds || []).filter(wbId => wbId !== id));
+      (db2.groups || []).forEach(g => g.worldBookIds = (g.worldBookIds || []).filter(wbId => wbId !== id));
+      await saveData();
+      renderWorldBookList();
+      showToast(dom['toast-notification'], '条目已删除');
+    }
+    closeSwipeCardGlobal();
+  });
+
+  function closeSwipeCardGlobal() {
+    if (_swipedCard) {
+      const inner = _swipedCard.querySelector('.swipe-card__inner');
+      if (inner) { inner.classList.remove('swiped'); inner.style.transform = ''; }
+      _swipedCard = null;
+    }
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px;';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast(dom['toast-notification'], '已复制到剪贴板');
 }

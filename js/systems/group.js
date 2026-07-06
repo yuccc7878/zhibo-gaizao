@@ -616,3 +616,46 @@ function renderMemberBuiltinWBList(member) {
     }
   }));
 }
+
+// ─── 便捷群聊创建（供 chatList.js 调用） ──────────────────
+
+/**
+ * 快速从联系人选择器创建群聊
+ * @param {string} name - 群聊名称
+ * @param {string[]} memberCharIds - 选中的联系人 character ID 数组
+ */
+export async function createGroupChat(name, memberCharIds) {
+  const db = getDb();
+  if (!db.characters || memberCharIds.length < 1) {
+    showToast(dom['toast-notification'], '至少需要选择一个成员');
+    return null;
+  }
+  const firstChar = db.characters[0];
+  const newGroup = {
+    id: `group_${Date.now()}`,
+    name: name || '新群聊',
+    avatar: 'https://i.postimg.cc/fTLCngk1/image.jpg',
+    me: {
+      nickname: firstChar?.myName || '我',
+      persona: firstChar?.myPersona || '',
+      avatar: firstChar?.myAvatar || 'assets/icons/default-avatar.png',
+    },
+    members: memberCharIds.map(charId => {
+      const c = (db.characters || []).find(ch => ch.id === charId);
+      return c ? {
+        id: `member_${c.id}`, originalCharId: c.id,
+        realName: c.realName, groupNickname: c.remarkName,
+        persona: c.persona, avatar: c.avatar,
+      } : null;
+    }).filter(Boolean),
+    theme: 'white_pink', maxMemory: 100, chatBg: '',
+    history: [], isPinned: false,
+    useCustomBubbleCss: false, customBubbleCss: '', worldBookIds: [],
+  };
+  if (!db.groups) db.groups = [];
+  db.groups.push(newGroup);
+  await saveData();
+  if (_renderChatList) _renderChatList();
+  showToast(dom['toast-notification'], `群聊"${newGroup.name}"创建成功！`);
+  return newGroup;
+}
