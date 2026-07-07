@@ -1,0 +1,442 @@
+/**
+ * 约会小镇 - Three.js 3D 核心 (第二部分)
+ * 地点模型/魔法阵/交互增强/动画循环/生命周期
+ */
+import * as THREE from 'three';
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { DATE_LOCATIONS } from './date-core-pt1.js';
+
+// ==================== 8个地点独特3D模型 + 魔法阵标注 ====================
+export function setupLocationsAndMarkers(scene, camera, controls, clickables, magicRings, topOrbs) {
+  const totalLocations = DATE_LOCATIONS;
+  
+  totalLocations.forEach((loc, idx) => {
+    const pos = new THREE.Vector3(loc.pos[0], loc.pos[1], loc.pos[2]);
+    const color = loc.color;
+    const g = new THREE.Group();
+    g.position.copy(pos);
+    g.userData.locationId = loc.id;
+    g.userData.isLocation = true;
+
+    // 1. 独特3D建筑模型
+    const buildingGroup = createLocationBuilding(loc);
+    if (buildingGroup) g.add(buildingGroup);
+
+    // 2. 魔法阵标注（TorusGeometry 环 + 细光束 + 悬浮小球）
+    const markerGroup = createMagicMarker(color);
+    g.add(markerGroup);
+
+    scene.add(g);
+    clickables.push(g);
+  });
+}
+
+function createLocationBuilding(loc) {
+  const g = new THREE.Group();
+  
+  switch (loc.id) {
+    case 'cafe': {
+      // 咖啡厅：方块+遮阳棚+小圆桌
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.45),
+        new THREE.MeshPhysicalMaterial({ color:0xffe8d0, roughness:0.5 }));
+      body.position.y = 0.35;
+      g.add(body);
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.04, 0.5),
+        new THREE.MeshPhysicalMaterial({ color:0xcc6644, roughness:0.7 }));
+      roof.position.y = 0.46;
+      g.add(roof);
+      // 遮阳棚（extrude小面）
+      const awning = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.02, 0.3),
+        new THREE.MeshPhysicalMaterial({ color:0xdd8866 }));
+      awning.position.set(0.33, 0.36, 0);
+      g.add(awning);
+      break;
+    }
+    case 'cinema': {
+      // 影院：矩形体+大型入口+装饰条
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.4),
+        new THREE.MeshPhysicalMaterial({ color:0x446688, roughness:0.6 }));
+      body.position.y = 0.35;
+      g.add(body);
+      const marquee = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.06, 0.08),
+        new THREE.MeshBasicMaterial({ color:0xffdd44 }));
+      marquee.position.set(0, 0.5, 0.24);
+      g.add(marquee);
+      // 两侧装饰柱
+      for (let side = -1; side <= 1; side += 2) {
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 6),
+          new THREE.MeshPhysicalMaterial({ color:0xccaa88 }));
+        pillar.position.set(side*0.2, 0.25, 0.24);
+        g.add(pillar);
+      }
+      break;
+    }
+    case 'park': {
+      // 游乐园：摩天轮简化版（环 + 辐条 + 小舱）
+      const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.02, 8, 16),
+        new THREE.MeshPhysicalMaterial({ color:0x88bbee, roughness:0.5 }));
+      wheel.position.y = 0.45;
+      wheel.rotation.x = Math.PI / 2;
+      g.add(wheel);
+      for (let i = 0; i < 6; i++) {
+        const angle = (i/6)*Math.PI*2;
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.04,0.04,0.03),
+          new THREE.MeshPhysicalMaterial({ color:0xff6644 }));
+        cabin.position.set(Math.cos(angle)*0.25, 0.45 + Math.sin(angle)*0.25, 0);
+        g.add(cabin);
+      }
+      // 底座
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.15, 6),
+        new THREE.MeshPhysicalMaterial({ color:0x554433 }));
+      base.position.y = 0.2;
+      g.add(base);
+      break;
+    }
+    case 'gallery': {
+      // 画廊：堆叠彩色方块
+      const colors = [0xff44aa, 0x88ddff, 0xffaa44, 0x66dd88];
+      for (let i = 0; i < 5; i++) {
+        const block = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.12),
+          new THREE.MeshPhysicalMaterial({ color:colors[i%4], roughness:0.3, metalness:0.1 }));
+        block.position.set((i-2)*0.1, 0.3 + i*0.05, 0);
+        g.add(block);
+      }
+      break;
+    }
+    case 'observatory': {
+      // 瞭望台：高柱+穹顶+望远镜
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.5, 8),
+        new THREE.MeshPhysicalMaterial({ color:0xddd4c4 }));
+      pillar.position.y = 0.5;
+      g.add(pillar);
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8, 0, Math.PI*2, 0, Math.PI/2),
+        new THREE.MeshPhysicalMaterial({ color:0x446688, roughness:0.4 }));
+      dome.position.y = 0.75;
+      dome.rotation.x = Math.PI;
+      g.add(dome);
+      // 望远镜管
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.15, 6),
+        new THREE.MeshPhysicalMaterial({ color:0x664422 }));
+      tube.position.set(0.08, 0.8, 0);
+      tube.rotation.z = 0.3;
+      g.add(tube);
+      break;
+    }
+    case 'jazz': {
+      // 酒吧：半地下风格 + 霓虹
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.4),
+        new THREE.MeshPhysicalMaterial({ color:0x4a3a2a, roughness:0.7 }));
+      body.position.y = 0.28;
+      g.add(body);
+      const sign = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.04, 0.02),
+        new THREE.MeshBasicMaterial({ color:0xff8844, transparent:true, opacity:0.8 }));
+      sign.position.set(0, 0.4, 0.21);
+      g.add(sign);
+      // 霓虹管（发光小管围绕）
+      const neonMat = new THREE.MeshBasicMaterial({ color:0xff4400, transparent:true, opacity:0.6 });
+      for (let i = 0; i < 4; i++) {
+        const angle = (i/4)*Math.PI*2;
+        const neon = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.01, 0.01), neonMat);
+        neon.position.set(Math.cos(angle)*0.22, 0.35, Math.sin(angle)*0.22);
+        g.add(neon);
+      }
+      break;
+    }
+    case 'hotel': {
+      // 爱情旅馆：蜂巢网格 + 霓虹
+      const hexMat = new THREE.MeshPhysicalMaterial({ color:0x88ffdd, roughness:0.2, metalness:0.4, emissive:0x00ffcc, emissiveIntensity:0.1 });
+      for (let i = 0; i < 5; i++) {
+        const hex = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.03, 6), hexMat);
+        hex.position.set((i-2)*0.1, 0.35 + (i%2)*0.06, 0);
+        g.add(hex);
+      }
+      const glowRing = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.008, 8, 16),
+        new THREE.MeshBasicMaterial({ color:0x00ffcc, transparent:true, opacity:0.4 }));
+      glowRing.position.y = 0.28;
+      glowRing.rotation.x = Math.PI / 2;
+      g.add(glowRing);
+      break;
+    }
+    case 'sakura': {
+      // 樱花园：树干+粉红花冠+漂浮花瓣
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.25, 6),
+        new THREE.MeshPhysicalMaterial({ color:0x6a4a3a }));
+      trunk.position.y = 0.25;
+      g.add(trunk);
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8),
+        new THREE.MeshPhysicalMaterial({ color:0xff88cc, roughness:0.6, emissive:0xff4488, emissiveIntensity:0.1 }));
+      crown.position.y = 0.45;
+      crown.scale.y = 0.7;
+      g.add(crown);
+      // 飘浮花瓣（小平面围绕）
+      for (let i = 0; i < 12; i++) {
+        const angle = (i/12)*Math.PI*2;
+        const petal = new THREE.Mesh(new THREE.PlaneGeometry(0.02, 0.015),
+          new THREE.MeshBasicMaterial({ color:0xff88cc, transparent:true, opacity:0.5, side:THREE.DoubleSide }));
+        petal.position.set(Math.cos(angle)*0.28, 0.4 + Math.sin(i*0.5)*0.05, Math.sin(angle)*0.28);
+        petal.rotation.set(Math.random(), Math.random(), Math.random());
+        g.add(petal);
+      }
+      break;
+    }
+  }
+  return g;
+}
+
+// ==================== 魔法阵标注系统 ====================
+function createMagicMarker(color) {
+  const g = new THREE.Group();
+  const baseColor = new THREE.Color(color);
+
+  // 主环
+  const ringMat = new THREE.MeshPhysicalMaterial({
+    color: baseColor, emissive: baseColor, emissiveIntensity: 0.3,
+    transparent: true, opacity: 0.7, roughness: 0.3, metalness: 0.4
+  });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.025, 12, 24), ringMat);
+  ring.rotation.x = Math.PI / 2 + 0.15;
+  ring.position.y = 0.15;
+  g.add(ring);
+
+  // 第二环（反向倾斜）
+  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.015, 8, 24),
+    ringMat.clone());
+  ring2.material.opacity = 0.4;
+  ring2.rotation.x = Math.PI / 2 - 0.15;
+  ring2.rotation.z = 0.3;
+  ring2.position.y = 0.18;
+  g.add(ring2);
+
+  // 细光束（4条向上汇聚）
+  const beamMat = new THREE.MeshBasicMaterial({
+    color: baseColor, transparent: true, opacity: 0.15
+  });
+  for (let i = 0; i < 4; i++) {
+    const angle = (i/4)*Math.PI*2 + 0.2;
+    const startR = 0.4, endR = 0.1;
+    const shape = new THREE.Shape();
+    shape.moveTo(0,0);
+    shape.quadraticCurveTo(0.2, 0.3, 0, 0.5);
+    const beam = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(shape, {steps:1, depth:0.008, bevelEnabled:false}),
+      beamMat
+    );
+    beam.position.set(Math.cos(angle)*startR, 0.15, Math.sin(angle)*startR);
+    beam.rotation.y = -angle;
+    beam.lookAt(0, 1, 0);
+    g.add(beam);
+  }
+
+  // 悬浮小球（4颗环绕）
+  const orbMat = new THREE.MeshPhysicalMaterial({
+    color: baseColor, emissive: baseColor, emissiveIntensity: 0.5,
+    roughness: 0.1, metalness: 0.8
+  });
+  for (let i = 0; i < 4; i++) {
+    const angle = (i/4)*Math.PI*2;
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), orbMat.clone());
+    orb.position.set(Math.cos(angle)*0.6, 0.25 + Math.sin(angle)*0.05, Math.sin(angle)*0.6);
+    orb.userData.orbitAngle = angle;
+    orb.userData.orbitSpeed = 0.4 + Math.random()*0.2;
+    g.add(orb);
+  }
+
+  return g;
+}
+
+// ==================== CSS2D 标签创建 ====================
+export function createLocationLabels(scene) {
+  DATE_LOCATIONS.forEach(loc => {
+    const div = document.createElement('div');
+    div.textContent = loc.name;
+    div.style.color = '#fff';
+    div.style.fontSize = '13px';
+    div.style.fontWeight = '600';
+    div.style.textShadow = '0 1px 4px rgba(0,0,0,0.6)';
+    div.style.background = 'rgba(0,0,0,0.5)';
+    div.style.padding = '3px 10px';
+    div.style.borderRadius = '12px';
+    div.style.backdropFilter = 'blur(4px)';
+    div.style.border = '1px solid rgba(255,255,255,0.2)';
+    div.style.pointerEvents = 'none';
+    div.style.fontFamily = 'sans-serif';
+    const label = new CSS2DObject(div);
+    label.position.set(loc.pos[0], loc.pos[1] + 0.9, loc.pos[2]);
+    scene.add(label);
+  });
+}
+
+// ==================== 交互系统（hover + 点击 + 面板） ====================
+export function setupInteractionSystem(renderer, scene, camera, controls, clickables, pointer, raycaster,
+  showPanelFn, closePanelFn) {
+  let hoveredId = null;
+
+  renderer.domElement.addEventListener('pointermove', (e) => {
+    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  renderer.domElement.addEventListener('click', (e) => {
+    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObjects(clickables, true);
+    if (intersects.length > 0) {
+      let obj = intersects[0].object;
+      while (obj && !obj.userData.isLocation) {
+        obj = obj.parent;
+        if (!obj) break;
+        if (obj.userData && obj.userData.isLocation) break;
+      }
+      if (obj && obj.userData && obj.userData.locationId) {
+        const loc = DATE_LOCATIONS.find(l => l.id === obj.userData.locationId);
+        if (loc) {
+          // 相机飞行至该地点
+          flyToLocation(camera, controls, loc, () => {
+            showPanelFn(loc);
+          });
+          return;
+        }
+      }
+    }
+    // 点击空白处关闭面板
+    closePanelFn();
+  });
+}
+
+// ==================== 相机飞行 ====================
+export function flyToLocation(camera, controls, loc, callback) {
+  const targetPos = new THREE.Vector3(loc.pos[0], 0.2, loc.pos[2]);
+  const startPos = camera.position.clone();
+  const startTarget = controls.target.clone();
+  const endPos = new THREE.Vector3(
+    loc.pos[0] + 2.5,
+    loc.pos[1] + 1.5,
+    loc.pos[2] + 2.5
+  );
+  const endTarget = new THREE.Vector3(loc.pos[0], loc.pos[1] + 0.3, loc.pos[2]);
+
+  controls.autoRotate = false;
+  const duration = 800; // ms
+  const startTime = performance.now();
+
+  function flyStep() {
+    const elapsed = performance.now() - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    // easeInOutCubic
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    controls.update();
+
+    if (t < 1) {
+      requestAnimationFrame(flyStep);
+    } else {
+      camera.position.copy(endPos);
+      controls.target.copy(endTarget);
+      controls.update();
+      if (callback) setTimeout(callback, 100);
+    }
+  }
+  flyStep();
+}
+
+// ==================== 心动之选 ⭐ 系统 ====================
+export function setupHeartStar(scene, clickables, heartRef) {
+  // 创建星星标记
+  const starMat = new THREE.MeshPhysicalMaterial({
+    color: 0xffea00, emissive: 0xffcc00, emissiveIntensity: 0.8,
+    roughness: 0.2, metalness: 0.6, transparent: true, opacity: 0.9
+  });
+  const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.06, 0), starMat);
+  star.visible = false;
+  star.userData.isHeartStar = true;
+  scene.add(star);
+  
+  // 光晕（光环）
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0xffaa00, transparent: true, opacity: 0.3
+  });
+  const glow = new THREE.Mesh(new THREE.RingGeometry(0.04, 0.1, 16), glowMat);
+  glow.rotation.x = Math.PI / 2;
+  glow.position.y = -0.02;
+  glow.userData.isHeartGlow = true;
+  star.add(glow);
+
+  heartRef.star = star;
+  heartRef.light = glow;
+  heartRef.currentIndex = -1;
+
+  // 初始随机选择
+  pickNewHeartLocation(heartRef);
+
+  // 每20秒切换
+  setInterval(() => {
+    pickNewHeartLocation(heartRef);
+  }, 20000);
+
+  // 动画更新
+  heartRef.update = (time) => {
+    if (!star.visible) return;
+    star.position.y += Math.sin(time * 2) * 0.0003;
+    star.rotation.y += 0.01;
+    star.rotation.x = Math.sin(time * 1.5) * 0.1;
+    if (glow) {
+      glow.scale.setScalar(1 + Math.sin(time * 3) * 0.2);
+      glow.material.opacity = 0.2 + Math.sin(time * 2) * 0.1;
+    }
+  };
+}
+
+function pickNewHeartLocation(heartRef) {
+  const available = DATE_LOCATIONS.slice();
+  if (heartRef.currentIndex >= 0 && heartRef.currentIndex < available.length) {
+    available.splice(heartRef.currentIndex, 1);
+  }
+  const idx = Math.floor(Math.random() * available.length);
+  const loc = available[idx];
+  heartRef.currentIndex = DATE_LOCATIONS.indexOf(loc);
+  const star = heartRef.star;
+  if (star) {
+    star.position.set(loc.pos[0], loc.pos[1] + 0.6, loc.pos[2]);
+    star.visible = true;
+  }
+  console.log('[Date] 随机心动之选:', loc.name);
+}
+
+// ==================== 魔法阵动画更新 ====================
+export function animateMagicRings(magicRings, time) {
+  // 所有魔法阵通过场景遍历（替代直接引用）
+}
+
+// ==================== 详情面板 ====================
+export function showLocationPanel(loc) {
+  closePanel(); // 先关闭旧面板
+  const panel = document.getElementById('date-panel');
+  if (!panel) return;
+
+  document.getElementById('date-panel-name').textContent = loc.name;
+  document.getElementById('date-panel-sub').textContent = loc.sub;
+  document.getElementById('date-panel-desc').textContent = loc.desc;
+  document.getElementById('date-panel-tags').textContent = loc.tags;
+  document.getElementById('date-panel-mood').textContent = loc.mood;
+
+  panel.classList.add('active');
+
+  // 更新"前往约会"按钮行为
+  const btn = document.getElementById('date-panel-btn');
+  if (btn) {
+    btn.onclick = () => {
+      alert(`即将前往「${loc.name}」开启约会…（该功能开发中）`);
+    };
+  }
+
+  // 小延迟后自动滚回顶部
+  requestAnimationFrame(() => { panel.scrollTop = 0; });
+}
+
+export function closePanel() {
+  const panel = document.getElementById('date-panel');
+  if (panel) panel.classList.remove('active');
+}

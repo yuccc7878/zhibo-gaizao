@@ -1,0 +1,308 @@
+let _wizardData = {};
+
+function openContactWizard() {
+  _wizardData = {};
+  const modal = dom['contact-wizard-modal'];
+  if (!modal) return;
+  dom['wizard-import-preview'].style.display = 'none';
+  dom['wizard-char-realname'].value = '';
+  dom['wizard-char-nickname'].value = '';
+  dom['wizard-char-persona'].value = '';
+  dom['wizard-avatar-preview'].src = 'assets/icons/default-avatar.png';
+  dom['wizard-step1-next'].disabled = true;
+  const wbList = dom['wizard-wb-list'];
+  if (wbList) {
+    const db = getDb();
+    wbList.innerHTML = '';
+    (db.worldBooks || []).forEach(book => {
+      const item = document.createElement('div');
+      item.className = 'wizard-wb-item';
+      item.innerHTML = '<input type="checkbox" id="wiz-wb-' + book.id + '" value="' + book.id + '"><label for="wiz-wb-' + book.id + '">' + escHtml(book.name) + '</label>';
+      wbList.appendChild(item);
+    });
+  }
+  showWizardStep(1);
+  modal.classList.add('visible');
+}
+
+function showWizardStep(step) {
+  const modal = dom['contact-wizard-modal'];
+  modal.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+  const target = modal.querySelector('.wizard-step[data-step="' + step + '"]');
+  if (target) target.classList.add('active');
+  modal.querySelectorAll('.wizard-dot').forEach(d => {
+    const ds = parseInt(d.dataset.step);
+    d.classList.remove('active', 'done');
+    if (ds === step) d.classList.add('active');
+    else if (ds < step) d.classList.add('done');
+  });
+}
+
+function bindWizardEvents() {
+  const importZone = dom['wizard-import-zone'];
+  const importFile = dom['wizard-import-file'];
+  if (importZone && importFile) {
+    importZone.addEventListener('click', () => importFile.click());
+  }
+  if (importFile) {
+    importFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      await handleWizardImport(file);
+      importFile.value = '';
+    });
+  }
+  dom['wizard-skip-import']?.addEventListener('click', () => {
+    dom['wizard-step1-next'].disabled = false;
+    showWizardStep(2);
+  });
+  dom['wizard-step1-next']?.addEventListener('click', () => showWizardStep(2));
+  dom['wizard-step2-back']?.addEventListener('click', () => showWizardStep(1));
+  dom['wizard-step2-next']?.addEventListener('click', () => {
+    const realname = dom['wizard-char-realname']?.value.trim();
+    const nickname = dom['wizard-char-nickname']?.value.trim();
+    if (!realname || !nickname) {
+      showToast(dom['toast-notification'], '请填写真实姓名和昵称');
+      return;
+    }
+    _wizardData.realName = realname;
+    _wizardData.remarkName = nickname;
+    showWizardStep(3);
+  });
+  dom['wizard-step3-back']?.addEventListener('click', () => showWizardStep(2));
+  dom['wizard-step3-finish']?.addEventListener('click', async () => await finishWizard());
+  dom['wizard-avatar-upload']?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressImage(file, { quality: 0.8, maxWidth: 400, maxHeight: 400 });
+      dom['wizard-avatar-preview'].src = dataUrl;
+      _wizardData.avatar = dataUrl;
+    } catch (err) {
+      showToast(dom['toast-notification'], '头像压缩失败');
+    }
+  });
+}
+
+async function handleWizardImport(file) {
+  try {
+    if (!window.SillyTavernImporter) {
+      showToast(dom['toast-notification'], '导入模块未加载');
+      return;
+    }
+    const card = await window.SillyTavernImporter.parseCardFile(file);
+    _wizardData.importedCard = card;
+    const previewEl = dom['wizard-import-preview'];
+    if (previewEl) {
+      previewEl.style.display = 'block';
+      previewEl.innerHTML = '<div class="import-card-header">' +
+        '<img src="' + escHtml(card.avatar || '') + '" class="import-card-avatar" onerror="this.src=\'assets/icons/default-avatar.png\'">' +
+        '<div class="import-card-name">' + escHtml(card.name || '未命名') + '</div>' +
+        '</div>' +
+        '<div style="font-size:12px;color:#888;padding:4px 0;">已解析成功，点击下一步继续</div>';
+    }
+    dom['wizard-step1-next'].disabled = false;
+  } catch (err) {
+    console.error('[Wizard Import]', err);
+    showToast(dom['toast-notification'], '导入失败: ' + err.message);
+  }
+}
+
+async function finishWizard() {
+  const persona = dom['wizard-char-persona']?.value.trim() || '';
+  _wizardData.persona = persona;
+  const selectedWB = [];
+  const wbChecks = dom['wizard-wb-list']?.querySelectorAll('input:checked') || [];
+  wbChecks.forEach(cb => selectedWB.push(cb.value));
+  const db = getDb();
+  const importedCard = _wizardData.importedCard;
+  let newChar;
+  if (importedCard && !_wizardData.realName) {
+    newChar = {
+      id: 'char_' + Date.now(),
+      realName: importedCard.name || '',
+      remarkName: importedCard.name || '',
+      persona: importedCard.description || '',
+      avatar: importedCard.avatar || 'assets/icons/default-avatar.png',
+      myName: db.characters?.[0]?.myName || '我',
+      myPersona: db.characters?.[0]?.myPersona || '',
+      myAvatar: db.characters?.[0]?.myAvatar || 'assets/icons/default-avatar.png',
+      theme: 'white_pink', maxMemory: 100, chatBg: '', history: [],
+      isPinned: false, status: '在线', worldBookIds: selectedWB,
+      useCustomBubbleCss: false, customBubbleCss: '',
+      aiImgGen: false,
+      scenario: importedCard.scenario || '',
+      systemPrompt: importedCard.system_prompt || '',
+      mesExample: importedCard.mes_example || '',
+    };
+  } else {
+    newChar = {
+      id: 'char_' + Date.now(),
+      realName: _wizardData.realName || '',
+      remarkName: _wizardData.remarkName || _wizardData.realName || '',
+      persona: _wizardData.persona || '',
+      avatar: _wizardData.avatar || 'assets/icons/default-avatar.png',
+      myName: db.characters?.[0]?.myName || '我',
+      myPersona: db.characters?.[0]?.myPersona || '',
+      myAvatar: db.characters?.[0]?.myAvatar || 'assets/icons/default-avatar.png',
+      theme: 'white_pink', maxMemory: 100, chatBg: '', history: [],
+      isPinned: false, status: '在线', worldBookIds: selectedWB,
+      useCustomBubbleCss: false, customBubbleCss: '',
+      aiImgGen: false,
+    };
+  }
+  if (!db.characters) db.characters = [];
+  db.characters.push(newChar);
+  await saveData();
+  renderAllLists();
+  dom['contact-wizard-modal']?.classList.remove('visible');
+  showToast(dom['toast-notification'], '联系人"' + newChar.remarkName + '"创建成功！');
+}
+
+let _pickerMode = 'single';
+let _pickerResolve = null;
+
+function openContactPicker(mode) {
+  _pickerMode = mode;
+  const modal = dom['contact-picker-modal'];
+  if (!modal) return;
+  const title = dom['picker-modal-title'];
+  const subtitle = dom['picker-modal-subtitle'];
+  if (mode === 'single') {
+    title.textContent = '选择联系人';
+    subtitle.textContent = '选择一个联系人开始私聊';
+  } else {
+    title.textContent = '选择群成员';
+    subtitle.textContent = '已选择 0 位成员（至少 1 位）';
+  }
+  const list = dom['picker-list'];
+  list.innerHTML = '';
+  const db = getDb();
+  const chars = db.characters || [];
+  if (chars.length === 0) {
+    list.innerHTML = '<li style="color:#aaa;text-align:center;padding:20px;">还没有联系人，请先创建</li>';
+    dom['picker-confirm-btn'].disabled = true;
+  } else {
+    dom['picker-confirm-btn'].disabled = false;
+    chars.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'contact-picker-item';
+      const inputType = mode === 'single' ? 'radio' : 'checkbox';
+      li.innerHTML = '<input type="' + inputType + '" name="picker-char" value="' + c.id + '" class="picker-check">' +
+        '<img src="' + c.avatar + '" alt="' + c.remarkName + '" onerror="this.src=\'assets/icons/default-avatar.png\'">' +
+        '<span class="picker-name">' + escHtml(c.remarkName || c.realName) + '</span>';
+      if (mode === 'single') {
+        li.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const radio = li.querySelector('input');
+            if (radio) radio.checked = true;
+          }
+        });
+      } else {
+        li.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const cb = li.querySelector('input');
+            if (cb) cb.checked = !cb.checked;
+          }
+          updatePickerCount();
+        });
+      }
+      list.appendChild(li);
+    });
+  }
+  const search = dom['picker-search'];
+  if (search) {
+    search.value = '';
+    search.oninput = () => {
+      const q = search.value.toLowerCase();
+      list.querySelectorAll('.contact-picker-item').forEach(item => {
+        const name = item.querySelector('.picker-name')?.textContent?.toLowerCase() || '';
+        item.style.display = name.includes(q) ? '' : 'none';
+      });
+    };
+  }
+  modal.classList.add('visible');
+  return new Promise((resolve) => { _pickerResolve = resolve; });
+}
+
+function updatePickerCount() {
+  if (_pickerMode !== 'multi') return;
+  const checked = dom['picker-list']?.querySelectorAll('input:checked')?.length || 0;
+  const subtitle = dom['picker-modal-subtitle'];
+  if (subtitle) subtitle.textContent = '已选择 ' + checked + ' 位成员（至少 1 位）';
+}
+
+function bindPickerEvents() {
+  dom['picker-cancel-btn']?.addEventListener('click', () => {
+    dom['contact-picker-modal']?.classList.remove('visible');
+    if (_pickerResolve) _pickerResolve([]);
+  });
+  dom['picker-confirm-btn']?.addEventListener('click', () => {
+    const checked = dom['picker-list']?.querySelectorAll('input:checked, input[type="radio"]:checked') || [];
+    const ids = Array.from(checked).map(i => i.value);
+    if (_pickerMode === 'single') {
+      if (ids.length === 0) {
+        showToast(dom['toast-notification'], '请选择一个联系人');
+        return;
+      }
+      dom['contact-picker-modal']?.classList.remove('visible');
+      if (_openChatRoom) _openChatRoom(ids[0], 'private');
+      if (_pickerResolve) _pickerResolve(ids);
+    } else {
+      if (ids.length < 1) {
+        showToast(dom['toast-notification'], '至少选择 1 位成员');
+        return;
+      }
+      dom['contact-picker-modal']?.classList.remove('visible');
+      openGroupCreateModal(ids);
+      if (_pickerResolve) _pickerResolve(ids);
+    }
+  });
+  dom['picker-search']?.addEventListener('click', (e) => e.stopPropagation());
+}
+
+let _pendingGroupMemberIds = [];
+
+function openGroupCreateModal(memberIds) {
+  _pendingGroupMemberIds = memberIds;
+  const modal = dom['group-create-modal'];
+  if (!modal) return;
+  dom['group-create-members-count'].textContent = '已选择 ' + memberIds.length + ' 位成员';
+  dom['group-create-name-input'].value = '';
+  modal.classList.add('visible');
+  setTimeout(() => dom['group-create-name-input']?.focus(), 100);
+}
+
+function bindGroupCreateEvents() {
+  dom['group-create-cancel-btn']?.addEventListener('click', () => {
+    dom['group-create-modal']?.classList.remove('visible');
+    _pendingGroupMemberIds = [];
+  });
+  dom['group-create-confirm-btn']?.addEventListener('click', async () => {
+    const name = dom['group-create-name-input']?.value.trim();
+    if (!name) {
+      showToast(dom['toast-notification'], '请输入群聊名称');
+      return;
+    }
+    if (_pendingGroupMemberIds.length < 1) {
+      showToast(dom['toast-notification'], '请选择至少一位成员');
+      return;
+    }
+    const db = getDb();
+    const validIds = _pendingGroupMemberIds.filter(id =>
+      (db.characters || []).some(c => c.id === id)
+    );
+    if (validIds.length < 1) {
+      showToast(dom['toast-notification'], '所选联系人已不存在');
+      dom['group-create-modal']?.classList.remove('visible');
+      return;
+    }
+    await createGroupChat(name, validIds);
+    dom['group-create-modal']?.classList.remove('visible');
+    _pendingGroupMemberIds = [];
+  });
+  dom['group-create-name-input']?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') dom['group-create-confirm-btn']?.click();
+  });
+}
+</content>

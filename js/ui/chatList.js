@@ -312,33 +312,40 @@ function createSwipeCard(id, type, avatar, name, subtitle, isPinned, onClick) {
         const char = (db.characters || []).find(c => c.id === id);
         if (!char) return;
         if (action === 'delete') {
-          if (confirm('确定删除"' + (char.remarkName || char.realName) + '"吗？')) {
-            db.characters = (db.characters || []).filter(c => c.id !== id);
-            await saveData();
-            renderAllLists();
-            showToast(dom['toast-notification'], '已删除 ' + (char.remarkName || char.realName));
-          }
+          // ★ 使用弹窗确认 (需求1) + 仅清空历史、不删角色卡片 (需求4)
+          _pendingDelete = { id, type, name: char.remarkName || char.realName || '未知' };
+          dom['delete-confirm-text'].textContent = '确定要删除与「' + _pendingDelete.name + '」的聊天记录吗？';
+          dom['delete-confirm-modal'].classList.add('visible');
+          closeSwipeCard();
+          return;
         } else if (action === 'edit') {
-          state.currentChatId = char.id;
-          state.currentChatType = 'private';
-          dom['chat-settings-btn']?.click();
+          // ★ 联系人编辑改为向导弹窗 (需求2)
+          if (type === 'contact') {
+            openContactWizardForEdit(id);
+            closeSwipeCard();
+            return;
+          }
+          // 私聊编辑暂不处理，或也可改为向导弹窗
+          openContactWizardForEdit(id);
+          closeSwipeCard();
+          return;
         } else if (action === 'pin') {
           char.isPinned = !char.isPinned;
           await saveData();
           renderAllLists();
         }
       } else if (type === 'group') {
-        const group = (db.groups || []).find(g => g.id === id);
-        if (!group) return;
+        const g = (db.groups || []).find(gr => gr.id === id);
+        if (!g) return;
         if (action === 'delete') {
-          if (confirm('确定删除群聊"' + group.name + '"吗？')) {
-            db.groups = (db.groups || []).filter(g => g.id !== id);
-            await saveData();
-            renderAllLists();
-            showToast(dom['toast-notification'], '已删除 ' + group.name);
-          }
+          // ★ 使用弹窗确认 (需求1) + 仅清空历史 (需求4)
+          _pendingDelete = { id, type: 'group', name: g.name || '未命名群聊' };
+          dom['delete-confirm-text'].textContent = '确定要删除与「' + _pendingDelete.name + '」的聊天记录吗？';
+          dom['delete-confirm-modal'].classList.add('visible');
+          closeSwipeCard();
+          return;
         } else if (action === 'pin') {
-          group.isPinned = !group.isPinned;
+          g.isPinned = !g.isPinned;
           await saveData();
           renderAllLists();
         }
@@ -349,6 +356,8 @@ function createSwipeCard(id, type, avatar, name, subtitle, isPinned, onClick) {
 
   return wrapper;
 }
+
+let _pendingDelete = null;
 
 function closeSwipeCard() {
   if (_swipedCard) {
@@ -495,58 +504,7 @@ async function handleWizardImport(file) {
   } catch (err) {
     console.error('[Wizard Import]', err);
     showToast(dom['toast-notification'], '导入失败: ' + err.message);
-  }
 }
-
-async function finishWizard() {
-  const persona = dom['wizard-char-persona']?.value.trim() || '';
-  _wizardData.persona = persona;
-  const selectedWB = [];
-  const wbChecks = dom['wizard-wb-list']?.querySelectorAll('input:checked') || [];
-  wbChecks.forEach(cb => selectedWB.push(cb.value));
-  const db = getDb();
-  const importedCard = _wizardData.importedCard;
-  let newChar;
-  if (importedCard && !_wizardData.realName) {
-    newChar = {
-      id: 'char_' + Date.now(),
-      realName: importedCard.name || '',
-      remarkName: importedCard.name || '',
-      persona: importedCard.description || '',
-      avatar: importedCard.avatar || 'assets/icons/default-avatar.png',
-      myName: db.characters?.[0]?.myName || '我',
-      myPersona: db.characters?.[0]?.myPersona || '',
-      myAvatar: db.characters?.[0]?.myAvatar || 'assets/icons/default-avatar.png',
-      theme: 'white_pink', maxMemory: 100, chatBg: '', history: [],
-      isPinned: false, status: '在线', worldBookIds: selectedWB,
-      useCustomBubbleCss: false, customBubbleCss: '',
-      aiImgGen: false,
-      scenario: importedCard.scenario || '',
-      systemPrompt: importedCard.system_prompt || '',
-      mesExample: importedCard.mes_example || '',
-    };
-  } else {
-    newChar = {
-      id: 'char_' + Date.now(),
-      realName: _wizardData.realName || '',
-      remarkName: _wizardData.remarkName || _wizardData.realName || '',
-      persona: _wizardData.persona || '',
-      avatar: _wizardData.avatar || 'assets/icons/default-avatar.png',
-      myName: db.characters?.[0]?.myName || '我',
-      myPersona: db.characters?.[0]?.myPersona || '',
-      myAvatar: db.characters?.[0]?.myAvatar || 'assets/icons/default-avatar.png',
-      theme: 'white_pink', maxMemory: 100, chatBg: '', history: [],
-      isPinned: false, status: '在线', worldBookIds: selectedWB,
-      useCustomBubbleCss: false, customBubbleCss: '',
-      aiImgGen: false,
-    };
-  }
-  if (!db.characters) db.characters = [];
-  db.characters.push(newChar);
-  await saveData();
-  renderAllLists();
-  dom['contact-wizard-modal']?.classList.remove('visible');
-  showToast(dom['toast-notification'], '联系人"' + newChar.remarkName + '"创建成功！');
 }
 
 let _pickerMode = 'single';
@@ -694,4 +652,180 @@ function bindGroupCreateEvents() {
   dom['group-create-name-input']?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') dom['group-create-confirm-btn']?.click();
   });
+
+  // ★ 删除确认弹窗事件绑定 (需求1)
+  dom['delete-confirm-cancel']?.addEventListener('click', () => {
+    dom['delete-confirm-modal'].classList.remove('visible');
+    _pendingDelete = null;
+  });
+  dom['delete-confirm-btn']?.addEventListener('click', async () => {
+    if (!_pendingDelete) return;
+    const db = getDb();
+    const { id, type, name } = _pendingDelete;
+    if (type === 'group') {
+      const g = (db.groups || []).find(gr => gr.id === id);
+      if (g) {
+        g.history = [];
+        await saveData();
+        renderAllLists();
+        showToast(dom['toast-notification'], '聊天记录已清空');
+      }
+    } else {
+      const char = (db.characters || []).find(c => c.id === id);
+      if (char) {
+        char.history = [];
+        await saveData();
+        renderAllLists();
+        showToast(dom['toast-notification'], '聊天记录已清空');
+      }
+    }
+    dom['delete-confirm-modal'].classList.remove('visible');
+    _pendingDelete = null;
+  });
+
+  // ★ 我的资料弹窗事件绑定 (需求0)
+  dom['my-profile-card']?.addEventListener('click', openMyProfileEditor);
+  dom['myprofile-cancel-btn']?.addEventListener('click', () => {
+    dom['my-profile-modal'].classList.remove('visible');
+  });
+  dom['myprofile-save-btn']?.addEventListener('click', async () => {
+    const db = getDb();
+    if (!db.myProfile) db.myProfile = {};
+    const newAvatar = dom['myprofile-avatar-preview'].src;
+    const newName = dom['myprofile-name'].value.trim() || '我';
+    const newPersona = dom['myprofile-persona'].value.trim() || '';
+    db.myProfile.avatar = newAvatar;
+    db.myProfile.name = newName;
+    db.myProfile.persona = newPersona;
+    // 同步到所有已有角色的 myName/myPersona/myAvatar（仅当角色未单独设置时）
+    (db.characters || []).forEach(c => {
+      if (!c.myName || c.myName === db.myProfile.name) c.myName = newName;
+      if (!c.myPersona) c.myPersona = newPersona;
+      if (!c.myAvatar) c.myAvatar = newAvatar;
+    });
+    await saveData();
+    dom['my-profile-modal'].classList.remove('visible');
+    showToast(dom['toast-notification'], '✅ 个人资料已更新');
+  });
+  dom['myprofile-avatar-upload']?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressImage(file, { quality: 0.8, maxWidth: 400, maxHeight: 400 });
+      dom['myprofile-avatar-preview'].src = dataUrl;
+    } catch (err) {
+      showToast(dom['toast-notification'], '头像压缩失败');
+    }
+  });
+}
+
+// ★ 编辑资料：打开向导弹窗并回填 (需求2)
+function openContactWizardForEdit(charId) {
+  const db = getDb();
+  const char = db.characters.find(c => c.id === charId);
+  if (!char) return;
+
+  _wizardData = { isEdit: true, editCharId: charId };
+
+  // 回填步骤1：跳过导入
+  dom['wizard-step1-next'].disabled = false;
+
+  // 回填步骤2
+  dom['wizard-avatar-preview'].src = char.avatar || 'assets/icons/default-avatar.png';
+  dom['wizard-char-realname'].value = char.realName || '';
+  dom['wizard-char-nickname'].value = char.remarkName || '';
+
+  // 回填步骤3
+  dom['wizard-char-persona'].value = char.persona || '';
+  const wbChecks = dom['wizard-wb-list']?.querySelectorAll('input[type="checkbox"]');
+  if (wbChecks) {
+    wbChecks.forEach(cb => {
+      cb.checked = (char.worldBookIds || []).includes(cb.value);
+    });
+  }
+
+  // 跳转到步骤2（跳过导入步骤）
+  showWizardStep(2);
+  dom['contact-wizard-modal'].classList.add('visible');
+}
+
+// ★ 我的资料弹窗 (需求0)
+function openMyProfileEditor() {
+  const db = getDb();
+  const profile = db.myProfile || {};
+  dom['myprofile-avatar-preview'].src = profile.avatar || 'assets/icons/default-avatar.png';
+  dom['myprofile-name'].value = profile.name || '我';
+  dom['myprofile-persona'].value = profile.persona || '';
+  dom['my-profile-modal'].classList.add('visible');
+}
+
+// ★ 修改 finishWizard 支持编辑模式
+async function finishWizard() {
+  const persona = dom['wizard-char-persona']?.value.trim() || '';
+  _wizardData.persona = persona;
+  const selectedWB = [];
+  const wbChecks = dom['wizard-wb-list']?.querySelectorAll('input:checked') || [];
+  wbChecks.forEach(cb => selectedWB.push(cb.value));
+  const db = getDb();
+
+  // ★ 编辑模式：更新现有角色，不清空 history
+  if (_wizardData.isEdit) {
+    const char = db.characters.find(c => c.id === _wizardData.editCharId);
+    if (char) {
+      char.realName = dom['wizard-char-realname']?.value.trim() || char.realName;
+      char.remarkName = dom['wizard-char-nickname']?.value.trim() || char.remarkName;
+      char.avatar = dom['wizard-avatar-preview']?.src || char.avatar;
+      char.persona = persona;
+      char.worldBookIds = selectedWB;
+      await saveData();
+      renderAllLists();
+      dom['contact-wizard-modal']?.classList.remove('visible');
+      showToast(dom['toast-notification'], '✅ 联系人"' + char.remarkName + '"已更新');
+      return;
+    }
+  }
+
+  // 原有新建逻辑
+  const importedCard = _wizardData.importedCard;
+  let newChar;
+  if (importedCard && !_wizardData.realName) {
+    newChar = {
+      id: 'char_' + Date.now(),
+      realName: importedCard.name || '',
+      remarkName: importedCard.name || '',
+      persona: importedCard.description || '',
+      avatar: importedCard.avatar || 'assets/icons/default-avatar.png',
+      myName: db.characters?.[0]?.myName || '我',
+      myPersona: db.characters?.[0]?.myPersona || '',
+      myAvatar: db.characters?.[0]?.myAvatar || 'assets/icons/default-avatar.png',
+      theme: 'white_pink', maxMemory: 100, chatBg: '', history: [],
+      isPinned: false, status: '在线', worldBookIds: selectedWB,
+      useCustomBubbleCss: false, customBubbleCss: '',
+      aiImgGen: false,
+      scenario: importedCard.scenario || '',
+      systemPrompt: importedCard.system_prompt || '',
+      mesExample: importedCard.mes_example || '',
+    };
+  } else {
+    newChar = {
+      id: 'char_' + Date.now(),
+      realName: _wizardData.realName || '',
+      remarkName: _wizardData.remarkName || _wizardData.realName || '',
+      persona: _wizardData.persona || '',
+      avatar: _wizardData.avatar || 'assets/icons/default-avatar.png',
+      myName: db.characters?.[0]?.myName || '我',
+      myPersona: db.characters?.[0]?.myPersona || '',
+      myAvatar: db.characters?.[0]?.myAvatar || 'assets/icons/default-avatar.png',
+      theme: 'white_pink', maxMemory: 100, chatBg: '', history: [],
+      isPinned: false, status: '在线', worldBookIds: selectedWB,
+      useCustomBubbleCss: false, customBubbleCss: '',
+      aiImgGen: false,
+    };
+  }
+  if (!db.characters) db.characters = [];
+  db.characters.push(newChar);
+  await saveData();
+  renderAllLists();
+  dom['contact-wizard-modal']?.classList.remove('visible');
+  showToast(dom['toast-notification'], '联系人"' + newChar.remarkName + '"创建成功！');
 }

@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>组装姬</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="assets/icons/nav/app-touch-icon.png">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- 依赖 -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/lottev1991/html2canvas@1.6.5-custom/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <!-- 引擎层 -->
+    <link rel="stylesheet" href="engine/styles.css">
+    <link rel="stylesheet" href="modules/shop/shop.css">
+    <link rel="stylesheet" href="modules/live/live.css">
+    <link rel="stylesheet" href="modules/media/media.css">
+    <link rel="stylesheet" href="modules/games/games.css">
+    <link rel="stylesheet" href="modules/album/album.css">
+    <link rel="stylesheet" href="modules/gacha/gacha.css">
+    <link rel="stylesheet" href="modules/wardrobe/wardrobe.css">
+    <link rel="stylesheet" href="modules/date/date.css">
+    <link rel="stylesheet" href="css/video-call.css">
+    <link rel="stylesheet" href="css/chat-room-dark.css">
+    <link rel="stylesheet" href="css/module-theme.css">
+    <link rel="stylesheet" href="css/theme-controller.css">
+    <link rel="stylesheet" href="css/effects-upgrade.css">
+    <link rel="stylesheet" href="css/chat-tabs.css">
+    <script>
+    // 主题预加载：防止白色闪烁
+    (function() {
+      try {
+        var db = JSON.parse(localStorage.getItem('组装姬') || '{}');
+        var theme = db.appTheme || 'purple';
+        document.documentElement.classList.add('theme-' + theme);
+      } catch(e) { document.documentElement.classList.add('theme-purple'); }
+    })();
+    </script>
+</head>
+
+<body>
+<div class="phone-screen">
+    <!-- 主页（双屏滑动） -->
+    <div id="home-screen" class="screen active">
+        <div class="page-swipe-container" id="page-swipe-container">
+            <div class="swipe-page" id="home-page-main"></div>
+            <div class="swipe-page right-page" id="home-page-right"></div>
+        </div>
+        <div class="page-indicators" id="page-indicators">
+            <div class="dot active" data-page="0"></div>
+            <div class="dot" data-page="1"></div>
+        </div>
+        <div class="dock" id="home-dock"></div>
+    </div>
+
+    <!-- 聊天列表（Tab 分页） -->
+    <div id="chat-list-screen" class="screen">
+        <header class="app-header">
+            <button class="back-btn" data-target="home-screen">‹</button>
+            <div class="title-container"><h1 class="title" id="chat-list-title">私聊</h1></div>
+            <div class="placeholder"></div>
+        </header>
+        <nav class="tab-bar" id="chat-tab-bar">
+            <button class="tab-btn" data-tab="contacts">联系人</button>
+            <button class="tab-btn active" data-tab="private">私聊</button>
+            <button class="tab-btn" data-tab="group">群聊</button>
+        </nav>
+        <main class="content" style="padding:0;display:flex;flex-direction:column;overflow:hidden;">
+            <!-- 联系人 Tab -->
+            <div class="tab-panel" data-tab="contacts">
+                <div class="tab-content-wrapper" id="contacts-wrapper">
+                    <div class="new-card" id="new-contact-card">
+                        <span class="new-card__icon">➕</span>
+                        <span class="new-card__text">新建联系人</span>
+                    </div>
+                    <div id="contacts-list-container"></div>
+                    <div class="tab-empty-state" id="contacts-empty" style="display:none;">
+                        <div class="empty-icon">👤</div>
+                        <div class="empty-text">还没有联系人<br>点击上方卡片添加</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 私聊 Tab -->
+            <div class="tab-panel active" data-tab="private">
+                <div class="tab-content-wrapper" id="private-wrapper">
+                    <div class="new-card" id="new-private-card">
+                        <span class="new-card__icon">💬</span>
+                        <span class="new-card__text">新建私聊</span>
+                    </div>
+                    <div id="private-list-container"></div>
+                    <div class="tab-empty-state" id="private-empty" style="display:none;">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-text">还没有私聊<br>选择一位联系人开始对话</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 群聊 Tab -->
+            <div class="tab-panel" data-tab="group">
+                <div class="tab-content-wrapper" id="group-wrapper">
+                    <div class="new-card" id="new-group-card">
+                        <span class="new-card__icon">👥</span>
+                        <span class="new-card__text">发起群聊</span>
+                    </div>
+                    <div id="group-list-container"></div>
+                    <div class="tab-empty-state" id="group-empty" style="display:none;">
+                        <div class="empty-icon">👥</div>
+                        <div class="empty-text">还没有群聊<br>选择多位联系人发起群聊</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ===== 联系人创建向导 (3步) ===== -->
+    <div id="contact-wizard-modal" class="modal-overlay wizard-modal">
+        <div class="modal-window">
+            <div class="wizard-indicator" id="wizard-indicator">
+                <div class="wizard-dot active" data-step="1"></div>
+                <div class="wizard-dot" data-step="2"></div>
+                <div class="wizard-dot" data-step="3"></div>
+            </div>
+            <!-- 步骤 1: 导入/手动创建 -->
+            <div class="wizard-step active" data-step="1">
+                <h3>📥 添加联系人</h3>
+                <p class="wizard-subtitle">导入角色卡或手动填写</p>
+                <div class="wizard-import-zone" id="wizard-import-zone">
+                    <div class="import-icon">📂</div>
+                    <div class="import-text">点击选择或拖拽 .png / .json 角色卡</div>
+                    <input type="file" id="wizard-import-file" accept=".png,.json" style="display:none;">
+                </div>
+                <div id="wizard-import-preview" style="display:none;"></div>
+                <div class="wizard-separator">或者</div>
+                <button type="button" class="wizard-manual-btn" id="wizard-skip-import">✏️ 手动填写</button>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-primary" id="wizard-step1-next" disabled>下一步</button>
+                </div>
+            </div>
+            <!-- 步骤 2: 头像 + 姓名 -->
+            <div class="wizard-step" data-step="2">
+                <h3>👤 头像与称呼</h3>
+                <p class="wizard-subtitle">设置联系人的头像和称呼</p>
+                <div class="wizard-avatar-upload">
+                    <img src="assets/icons/default-avatar.png" id="wizard-avatar-preview" class="wizard-avatar-preview">
+                    <input type="file" id="wizard-avatar-upload" accept="image/*">
+                    <label for="wizard-avatar-upload" class="btn btn-secondary" style="font-size:13px;padding:6px 16px;">📷 选择头像</label>
+                </div>
+                <div class="form-group">
+                    <label for="wizard-char-realname">真实姓名</label>
+                    <input type="text" id="wizard-char-realname" placeholder="角色的真实姓名" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+                </div>
+                <div class="form-group">
+                    <label for="wizard-char-nickname">昵称（备注）</label>
+                    <input type="text" id="wizard-char-nickname" placeholder="你如何称呼TA" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-neutral" id="wizard-step2-back">← 上一步</button>
+                    <button type="button" class="btn btn-primary" id="wizard-step2-next">下一步</button>
+                </div>
+            </div>
+            <!-- 步骤 3: 基础资料 + 世界书 -->
+            <div class="wizard-step" data-step="3">
+                <h3>📋 基础资料</h3>
+                <p class="wizard-subtitle">完善人设和关联世界书</p>
+                <div class="form-group">
+                    <label for="wizard-char-persona">人设描述</label>
+                    <textarea id="wizard-char-persona" rows="3" placeholder="描述角色的性格、背景、说话风格等" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">📖 关联世界书（可选）</label>
+                    <div class="wizard-wb-list" id="wizard-wb-list"></div>
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-neutral" id="wizard-step3-back">← 上一步</button>
+                    <button type="button" class="btn btn-primary" id="wizard-step3-finish">✅ 完成创建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 联系人选择器 (用于新建私聊/群聊选人) ===== -->
+    <div id="contact-picker-modal" class="modal-overlay">
+        <div class="modal-window" style="max-width:360px;padding:16px;">
+            <h3 id="picker-modal-title" style="margin:0 0 4px;font-size:16px;">选择联系人</h3>
+            <p id="picker-modal-subtitle" class="picker-selected-count" style="margin:0 0 8px;">请选择</p>
+            <input type="text" class="picker-search" id="picker-search" placeholder="🔍 搜索联系人...">
+            <ul class="picker-list" id="picker-list" style="max-height:50vh;"></ul>
+            <div class="picker-actions">
+                <button type="button" class="btn btn-neutral" id="picker-cancel-btn">取消</button>
+                <button type="button" class="btn btn-primary" id="picker-confirm-btn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 群聊快速创建（输入群名） ===== -->
+    <div id="group-create-modal" class="modal-overlay">
+        <div class="modal-window" style="max-width:340px;">
+            <h3>👥 创建群聊</h3>
+            <p class="wizard-subtitle" id="group-create-members-count">已选择 0 位成员</p>
+            <div class="form-group">
+                <label for="group-create-name-input">群聊名称</label>
+                <input type="text" id="group-create-name-input" class="group-create-name-input" placeholder="输入群聊名称" style="margin-top:4px;">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <button type="button" class="btn btn-neutral" id="group-create-cancel-btn" style="flex:1;">取消</button>
+                <button type="button" class="btn btn-primary" id="group-create-confirm-btn" style="flex:1;">✅ 立即创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 聊天室 -->
+    <div id="chat-room-screen" class="screen">
+        <header class="app-header" id="chat-room-header-default">
+                    <button class="back-btn" data-target="chat-list-screen">‹</button>
+                    <div class="title-container">
+                        <h1 class="title" id="chat-room-title">...</h1>
+                        <div class="subtitle" id="chat-room-subtitle"><div class="online-indicator"></div><span id="chat-room-status-text">在线</span></div>
+                    </div>
+                    <button class="action-btn" id="chat-settings-btn"><img src="assets/icons/设置.png" alt="设置"></button>
+                </header>
+                <header class="app-header" id="chat-room-header-select" style="display:none;">
+                    <button class="action-btn" id="cancel-multi-select-btn">取消</button>
+                    <div class="title-container"><h1 class="title" id="multi-select-title">选择消息</h1></div>
+                    <div class="placeholder"></div>
+                </header>
+                <main class="content">
+                    <div class="message-area" id="message-area"></div>
+                    <div class="typing-indicator" id="typing-indicator"></div>
+                </main>
+                <div class="chat-input-wrapper">
+            <div id="sticker-bar">
+                <button class="sticker-bar-btn" id="sticker-toggle-btn"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>
+                <button class="sticker-bar-btn" id="photo-video-btn"><svg viewBox="0 0 24 24"><path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/></svg></button>
+                <button class="sticker-bar-btn" id="image-recognition-btn"><svg viewBox="0 0 24 24"><path d="M21.58,16.09L19.66,18L18.24,16.58L21,13.83C21.39,13.44 22,13.44 22.39,13.83L23.17,14.61C23.56,15 23.56,15.64 23.17,16.03L21.58,17.62M20.13,12.25L18.71,13.66L20.41,15.36L21.83,13.94L20.13,12.25M5.93,19H5C3.9,19 3,18.1 3,17V5C3,3.9 3.9,3 5,3H19C20.1,3 21,3.9 21,5V11.08L19,13.08V5H5V17H5.93L13.5,9.43L16.29,12.21L12.08,16.42L5.93,19Z"/></svg></button>
+                <button class="sticker-bar-btn" id="voice-message-btn"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg></button>
+                <button class="sticker-bar-btn" id="wallet-btn"><svg viewBox="0 0 24 24"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 18H4V8H20V18ZM4 6H20V6H4Z"/></svg></button>
+                <button class="sticker-bar-btn" id="gift-btn"><svg viewBox="0 0 24 24"><path d="M20,8L12,13L4,8V6H20M20,4H4A2,2 0 0,0 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6A2,2 0 0,0 20,4M12.5,18C12.5,17.29 12.17,16.65 11.64,16.27C12.17,15.89 12.5,15.26 12.5,14.55C12.5,13.6 11.83,12.79 11,12.58V12H13V10H11V8H13V6H11V5C11,4.45 10.55,4 10,4H8C7.45,4 7,4.45 7,5V6H9V8H7V10H9V12H7V12.58C6.17,12.79 5.5,13.6 5.5,14.55C5.5,15.26 5.83,15.89 6.36,16.27C5.83,16.65 5.5,17.29 5.5,18H12.5Z"/></svg></button>
+                <button class="sticker-bar-btn" id="time-skip-btn"><svg viewBox="0 0 24 24"><path d="M4 5v14l7-7-7-7zm9 0v14l7-7-7-7z"></path></svg></button>
+                <button class="sticker-bar-btn" id="regenerate-btn" title="重新生成"><svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
+                <button class="sticker-bar-btn" id="video-call-btn" title="视频通话"><svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></button>
+            </div>
+            <div class="message-input-area" id="message-input-default">
+                <input type="text" id="message-input" placeholder="输入消息...">
+                <button id="send-message-btn" class="icon-btn send-btn">➤</button>
+                <button id="get-reply-btn" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 1,1 20,12A8,8 0 0,1 12,20M16.24,7.76C15.07,6.58 13.53,6 12,6V12L7.76,16.24C10.1,18.58 13.9,18.58 16.24,16.24C18.58,13.9 18.58,10.1 16.24,7.76Z"/></svg></button>
+            </div>
+            <div class="message-input-area" id="message-edit-bar" style="display:none;">
+                <input type="text" id="message-edit-input">
+                <button id="save-edit-btn" class="icon-btn send-btn">✓</button>
+                <button id="cancel-edit-btn" class="icon-btn" style="background-color:#aaa;">✗</button>
+                </div><!-- /chat-input-wrapper -->
+        </div>
+
+        <div id="multi-select-bar"><span id="select-count">已选择 0 项</span><button class="btn btn-danger" id="delete-selected-btn" style="width:auto;padding:8px 16px;">删除已选</button></div>
+        <div id="sticker-modal">
+            <div class="header"><span>我的表情</span><button class="btn btn-primary btn-small" id="add-new-sticker-btn">添加新表情</button></div>
+            <div class="sticker-grid" id="sticker-grid-container"></div>
+        </div>
+    </div>
+
+    <!-- 私聊设置侧边栏 -->
+    <div id="chat-settings-sidebar" class="settings-sidebar">
+        <div class="header">聊天设置</div>
+        <div class="content">
+            <form id="chat-settings-form">
+                <!-- █ 核心信息（始终可见） -->
+                <div class="form-group"><label for="setting-char-remark">角色备注 (昵称)</label><input type="text" id="setting-char-remark"></div>
+                <div class="form-group"><label for="setting-my-name">我的姓名</label><input type="text" id="setting-my-name"></div>
+                <!-- █ 态度编辑栏 -->
+                <div class="form-group">
+                    <label for="setting-char-attitude">角色对你的态度</label>
+                    <textarea id="setting-char-attitude" rows="3" placeholder="例如：她对你的态度从冷淡逐渐转变为依赖，最近总是主动找你聊天..." style="width:100%;min-height:60px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+                    <div style="font-size:11px;color:#999;margin-top:4px;">填写角色对当前聊天对象的态度/看法，这些内容将注入 AI 提示词中</div>
+                </div>
+
+                <!-- █ 折叠面板 -->
+                <details class="settings-collapse" id="setting-collapse-style">
+                    <summary class="settings-collapse-title">💬 对话风格</summary>
+                    <div class="settings-collapse-body">
+                        <div class="form-group"><label for="setting-char-scenario">场景设定</label><textarea id="setting-char-scenario" rows="3" placeholder="当前对话发生的场景设定（可选）"></textarea></div>
+                        <div class="form-group"><label for="setting-char-system-prompt">系统指令</label><textarea id="setting-char-system-prompt" rows="3" placeholder="角色的系统级行为指令（可选）"></textarea></div>
+                        <div class="form-group"><label for="setting-char-mes-example">对话示例</label><textarea id="setting-char-mes-example" rows="4" placeholder="角色对话风格示例（可选）"></textarea></div>
+                    </div>
+                </details>
+                <details class="settings-collapse" id="setting-collapse-wb">
+                    <summary class="settings-collapse-title">📖 专属世界书 <span id="setting-wb-count" class="collapse-badge">0</span></summary>
+                    <div class="settings-collapse-body">
+                        <div id="setting-builtin-wb-list"></div>
+                        <button type="button" class="btn btn-secondary" id="setting-add-builtin-wb" style="width:100%;padding:8px;font-size:13px;margin-top:6px;">+ 添加条目</button>
+                    </div>
+                </details>
+<!-- 全局世界书关联已移除 -->
+                <details class="settings-collapse" id="setting-collapse-appearance">
+                    <summary class="settings-collapse-title">🎨 外观与样式</summary>
+                    <div class="settings-collapse-body">
+                        <div class="form-group"><label for="setting-max-memory">最大记忆轮数</label><input type="number" id="setting-max-memory" value="100" min="1" max="500"></div>
+                        <div class="form-group">
+                            <label style="margin-bottom:8px;">气泡样式</label>
+                            <button type="button" class="btn btn-primary" id="open-bubble-workshop-btn" style="width:100%;padding:12px;font-size:14px;border-radius:10px;">🎨 自定义气泡</button>
+                            <div style="font-size:11px;color:#999;margin-top:4px;">可视化编辑气泡颜色、圆角、阴影等样式</div>
+                        </div>
+                        <div class="form-group"><label for="setting-chat-bg-upload" class="btn btn-primary" style="font-size:13px;padding:10px;">更换聊天背景</label><input type="file" id="setting-chat-bg-upload" accept="image/*" style="display:none;"></div>
+                    </div>
+                </details>
+                <details class="settings-collapse" id="setting-collapse-tts">
+                    <summary class="settings-collapse-title">🔊 语音朗读</summary>
+                    <div class="settings-collapse-body">
+                        <div class="form-group">
+                            <label for="setting-tts-engine">朗读引擎</label>
+                            <select id="setting-tts-engine">
+                                <option value="global">跟随全局设置</option>
+                                <option value="local">本地浏览器</option>
+                                <option value="sogou">搜狗在线 TTS</option>
+                            </select>
+                        </div>
+                        <div id="setting-tts-sogou-options" style="display:none;">
+                            <div class="form-group">
+                                <label for="setting-tts-speaker">搜狗音色</label>
+                                <select id="setting-tts-speaker">
+                                    <option value="1">🎙️ 标准女声</option>
+                                    <option value="2">🎀 温柔女声</option>
+                                    <option value="3">🍬 甜美女声</option>
+                                    <option value="4">🎤 标准男声</option>
+                                    <option value="5">📢 沉稳男声</option>
+                                    <option value="6">🧲 磁性男声</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>语速</label>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <span style="font-size:12px;color:#999;">慢</span>
+                                    <input type="range" id="setting-tts-speed" min="1" max="5" value="3" style="flex:1;">
+                                    <span style="font-size:12px;color:#999;">快</span>
+                                    <span id="setting-tts-speed-label" style="font-size:12px;color:#666;min-width:20px;text-align:center;">3</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="setting-tts-preview-btn" style="width:100%;margin-top:8px;">🔊 试听当前设置</button>
+                    </div>
+                </details>
+                <details class="settings-collapse" id="setting-collapse-memory">
+                    <summary class="settings-collapse-title">📝 记忆与事件</summary>
+                    <div class="settings-collapse-body">
+                        <div style="margin-bottom:12px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                <span style="font-weight:500;font-size:13px;">📝 对话记忆摘要</span>
+                                <div style="display:flex;gap:4px;">
+                                    <button type="button" class="btn btn-secondary" id="btn-gen-summary" style="padding:3px 10px;font-size:11px;width:auto;">生成</button>
+                                    <button type="button" class="btn btn-neutral" id="btn-clear-summary" style="padding:3px 10px;font-size:11px;width:auto;">清空</button>
+                                </div>
+                            </div>
+                            <textarea id="setting-memory-summary" rows="3" style="width:100%;padding:8px;border:1px solid #eee;border-radius:8px;font-size:12px;resize:vertical;box-sizing:border-box;" placeholder="还没有记忆摘要，点击「生成」由 AI 自动总结"></textarea>
+                        </div>
+                        <div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                <span style="font-weight:500;font-size:13px;">⭐ 关键事件</span>
+                                <button type="button" class="btn btn-neutral" id="btn-clear-keyevents" style="padding:3px 10px;font-size:11px;width:auto;">清空</button>
+                            </div>
+                            <div id="setting-key-events-list" style="font-size:12px;color:#666;max-height:120px;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+                </details>
+                <button type="submit" class="btn btn-primary">保存设置</button>
+            </form>
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+            <button type="button" class="btn btn-danger" id="clear-chat-history-btn">清空聊天记录</button>
+        </div>
+    </div>
+
+    <!-- 群聊设置侧边栏 -->
+    <div id="group-settings-sidebar" class="settings-sidebar">
+        <div class="header">群聊设置</div>
+        <div class="content">
+            <form id="group-settings-form">
+                <div class="group-avatar-setting"><img src="" alt="群头像" id="setting-group-avatar-preview" class="group-avatar-preview"><input type="file" id="setting-group-avatar-upload" accept="image/*" style="display:none;"><label for="setting-group-avatar-upload" class="btn btn-primary" style="flex-grow:1;">更换群头像</label></div>
+                <div class="form-group"><label for="setting-group-name">群名 (AI也可见)</label><input type="text" id="setting-group-name"></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="avatar-setting"><img src="" alt="我的头像" id="setting-group-my-avatar-preview" class="avatar-preview"><input type="file" id="setting-group-my-avatar-upload" accept="image/*" style="display:none;"><label for="setting-group-my-avatar-upload" class="btn btn-secondary" style="flex-grow:1;">更换我的头像</label></div>
+                <div class="form-group"><label for="setting-group-my-nickname">我的群昵称</label><input type="text" id="setting-group-my-nickname"></div>
+                <div class="form-group"><label for="setting-group-my-persona">我的人设</label><textarea id="setting-group-my-persona" placeholder="描述你希望在此群聊中扮演的形象。"></textarea></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="form-group"><label>群成员</label><div class="group-members-list" id="group-members-list-container"></div></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <details class="settings-collapse">
+                    <summary class="settings-collapse-title">💬 对话风格</summary>
+                    <div class="settings-collapse-body">
+                        <div class="form-group"><label for="setting-group-scenario">场景设定</label><textarea id="setting-group-scenario" rows="3" placeholder="当前群聊对话的场景（可选）"></textarea></div>
+                        <div class="form-group"><label for="setting-group-system-prompt">系统指令</label><textarea id="setting-group-system-prompt" rows="3" placeholder="群聊系统级指令（可选）"></textarea></div>
+                    </div>
+                </details>
+                <details class="settings-collapse">
+                    <summary class="settings-collapse-title">📖 群专属世界书 <span id="setting-group-wb-count" class="collapse-badge">0</span></summary>
+                    <div class="settings-collapse-body">
+                        <div id="setting-group-builtin-wb-list"></div>
+                        <button type="button" class="btn btn-secondary" id="setting-group-add-builtin-wb" style="width:100%;padding:8px;font-size:13px;margin-top:6px;">+ 添加条目</button>
+                    </div>
+                </details>
+                <div class="form-group"><button type="button" class="btn btn-secondary" id="link-group-world-book-btn">关联全局世界书</button></div>
+                <div class="form-group"><label for="setting-group-theme-color">主题颜色 (对方/我方)</label><select id="setting-group-theme-color"></select></div>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><label for="setting-group-use-custom-css" style="margin-bottom:0;">自定义气泡样式</label><input type="checkbox" id="setting-group-use-custom-css" style="width:auto;"></div>
+                    <div id="group-bubble-css-preview" style="background:#fff;border:1px solid #eee;border-radius:10px;padding:15px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px;"></div>
+                    <textarea id="setting-group-custom-bubble-css" rows="6" placeholder="在此输入CSS代码..." disabled></textarea>
+                    <button type="button" class="btn btn-neutral" id="reset-group-custom-bubble-css-btn" style="margin-top:10px;width:auto;padding:5px 15px;font-size:14px;">恢复默认</button>
+                </div>
+                <div class="form-group"><label for="setting-group-max-memory">最大记忆轮数</label><input type="number" id="setting-group-max-memory" value="100" min="1" max="500"></div>
+                <div class="form-group"><label for="setting-group-chat-bg-upload" class="btn btn-primary">更换聊天背景</label><input type="file" id="setting-group-chat-bg-upload" accept="image/*" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary">保存设置</button>
+            </form>
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+            <button type="button" class="btn btn-danger" id="clear-group-chat-history-btn">清空聊天记录</button>
+        </div>
+    </div>
+
+    <!-- 视频通话浮窗 -->
+    <div id="vc-overlay" class="vc-overlay">
+        <div class="vc-header">
+            <span class="vc-char-name-small" id="vc-char-name">通话中</span>
+            <span class="vc-timer" id="vc-timer">00:00</span>
+            <button class="vc-close-btn" id="vc-close-overlay" title="最小化">—</button>
+        </div>
+        <div class="vc-main">
+            <div class="vc-call-status" id="vc-call-status">呼叫中...</div>
+            <div class="vc-avatar-wrapper">
+                <img id="vc-char-avatar" class="vc-avatar" src="" alt="avatar">
+                <div class="vc-avatar-ring"></div>
+            </div>
+            <div class="vc-subtitle" id="vc-subtitle">
+                <span id="vc-subtitle-text"></span>
+            </div>
+            <video id="vc-self-video" class="vc-self-video" autoplay muted playsinline style="display:none;"></video>
+        </div>
+        <div class="vc-input-area">
+            <button class="vc-speech-btn" id="vc-speech-btn">🎤</button>
+            <input type="text" id="vc-user-input" class="vc-user-input" placeholder="说点什么...">
+            <button class="vc-send-btn" id="vc-send-btn">➤</button>
+        </div>
+        <div class="vc-controls">
+            <button class="vc-ctrl-btn" id="vc-mute-btn" title="静音">🔊</button>
+            <button class="vc-ctrl-btn vc-end-btn" id="vc-end-btn" title="挂断">📱</button>
+            <button class="vc-ctrl-btn" id="vc-camera-btn" title="摄像头">📷</button>
+        </div>
+    </div>
+
+    <!-- 世界书 -->
+    <div id="world-book-screen" class="screen">
+        <header class="app-header">
+            <button class="back-btn" data-target="home-screen">‹</button>
+            <div class="title-container"><h1 class="title">世界书</h1></div>
+            <button class="action-btn" id="add-world-book-btn">+</button>
+        </header>
+        <main class="content">
+            <ul class="list-container" id="world-book-list-container"></ul>
+            <div class="placeholder-text" id="no-world-books-placeholder" style="display:none;">
+                <p>你的世界一片混沌...</p><p>点击右上角的"+"创造第一个设定吧！</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑世界书 -->
+    <div id="edit-world-book-screen" class="screen">
+        <header class="app-header">
+            <button class="back-btn" data-target="world-book-screen">‹</button>
+            <div class="title-container"><h1 class="title" id="edit-world-book-title">创建/编辑条目</h1></div>
+            <div class="placeholder"></div>
+        </header>
+        <main class="content">
+            <form id="edit-world-book-form">
+                <input type="hidden" id="world-book-id-input">
+                <div class="form-group"><label for="world-book-name-input">条目名称</label><input type="text" id="world-book-name-input" placeholder="例如：世界观背景、魔法体系" required></div>
+                <div class="form-group"><label for="world-book-content-input">条目内容</label><textarea id="world-book-content-input" rows="8" placeholder="详细描述此项设定..." required></textarea></div>
+                <div class="form-group"><label>注入位置</label><div class="form-group radio-group"><label><input type="radio" name="world-book-position" value="before" checked> 前</label><label><input type="radio" name="world-book-position" value="after"> 后</label></div></div>
+                <button type="submit" class="btn btn-primary">保存条目</button>
+            </form>
+        </main>
+    </div>
+
+    <!-- AI 生成世界书弹窗 -->
+    <div id="ai-worldbook-modal" class="modal-overlay">
+        <div class="modal-window" style="max-width:360px;">
+            <h3>🎲 AI 生成世界书</h3>
+            <p style="font-size:13px;color:#888;margin:-8px 0 16px;">输入关键词让 AI 生成设定，或留空让 AI 自由发挥</p>
+            <div class="form-group"><label for="ai-wb-keywords">关键词（可选）</label><input type="text" id="ai-wb-keywords" placeholder="如：魔法体系、龙族、星际联邦..."></div>
+            <!-- R18 已移除 -->
+            <button type="button" class="btn btn-primary" id="ai-wb-generate-btn" style="width:100%;">✨ 开始生成</button>
+            <div id="ai-wb-result" style="display:none;margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <!-- 激活世界设置弹窗 -->
+    <div id="active-world-modal" class="modal-overlay">
+        <div class="modal-window" style="max-width:360px;">
+            <h3>🌍 激活世界</h3>
+            <p style="font-size:13px;color:#888;margin:-8px 0 16px;">让角色主动发消息，模拟真实社交场景</p>
+            <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" id="active-world-enabled" style="width:auto;"> <span>🌍 启用激活世界</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="active-world-interval">触发频率</label>
+                <select id="active-world-interval" style="width:100%;">
+                    <option value="3">每 3 分钟</option>
+                    <option value="5" selected>每 5 分钟（推荐）</option>
+                    <option value="8">每 8 分钟</option>
+                    <option value="10">每 10 分钟</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="active-world-scope">触发范围</label>
+                <select id="active-world-scope" style="width:100%;">
+                    <option value="both">私聊 + 群聊</option>
+                    <option value="private">仅私聊</option>
+                    <option value="group">仅群聊</option>
+                </select>
+            </div>
+            <div id="active-world-status" style="font-size:12px;color:#999;margin:8px 0;text-align:center;"></div>
+            <button type="button" class="btn btn-primary" id="active-world-save-btn" style="width:100%;">💾 保存设置</button>
+        </div>
+    </div>
+
+    <!-- 动态注入屏幕占位 -->
+    <div id="api-settings-screen" class="screen"></div>
+    <div id="api-edit-screen" class="screen"></div>
+    <div id="img-gen-edit-screen" class="screen"></div>
+    <div id="wallpaper-screen" class="screen"></div>
+    <div id="font-settings-screen" class="screen"></div>
+    <div id="customize-screen" class="screen"></div>
+
+    <!-- 气泡工坊 -->
+    <div id="bubble-workshop-screen" class="screen">
+        <header class="app-header" style="background:linear-gradient(135deg,#ff80ab 0%,#ce93d8 100%);">
+            <button class="back-btn" id="bubble-workshop-back" style="color:#fff;">‹</button>
+            <div class="title-container"><h1 class="title" style="color:#fff;">✨ 自定义气泡</h1></div>
+            <button class="action-btn" id="bubble-workshop-export" title="导出CSS" style="color:#fff;">📋</button>
+        </header>
+        <main class="content" style="padding-bottom:80px;background:linear-gradient(180deg,#fff5f9 0%,#fff 40px);">
+            <!-- 预设 -->
+            <div style="margin-bottom:16px;">
+                <div style="font-size:13px;font-weight:bold;color:#c2185b;margin-bottom:10px;">🎨 预设模板</div>
+                <div id="bubble-preset-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
+            </div>
+            <!-- 用户/AI 标签 -->
+            <div id="bubble-role-tabs" style="display:flex;gap:0;margin-bottom:14px;background:#fce4ec;border-radius:10px;overflow:hidden;padding:3px;">
+                <button class="bubble-role-tab active" data-role="user" style="flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:bold;cursor:pointer;border-radius:8px;transition:all 0.2s;">👤 我方气泡</button>
+                <button class="bubble-role-tab" data-role="ai" style="flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:bold;cursor:pointer;border-radius:8px;transition:all 0.2s;">🤖 对方气泡</button>
+            </div>
+            <!-- 用户气泡设置 -->
+            <div class="bubble-role-panel active" data-role="user">
+                <div class="form-group"><label>文字颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="bu-text-color" value="#A56767" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="bu-text-color-val" style="font-size:12px;color:#666;">#A56767</span></div></div>
+                <div class="form-group"><label>背景颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="bu-bg-color" value="#ffcccc" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="bu-bg-color-val" style="font-size:12px;color:#666;">#ffcccc</span></div></div>
+                <div class="form-group"><label>背景透明度 <span id="bu-bg-alpha-val" style="color:#999;">90%</span></label><input type="range" id="bu-bg-alpha" min="0" max="1" step="0.05" value="0.9" style="width:100%;"></div>
+                <div class="form-group"><label>气泡透明度 <span id="bu-opacity-val" style="color:#999;">100%</span></label><input type="range" id="bu-opacity" min="0.3" max="1" step="0.05" value="1" style="width:100%;"></div>
+                <div class="form-group"><label>圆角 <span id="bu-radius-val" style="color:#999;">18px</span></label><input type="range" id="bu-radius" min="0" max="30" value="18" style="width:100%;"></div>
+                <div class="form-group"><label>内边距 <span id="bu-padding-val" style="color:#999;">10px</span></label><input type="range" id="bu-padding" min="4" max="24" value="10" style="width:100%;"></div>
+                <div class="form-group"><label>阴影</label><input type="text" id="bu-shadow" placeholder="点击下方预设或自定义" style="width:100%;font-size:12px;font-family:monospace;"><div class="bubble-shadow-row" data-role="user" id="bubble-shadow-presets-user"></div></div>
+            </div>
+            <!-- AI 气泡设置 -->
+            <div class="bubble-role-panel" data-role="ai">
+                <div class="form-group"><label>文字颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="ba-text-color" value="#6D6D6D" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="ba-text-color-val" style="font-size:12px;color:#666;">#6D6D6D</span></div></div>
+                <div class="form-group"><label>背景颜色</label><div style="display:flex;align-items:center;gap:8px;"><input type="color" id="ba-bg-color" value="#ffffff" style="width:40px;height:32px;border:none;cursor:pointer;"><span id="ba-bg-color-val" style="font-size:12px;color:#666;">#ffffff</span></div></div>
+                <div class="form-group"><label>背景透明度 <span id="ba-bg-alpha-val" style="color:#999;">90%</span></label><input type="range" id="ba-bg-alpha" min="0" max="1" step="0.05" value="0.9" style="width:100%;"></div>
+                <div class="form-group"><label>气泡透明度 <span id="ba-opacity-val" style="color:#999;">100%</span></label><input type="range" id="ba-opacity" min="0.3" max="1" step="0.05" value="1" style="width:100%;"></div>
+                <div class="form-group"><label>圆角 <span id="ba-radius-val" style="color:#999;">18px</span></label><input type="range" id="ba-radius" min="0" max="30" value="18" style="width:100%;"></div>
+                <div class="form-group"><label>内边距 <span id="ba-padding-val" style="color:#999;">10px</span></label><input type="range" id="ba-padding" min="4" max="24" value="10" style="width:100%;"></div>
+                <div class="form-group"><label>阴影</label><input type="text" id="ba-shadow" placeholder="点击下方预设或自定义" style="width:100%;font-size:12px;font-family:monospace;"><div class="bubble-shadow-row" data-role="ai" id="bubble-shadow-presets-ai"></div></div>
+            </div>
+            <!-- 同步开关 + 对比按钮 -->
+            <div style="display:flex;gap:8px;margin:14px 0;">
+                <div style="flex:1;padding:10px 12px;background:linear-gradient(135deg,#fce4ec,#f3e5f5);border-radius:10px;display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="bubble-sync-toggle" style="width:auto;">
+                    <label for="bubble-sync-toggle" style="font-size:12px;margin:0;color:#7b1fa2;">对方跟随我方</label>
+                </div>
+                <button type="button" id="bubble-compare-toggle" style="padding:10px 14px;background:#fff;border:1px solid #f8bbd0;border-radius:10px;font-size:12px;cursor:pointer;color:#c2185b;">⚖️ AB对比</button>
+            </div>
+            <!-- 快速 CSS 片段 -->
+            <div style="margin-bottom:14px;">
+                <div style="font-size:12px;font-weight:bold;color:#c2185b;margin-bottom:8px;">⚡ 快速样式</div>
+                <div id="bubble-css-snippets" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            </div>
+            <!-- 自定义 CSS -->
+            <div class="form-group"><label style="color:#c2185b;">高级 CSS</label><textarea id="bubble-custom-css" rows="4" placeholder=".message-bubble.sent { ... }" style="width:100%;font-size:12px;font-family:monospace;resize:vertical;border-color:#f8bbd0;"></textarea></div>
+            <!-- 实时预览 -->
+            <div style="margin:16px 0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-size:13px;font-weight:bold;color:#c2185b;">👀 实时预览</span>
+                    <label style="font-size:11px;color:#999;display:flex;align-items:center;gap:4px;"><input type="checkbox" id="bubble-preview-dark" style="width:auto;">深色</label>
+                </div>
+                <div id="bubble-workshop-preview" style="background:#f5f5f5;border:1px solid #f8bbd0;border-radius:14px;padding:16px;min-height:120px;transition:background 0.3s;"></div>
+            </div>
+            <!-- 操作按钮 -->
+            <div style="display:flex;gap:8px;">
+                <button type="button" class="btn btn-primary" id="bubble-workshop-save" style="flex:2;padding:14px;font-size:15px;border-radius:12px;background:linear-gradient(135deg,#ff80ab,#ce93d8);border:none;">💾 保存</button>
+                <button type="button" class="btn btn-neutral" id="bubble-workshop-import" style="flex:1;padding:14px;font-size:13px;border-radius:12px;">📥 导入</button>
+            </div>
+        </main>
+    </div>
+    <div id="shop-screen" class="screen"></div>
+    <div id="live-screen" class="screen"></div>
+    <div id="media-screen" class="screen"></div>
+    <div id="games-screen" class="screen"></div>
+    <div id="album-screen" class="screen"></div>
+    <div id="gacha-screen" class="screen"></div>
+    <div id="wardrobe-screen" class="screen"></div>
+    <div id="tts-edit-screen" class="screen"></div>
+
+    <div id="toast-notification" class="toast"></div>
+    <input type="file" id="image-upload-input" accept="image/*" style="display:none;">
+
+    <!-- 创建角色弹窗 -->
+    <div id="add-char-modal" class="modal-overlay">
+        <div class="modal-window" id="add-char-modal-window">
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-tab="manual">✏️ 手动创建</button>
+                <button class="modal-tab" data-tab="import">📦 导入 V1/V2/V3 标准角色卡</button>
+            </div>
+
+            <!-- 手动创建 -->
+            <form id="add-char-form">
+                <div class="form-group"><label for="char-real-name">角色姓名</label><input type="text" id="char-real-name" placeholder="角色的真实姓名" required></div>
+                <div class="form-group"><label for="char-remark-name">角色备注 (昵称)</label><input type="text" id="char-remark-name" placeholder="你对Ta的称呼" required></div>
+                <div class="form-group"><label for="my-name-for-char">我的姓名</label><input type="text" id="my-name-for-char" placeholder="你希望Ta如何称呼你" required></div>
+                <button type="submit" class="btn btn-primary">创建</button>
+            </form>
+
+            <!-- 导入角色卡 -->
+            <div id="import-tab-panel" style="display:none;">
+                <div class="import-dropzone" id="import-dropzone">
+                    <div class="import-dropzone-icon">📂</div>
+                    <div class="import-dropzone-text">点击选择或拖拽 .png / .json 角色卡</div>
+                    <input type="file" id="import-card-file" accept=".png,.json" style="display:none;">
+                    <button type="button" class="btn btn-primary" id="import-select-btn" style="width:auto;padding:10px 20px;margin-top:8px;">选择文件</button>
+                </div>
+                <div id="import-preview" style="display:none;"></div>
+                <div id="import-error" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表情包弹窗 -->
+    <div id="add-sticker-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3 id="add-sticker-modal-title">添加新表情</h3>
+            <form id="add-sticker-form">
+                <input type="hidden" id="sticker-edit-id">
+                <div id="sticker-preview"><span>预览</span></div>
+                <div class="form-group"><label for="sticker-name">表情名称</label><input type="text" id="sticker-name" placeholder="如：开心" required></div>
+                <div class="form-group"><label for="sticker-url-input">表情URL</label><input type="url" id="sticker-url-input" placeholder="粘贴图片URL"></div>
+                <p style="text-align:center;color:#888;margin:-10px 0 15px;">或</p>
+                <input type="file" id="sticker-file-upload" accept="image/*" style="display:none;">
+                <label for="sticker-file-upload" class="btn btn-secondary" style="width:100%;margin-bottom:20px;">从本地上传</label>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
+    <div id="sticker-actionsheet" class="action-sheet-overlay">
+        <div class="action-sheet">
+            <button class="action-sheet-button" id="edit-sticker-btn">编辑</button>
+            <button class="action-sheet-button danger" id="delete-sticker-btn">删除</button>
+        </div>
+    </div>
+
+    <!-- 语音弹窗 -->
+    <div id="send-voice-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>发送语音消息</h3>
+            <form id="send-voice-form">
+                <div class="form-group"><label for="voice-text-input">输入语音文字</label><textarea id="voice-text-input" placeholder="在这里输入你想说的话..." required rows="4"></textarea></div>
+                <div class="form-group" style="text-align:center;color:#888;font-size:14px;">预计时长: <span id="voice-duration-preview">0"</span></div>
+                <button type="submit" class="btn btn-primary">发送</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 照片/视频弹窗 -->
+    <div id="send-pv-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>分享照片/视频</h3>
+            <form id="send-pv-form">
+                <div class="form-group"><label for="pv-text-input">输入描述</label><textarea id="pv-text-input" placeholder="在这里描述你的照片或视频内容..." required rows="4"></textarea></div>
+                <button type="submit" class="btn btn-primary">发送</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 转账弹窗 -->
+    <div id="send-transfer-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>转账</h3>
+            <div style="text-align:center;font-size:13px;color:#888;margin:-8px 0 12px;">🪙 当前余额: <span id="transfer-balance">0</span> 金币</div>
+            <form id="send-transfer-form">
+                <div class="form-group"><label for="transfer-amount-input">金额 (元)</label><input type="number" id="transfer-amount-input" placeholder="0.00" required step="0.01" min="0.01"></div>
+                <div class="form-group"><label for="transfer-remark-input">备注</label><input type="text" id="transfer-remark-input" placeholder="（选填）"></div>
+                <button type="submit" class="btn btn-primary">发送</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 礼物弹窗 -->
+    <div id="send-gift-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>送出礼物</h3>
+            <div id="gift-item-list" style="max-height:50vh;overflow-y:auto;margin-bottom:12px;"></div>
+            <div id="gift-empty-hint" style="display:none;text-align:center;padding:20px 0;color:#999;font-size:13px;">还没有已购买的物品<br>去商店购买后再来赠送吧～</div>
+        </div>
+    </div>
+
+    <!-- 时间跳跃弹窗 -->
+    <div id="time-skip-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>记录今天发生的事</h3>
+            <form id="time-skip-form">
+                <div class="form-group"><label for="time-skip-input">事件描述 (该消息AI可见，会作为上下文)</label><textarea id="time-skip-input" placeholder="例如：我们一起去山顶看了日落，然后吃了烧烤。" required rows="4"></textarea></div>
+                <button type="submit" class="btn btn-primary">发送</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 群聊收件人选择 -->
+    <div id="group-recipient-selection-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3 id="group-recipient-selection-title">选择收件人</h3>
+            <ul id="group-recipient-selection-list"></ul>
+            <button class="btn btn-primary" id="confirm-group-recipient-btn" style="margin-top:20px;">确认</button>
+        </div>
+    </div>
+
+    <!-- 转账操作 -->
+    <div id="receive-transfer-actionsheet" class="action-sheet-overlay">
+        <div class="action-sheet">
+            <button class="action-sheet-button" id="accept-transfer-btn">接收</button>
+            <button class="action-sheet-button danger" id="return-transfer-btn">退回</button>
+        </div>
+    </div>
+
+    <!-- 私聊设置面板已移至聊天室内部（上方） -->
+
+    <!-- 世界书选择弹窗 -->
+    <div id="world-book-selection-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>选择要关联的世界书</h3>
+            <ul id="world-book-selection-list"></ul>
+            <button class="btn btn-primary" id="save-world-book-selection-btn" style="margin-top:20px;">确认</button>
+        </div>
+    </div>
+
+    <!-- 创建群聊弹窗 -->
+    <div id="create-group-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>创建群聊</h3>
+            <form id="create-group-form">
+                <div class="form-group"><label>选择群成员</label><ul id="member-selection-list" class="member-selection-list"></ul></div>
+                <div class="form-group"><label for="group-name-input">群聊名称</label><input type="text" id="group-name-input" placeholder="给你的群聊起个名字吧" required></div>
+                <button type="submit" class="btn btn-primary">创建群聊</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 群聊设置面板已移至聊天室内部（上方） -->
+
+    <!-- 群成员编辑弹窗 -->
+    <div id="edit-group-member-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3 id="edit-group-member-title">编辑群成员</h3>
+            <form id="edit-group-member-form">
+                <input type="hidden" id="editing-member-id">
+                <div class="avatar-setting" style="justify-content:center;"><img src="" alt="成员头像" id="edit-member-avatar-preview" class="avatar-preview" style="cursor:pointer;"><input type="file" id="edit-member-avatar-upload" accept="image/*" style="display:none;"></div>
+                <div class="form-group"><label for="edit-member-group-nickname">群昵称</label><input type="text" id="edit-member-group-nickname" required></div>
+                <div class="form-group"><label for="edit-member-real-name">真名</label><input type="text" id="edit-member-real-name" required></div>
+                <div class="form-group"><label for="edit-member-persona">人设</label><textarea id="edit-member-persona" placeholder="详细描述角色的性格、背景等。"></textarea></div>
+                <div class="form-group"><label for="edit-member-system-prompt">系统指令（可选）</label><textarea id="edit-member-system-prompt" rows="2" placeholder="该成员的系统级指令"></textarea></div>
+                <div style="font-size:12px;color:#999;margin-bottom:8px;">📖 专属世界书：该成员的专属设定（仅该成员生效）</div>
+                <div id="edit-member-wb-list" style="margin-bottom:8px;"></div>
+                <button type="button" class="btn btn-secondary" id="edit-member-add-wb" style="width:100%;padding:6px;font-size:12px;margin-bottom:12px;">+ 添加专属条目</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加成员操作面板 -->
+    <div id="add-member-actionsheet" class="action-sheet-overlay">
+        <div class="action-sheet">
+            <button class="action-sheet-button" id="invite-existing-member-btn">邀请现有角色</button>
+            <button class="action-sheet-button" id="create-new-member-btn">创建新角色入群</button>
+        </div>
+    </div>
+
+    <!-- 邀请成员弹窗 -->
+    <div id="invite-member-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>邀请成员加入群聊</h3>
+            <ul id="invite-member-selection-list"></ul>
+            <button class="btn btn-primary" id="confirm-invite-btn" style="margin-top:20px;">确认邀请</button>
+        </div>
+    </div>
+
+    <!-- 创建新成员弹窗 -->
+    <div id="create-member-for-group-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>创建新角色并加入群聊</h3>
+            <form id="create-member-for-group-form">
+                <div class="avatar-setting" style="justify-content:center;"><img src="https://i.postimg.cc/Y96LPskq/o-o-2.jpg" alt="新成员头像" id="create-group-member-avatar-preview" class="avatar-preview" style="cursor:pointer;"><input type="file" id="create-group-member-avatar-upload" accept="image/*" style="display:none;"></div>
+                <div class="form-group"><label for="create-group-member-nickname">群昵称</label><input type="text" id="create-group-member-nickname" required></div>
+                <div class="form-group"><label for="create-group-member-realname">真名</label><input type="text" id="create-group-member-realname" required></div>
+                <div class="form-group"><label for="create-group-member-persona">人设</label><textarea id="create-group-member-persona" placeholder="详细描述角色的性格、背景等。"></textarea></div>
+                <button type="submit" class="btn btn-primary">创建并加入</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== 约会地图 ===== -->
+    <div id="date-map-screen" class="screen">
+        <div class="date-header">
+            <a href="#" class="back-btn" data-target="home-screen" id="date-back-btn">‹</a>
+            <div class="title">🗺️ 约会地图</div>
+            <div style="width:36px;"></div>
+        </div>
+        <div id="date-panel">
+            <h2 id="date-panel-name"></h2>
+            <div class="sub" id="date-panel-sub"></div>
+            <div class="desc" id="date-panel-desc"></div>
+            <div class="stat"><span class="lbl">氛围标签</span><span class="val" id="date-panel-tags"></span></div>
+            <div class="stat"><span class="lbl">推荐情绪</span><span class="val" id="date-panel-mood"></span></div>
+            <button class="btn-go" id="date-panel-btn">前 往 约 会</button>
+        </div>
+        <div id="date-hint">✨ 点击地图上的魔法阵探索约会地点 · 留意随机出现的 ⭐ 心动之选</div>
+    </div>
+
+</div>
+
+<input type="file" id="import-data-input" accept=".ee" style="display:none;">
+
+<!-- 引擎层 JS -->
+<script src="js/core/aiService.js"></script>
+<script src="engine/db.js"></script>
+<script src="engine/ui.js"></script>
+<script src="engine/core.js"></script>
+
+<!-- 模块 JS（新增模块只需在此添加一行） -->
+<script src="modules/shop/shop.js"></script>
+<script src="modules/live/live.js"></script>
+<script src="modules/media/media.js"></script>
+<script src="modules/games/games.js"></script>
+<script src="modules/album/album.js"></script>
+<script src="modules/gacha/gacha.js"></script>
+<script src="modules/wardrobe/wardrobe.js"></script>
+<script src="modules/date/date.js"></script>
+
+<!-- 主应用逻辑 -->
+<script src="js/sillytavern-import.js"></script>
+<script src="js/systems/ttsService.js"></script>
+<script src="js/systems/activeWorld.js"></script>
+<script src="js/systems/aiDebug.js"></script>
+<!-- 模块化入口 -->
+<script type="module" src="js/app.js?v=12"></script>
+
+<!-- 启动 -->
+<script>
+    // 全局错误兜底：确保即使初始化失败，主页也能显示
+    function showError(msg) {
+        var el = document.getElementById('error-display');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'error-display';
+            el.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:99999;padding:20px;overflow:auto;font-family:monospace;font-size:13px;color:#c00;';
+            document.body.appendChild(el);
+        }
+        el.innerHTML += '<div style="margin-bottom:8px;padding:8px;background:#fff0f0;border:1px solid #fcc;border-radius:6px;word-break:break-all;"><b>Error:</b> ' + msg + '</div>';
+    }
+    window.addEventListener('error', function(e) {
+        console.error('[GlobalError]', e.message, e.filename, e.lineno);
+        showError(e.message + ' (' + (e.filename||'').split('/').pop() + ':' + e.lineno + ')');
+        var home = document.getElementById('home-screen');
+        if (home && !home.classList.contains('active')) home.classList.add('active');
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        console.error('[UnhandledRejection]', e.reason);
+        showError('Promise: ' + (e.reason?.message || e.reason || 'unknown'));
+        var home = document.getElementById('home-screen');
+        if (home && !home.classList.contains('active')) home.classList.add('active');
+    });
+    // CDN 依赖检测
+    (function() {
+        var missing = [];
+        if (typeof Dexie === 'undefined') missing.push('Dexie');
+        if (typeof saveAs === 'undefined' && typeof FileSaver === 'undefined') missing.push('FileSaver');
+        if (typeof html2canvas === 'undefined') missing.push('html2canvas');
+        if (typeof pako === 'undefined') missing.push('pako');
+        if (missing.length > 0) {
+            console.error('[CDN] 以下依赖加载失败:', missing.join(', '));
+            document.getElementById('home-screen')?.classList.add('active');
+            var toast = document.getElementById('toast-notification');
+            if (toast) {
+                toast.textContent = '⚠️ 部分依赖加载失败: ' + missing.join(', ') + '，请刷新重试';
+                toast.classList.add('show');
+            }
+        }
+    })();
+    // 注：模块化版 js/app.js 自行调用 initApp()，无需 DOMContentLoaded 监听
+</script>
+</body>
+</html>

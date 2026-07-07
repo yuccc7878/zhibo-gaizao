@@ -1,0 +1,366 @@
+/**
+ * 约会地图 - Three.js 3D 城市核心
+ * 懒加载模块，仅在用户首次打开地图时加载
+ */
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const DATE_LOCATIONS = [
+  { id:'cafe', name:'☕ 星语咖啡厅', sub:'温馨 · 下午茶 · 私语', pos:[-3.0,0.4,-2.0], color:0xff8844,
+    desc:'坐落在梧桐树下的静谧咖啡厅，暖黄的灯光透过落地窗洒在街道上。这里是初次约会的最佳选择，氛围轻松而不失浪漫。',
+    tags:'适合初次约会 · 安静舒适 · 甜品推荐', mood:'温馨 · 轻松' },
+  { id:'cinema', name:'🎬 星光影院', sub:'浪漫 · 大片 · 爆米花', pos:[3.2,0.4,-2.2], color:0x44aaff,
+    desc:'复古风格的独立影院，每晚放映经典与最新大片。情侣座宽敞舒适，黑暗中的悄悄话是感情升温的催化剂。',
+    tags:'适合情侣 · 经典片单 · 情侣座', mood:'浪漫 · 心动' },
+  { id:'park', name:'🎡 欢乐游乐园', sub:'刺激 · 欢笑 · 摩天轮', pos:[0,0.6,3.8], color:0x66dd88,
+    desc:'华灯初上的游乐园，摩天轮缓缓转动，过山车的尖叫声此起彼伏。在最高点的摩天轮里告白，成功率翻倍。',
+    tags:'适合约会 · 夜景绝佳 · 刺激项目', mood:'欢乐 · 心跳' },
+];
+
+let scene, camera, renderer, labelRenderer, controls;
+let clock, clickables = [];
+let clouds = [];
+let selectedId = null;
+let raycaster, pointer;
+let animFrameId = null;
+let isReady = false;
+
+export async function init() {
+  if (isReady) return;
+  try {
+    // 创建场景
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87CEEB);  // 天蓝色
+    scene.fog = new THREE.Fog(0x87CEEB, 15, 28);
+
+    const aspect = window.innerWidth / window.innerHeight;
+    camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 40);
+    camera.position.set(6, 5, 9);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.9;
+
+    labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.left = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    labelRenderer.domElement.style.zIndex = '10';
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.5;
+    controls.minDistance = 4;
+    controls.maxDistance = 16;
+    controls.maxPolarAngle = Math.PI / 2.3;
+    controls.target.set(0, 0.1, 0);
+
+    renderer.domElement.style.position = 'absolute';
+    renderer.domElement.style.top = '0';
+    renderer.domElement.style.left = '0';
+    renderer.domElement.style.zIndex = '1';
+
+    clock = new THREE.Clock();
+    raycaster = new THREE.Raycaster();
+    pointer = new THREE.Vector2();
+    clickables = [];
+
+    setupLights();
+    buildCity();
+    createLocationMarkers();
+    createStars();
+    setupInteraction();
+    window.addEventListener('resize', onResize);
+
+    const screen = document.getElementById('date-map-screen');
+    if (screen) {
+      screen.appendChild(renderer.domElement);
+      screen.appendChild(labelRenderer.domElement);
+    }
+
+    isReady = true;
+    animate();
+  } catch (e) {
+    console.error('[DateCore] init error:', e);
+  }
+}
+
+function setupLights() {
+  scene.add(new THREE.AmbientLight(0x334466, 0.3));
+  const hemi = new THREE.HemisphereLight(0x4488cc, 0x111133, 0.5);
+  scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xffeedd, 1.5);
+  sun.position.set(6,12,8);
+  sun.castShadow = true;
+  sun.shadow.mapSize.width = 2048;
+  sun.shadow.mapSize.height = 2048;
+  sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 25;
+  sun.shadow.camera.left = -8; sun.shadow.camera.right = 8;
+  sun.shadow.camera.top = 8; sun.shadow.camera.bottom = -8;
+  sun.shadow.bias = -0.001;
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x6688ff, 0.35);
+  fill.position.set(-4,3,-5);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xff8844, 0.25);
+  rim.position.set(0,2,-7);
+  scene.add(rim);
+}
+
+function buildCity() {
+  const plat = new THREE.Mesh(new THREE.CylinderGeometry(5,6,0.5,48),
+    new THREE.MeshPhysicalMaterial({ color:0x1a2a3a, roughness:0.7, metalness:0.1, flatShading:true }));
+  plat.position.y = -0.25; plat.receiveShadow = true; plat.castShadow = true;
+  scene.add(plat);
+
+  const grass = new THREE.Mesh(new THREE.CircleGeometry(4.8,48),
+    new THREE.MeshPhysicalMaterial({ color:0x2a4a3a, roughness:0.8 }));
+  grass.rotation.x = -Math.PI/2; grass.position.y = 0.01; grass.receiveShadow = true;
+  scene.add(grass);
+
+  const roadMat = new THREE.LineBasicMaterial({ color:0x4466aa, transparent:true, opacity:0.2 });
+  for (let i=-4;i<=4;i+=2) {
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-4.5,0.02,i), new THREE.Vector3(4.5,0.02,i)]), roadMat));
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(i,0.02,-4.5), new THREE.Vector3(i,0.02,4.5)]), roadMat));
+  }
+
+  const colors = [0x3a5a7a,0x5a3a6a,0x3a6a4a,0x6a4a3a,0x4a5a5a,0x5a5a3a];
+  for (let i=0;i<25;i++) {
+    const angle = Math.random()*Math.PI*2, radius = 1.5+Math.random()*2.8;
+    const x = Math.cos(angle)*radius, z = Math.sin(angle)*radius;
+    if (Math.abs(x)<0.8&&Math.abs(z)<0.8) continue;
+    if (Math.abs(x+3)<0.6&&Math.abs(z+2)<0.6) continue;
+    if (Math.abs(x-3.2)<0.6&&Math.abs(z+2.2)<0.6) continue;
+    if (Math.abs(x)<0.6&&Math.abs(z-3.8)<0.6) continue;
+    const w=0.2+Math.random()*0.35, h=0.2+Math.random()*0.6, d=0.2+Math.random()*0.35;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
+      new THREE.MeshPhysicalMaterial({ color:colors[Math.floor(Math.random()*colors.length)], roughness:0.6, flatShading:true }));
+    m.position.set(x,h/2,z); m.rotation.y=Math.random()*Math.PI;
+    m.castShadow=true; m.receiveShadow=true; scene.add(m);
+    if (Math.random()>0.5) {
+      const r=new THREE.Mesh(new THREE.ConeGeometry(w*0.6,h*0.15,4),
+        new THREE.MeshPhysicalMaterial({ color:0x4a3a2a, roughness:0.7, flatShading:true }));
+      r.position.set(x,h+0.07,z); r.castShadow=true; scene.add(r);
+    }
+  }
+  for (let i=0;i<8;i++) {
+    const a=i/8*Math.PI*2+Math.PI/8, r=3.8;
+    const x=Math.cos(a)*r, z=Math.sin(a)*r;
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.03,0.3,6),
+      new THREE.MeshPhysicalMaterial({ color:0x666688, roughness:0.4, metalness:0.6 }));
+    p.position.set(x,0.15,z); p.castShadow=true; scene.add(p);
+    const l=new THREE.Mesh(new THREE.SphereGeometry(0.04,6,6),
+      new THREE.MeshBasicMaterial({ color:0xffcc66, transparent:true, opacity:0.4 }));
+    l.position.set(x,0.32,z); scene.add(l);
+  }
+}
+
+function createLocationMarkers() {
+  DATE_LOCATIONS.forEach((loc, idx) => {
+    const pos = new THREE.Vector3(loc.pos[0], loc.pos[1], loc.pos[2]);
+    const pMat = new THREE.MeshPhysicalMaterial({ color:loc.color, emissive:loc.color, emissiveIntensity:0.5, transparent:true, opacity:0.25, roughness:0.2 });
+    const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.35,1.4,12), pMat);
+    pillar.position.copy(pos); pillar.position.y+=0.7; pillar.castShadow=true; scene.add(pillar);
+
+    const cMat = new THREE.MeshBasicMaterial({ color:loc.color, transparent:true, opacity:0.15 });
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.15,1.6,8), cMat);
+    core.position.copy(pillar.position); scene.add(core);
+
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,0.1,12),
+      new THREE.MeshPhysicalMaterial({ color:0x7a6a5a, roughness:0.7 }));
+    base.position.set(pos.x,0.05,pos.z); base.receiveShadow=true; base.castShadow=true; scene.add(base);
+
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.35,0.45,20),
+      new THREE.MeshBasicMaterial({ color:loc.color, transparent:true, opacity:0.12, side:THREE.DoubleSide }));
+    ring.rotation.x=-Math.PI/2; ring.position.set(pos.x,0.06,pos.z); scene.add(ring);
+
+    // 地标
+    if (loc.id==='cafe') {
+      const w = new THREE.Mesh(new THREE.BoxGeometry(0.4,0.3,0.4), new THREE.MeshPhysicalMaterial({ color:0x8a6a4a, roughness:0.5 }));
+      w.position.set(pos.x,0.18,pos.z); w.castShadow=true; w.receiveShadow=true; scene.add(w);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(0.32,0.2,4), new THREE.MeshPhysicalMaterial({ color:0x6a3a2a, roughness:0.6 }));
+      roof.position.set(pos.x,0.38,pos.z); roof.rotation.y=Math.PI/4; roof.castShadow=true; scene.add(roof);
+      const umb = new THREE.Mesh(new THREE.ConeGeometry(0.3,0.15,8), new THREE.MeshPhysicalMaterial({ color:0xcc8844, roughness:0.4 }));
+      umb.position.set(pos.x+0.4,0.25,pos.z-0.3); umb.castShadow=true; scene.add(umb);
+    } else if (loc.id==='cinema') {
+      const w = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.35,0.4), new THREE.MeshPhysicalMaterial({ color:0x4a5a7a, roughness:0.4 }));
+      w.position.set(pos.x,0.2,pos.z); w.castShadow=true; w.receiveShadow=true; scene.add(w);
+      const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.15), new THREE.MeshBasicMaterial({ color:0x4488ff, transparent:true, opacity:0.3 }));
+      scr.position.set(pos.x+0.26,0.25,pos.z); scr.rotation.y=Math.PI/2; scene.add(scr);
+      const t = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.05,0.45), new THREE.MeshPhysicalMaterial({ color:0x3a4a6a, roughness:0.6 }));
+      t.position.set(pos.x,0.38,pos.z); t.castShadow=true; scene.add(t);
+    } else if (loc.id==='park') {
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.3,0.4,6), new THREE.MeshPhysicalMaterial({ color:0x5a7a5a, roughness:0.5 }));
+      b.position.set(pos.x,0.2,pos.z); b.castShadow=true; b.receiveShadow=true; scene.add(b);
+      const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.35,0.02,8,20), new THREE.MeshBasicMaterial({ color:0x88dd88, transparent:true, opacity:0.25 }));
+      wheel.position.set(pos.x,0.55,pos.z); wheel.rotation.x=Math.PI/3; scene.add(wheel);
+      const lMat = new THREE.LineBasicMaterial({ color:0x88dd88, transparent:true, opacity:0.15 });
+      for (let i=0;i<6;i++) {
+        const a=i/6*Math.PI*2;
+        const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0,0,0), new THREE.Vector3(Math.cos(a)*0.35,Math.sin(a)*0.35*0.6,0)]), lMat);
+        ln.position.set(pos.x,0.55,pos.z); ln.rotation.x=Math.PI/3; scene.add(ln);
+      }
+    }
+
+    const pGroup = new THREE.Group();
+    pGroup.position.copy(pos); pGroup.position.y+=0.6; scene.add(pGroup);
+    const pCount = 6+idx*2;
+    for (let i=0;i<pCount;i++) {
+      const p = new THREE.Mesh(new THREE.SphereGeometry(0.02,6,6),
+        new THREE.MeshBasicMaterial({ color:loc.color, transparent:true, opacity:0.4 }));
+      const a=i/pCount*Math.PI*2;
+      p.position.set(Math.cos(a)*0.3,0,Math.sin(a)*0.3);
+      p.material.color.setHSL(0.08+idx*0.08,0.7,0.6);
+      p.userData = {angle:a, speed:0.4+Math.random()*0.2, offset:Math.random()*50};
+      pGroup.add(p);
+    }
+
+    const div = document.createElement('div');
+    div.className='date-loc-label'; div.textContent=loc.name;
+    const label=new CSS2DObject(div);
+    label.position.set(pos.x,1.2,pos.z); scene.add(label);
+    clickables.push({ pillar, core, label, labelDiv:div, pGroup, data:loc });
+  });
+}
+
+function createStars() {
+  const geo = new THREE.BufferGeometry();
+  const cnt = 800;
+  const pos = new Float32Array(cnt*3);
+  for (let i=0;i<cnt;i++) {
+    const t=Math.random()*Math.PI*2, p=Math.acos(2*Math.random()-1), r=25+Math.random()*15;
+    pos[i*3]=r*Math.sin(p)*Math.cos(t); pos[i*3+1]=Math.abs(r*Math.cos(p)); pos[i*3+2]=r*Math.sin(p)*Math.sin(t);
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color:0x8888ff, size:0.1, transparent:true, opacity:0.5, blending:THREE.AdditiveBlending })));
+}
+
+function setupInteraction() {
+  renderer.domElement.addEventListener('pointermove', e => {
+    const r=renderer.domElement.getBoundingClientRect();
+    pointer.x=((e.clientX-r.left)/r.width)*2-1; pointer.y=-((e.clientY-r.top)/r.height)*2+1;
+  });
+  renderer.domElement.addEventListener('click', e => {
+    const r=renderer.domElement.getBoundingClientRect();
+    const x=((e.clientX-r.left)/r.width)*2-1, y=-((e.clientY-r.top)/r.height)*2+1;
+    raycaster.setFromCamera(new THREE.Vector2(x,y), camera);
+    const targets=[]; clickables.forEach(c=>targets.push(c.pillar,c.core));
+    const hits=raycaster.intersectObjects(targets);
+    if (hits.length>0) {
+      const hit=hits[0].object;
+      const found=clickables.find(c=>c.pillar===hit||c.core===hit);
+      if (found) showLocation(found.data);
+    }
+    // 点击空白关闭面板
+    const panel=document.getElementById('date-panel');
+    if (panel&&panel.classList.contains('show')) {
+      const pr=panel.getBoundingClientRect();
+      if (e.clientX<pr.left||e.clientX>pr.right||e.clientY<pr.top||e.clientY>pr.bottom) {
+        if (raycaster.intersectObjects(targets).length===0) closePanel();
+      }
+    }
+  });
+}
+
+function showLocation(data) {
+  selectedId = data.id;
+  const panel = document.getElementById('date-panel');
+  if (!panel) return;
+  document.getElementById('dp-name').textContent=data.name;
+  document.getElementById('dp-sub').textContent=data.sub;
+  document.getElementById('dp-desc').textContent=data.desc;
+  document.getElementById('dp-tags').textContent=data.tags;
+  document.getElementById('dp-mood').textContent=data.mood;
+  panel.classList.add('show');
+  if (controls) controls.autoRotate=false;
+  clickables.forEach(c=>{
+    c.labelDiv.classList.toggle('hover',c.data.id===data.id);
+    c.pillar.material.emissiveIntensity=c.data.id===data.id?1.0:0.5;
+    c.pillar.material.opacity=c.data.id===data.id?0.4:0.25;
+  });
+}
+
+function closePanel() {
+  const panel=document.getElementById('date-panel');
+  if(panel) panel.classList.remove('show');
+  selectedId = null;
+  if(controls) controls.autoRotate=true;
+  clickables.forEach(c=>{
+    c.labelDiv.classList.remove('hover');
+    c.pillar.material.emissiveIntensity=0.5; c.pillar.material.opacity=0.25;
+  });
+}
+
+function onResize() {
+  if (!camera||!renderer||!labelRenderer) return;
+  const w=window.innerWidth, h=window.innerHeight;
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w,h); labelRenderer.setSize(w,h);
+}
+
+function animate() {
+  if (!scene||!camera||!renderer||!controls) return;
+  animFrameId = requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+
+  raycaster.setFromCamera(pointer,camera);
+  const targets=[]; clickables.forEach(c=>targets.push(c.pillar,c.core));
+  const intersects=raycaster.intersectObjects(targets);
+  clickables.forEach(c=>c.labelDiv.classList.remove('hover'));
+  if (renderer) renderer.domElement.style.cursor='default';
+  if (intersects.length>0) {
+    const hit=intersects[0].object;
+    const found=clickables.find(c=>c.pillar===hit||c.core===hit);
+    if (found&&found.data.id!==selectedId) { found.labelDiv.classList.add('hover'); if(renderer) renderer.domElement.style.cursor='pointer'; }
+  }
+
+  clickables.forEach((c,i)=>{
+    const pulse=Math.sin(time*1.0+i*0.7)*0.12+0.25;
+    c.pillar.material.opacity=c.data.id===selectedId?0.4:pulse;
+    c.core.material.opacity=pulse*0.4;
+    c.pGroup.children.forEach(p=>{
+      const d=p.userData;
+      p.position.x=Math.cos(d.angle+time*d.speed)*0.3;
+      p.position.z=Math.sin(d.angle+time*d.speed)*0.3;
+      p.position.y=Math.sin(time*d.speed+d.offset)*0.15;
+    });
+    c.pGroup.rotation.y=time*0.2+i;
+  });
+
+  controls.update();
+  renderer.render(scene,camera);
+  labelRenderer.render(scene,camera);
+}
+
+export function resume() {
+  if (isReady && !animFrameId) animate();
+}
+
+export function pause() {
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+  closePanel();
+}
+
+export function destroy() {
+  pause();
+  if (renderer&&renderer.domElement&&renderer.domElement.parentNode) {
+    renderer.domElement.parentNode.removeChild(renderer.domElement);
+  }
+  if (labelRenderer&&labelRenderer.domElement&&labelRenderer.domElement.parentNode) {
+    labelRenderer.domElement.parentNode.removeChild(labelRenderer.domElement);
+  }
+  window.removeEventListener('resize', onResize);
+  isReady = false;
+}
