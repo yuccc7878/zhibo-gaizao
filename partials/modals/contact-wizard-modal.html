@@ -1,0 +1,64 @@
+    <div id="contact-wizard-modal" class="modal-overlay wizard-modal">
+        <div class="modal-window">
+            <div class="wizard-indicator" id="wizard-indicator">
+                <div class="wizard-dot active" data-step="1"></div>
+                <div class="wizard-dot" data-step="2"></div>
+                <div class="wizard-dot" data-step="3"></div>
+            </div>
+            <!-- 步骤 1: 导入/手动创建 -->
+            <div class="wizard-step active" data-step="1">
+                <h3>📥 添加联系人</h3>
+                <p class="wizard-subtitle">导入角色卡或手动填写</p>
+                <div class="wizard-import-zone" id="wizard-import-zone">
+                    <div class="import-icon">📂</div>
+                    <div class="import-text">点击选择或拖拽 .png / .json 角色卡</div>
+                    <input type="file" id="wizard-import-file" accept=".png,.json" style="display:none;">
+                </div>
+                <div id="wizard-import-preview" style="display:none;"></div>
+                <div class="wizard-separator">或者</div>
+                <button type="button" class="wizard-manual-btn" id="wizard-skip-import">✏️ 手动填写</button>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-primary" id="wizard-step1-next" disabled>下一步</button>
+                </div>
+            </div>
+            <!-- 步骤 2: 头像 + 姓名 -->
+            <div class="wizard-step" data-step="2">
+                <h3>👤 头像与称呼</h3>
+                <p class="wizard-subtitle">设置联系人的头像和称呼</p>
+                <div class="wizard-avatar-upload">
+                    <img src="assets/icons/default-avatar.png" id="wizard-avatar-preview" class="wizard-avatar-preview">
+                    <input type="file" id="wizard-avatar-upload" accept="image/*">
+                    <label for="wizard-avatar-upload" class="btn btn-secondary" style="font-size:13px;padding:6px 16px;">📷 选择头像</label>
+                </div>
+                <div class="form-group">
+                    <label for="wizard-char-realname">真实姓名</label>
+                    <input type="text" id="wizard-char-realname" placeholder="角色的真实姓名" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+                </div>
+                <div class="form-group">
+                    <label for="wizard-char-nickname">昵称（备注）</label>
+                    <input type="text" id="wizard-char-nickname" placeholder="你如何称呼TA" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-neutral" id="wizard-step2-back">← 上一步</button>
+                    <button type="button" class="btn btn-primary" id="wizard-step2-next">下一步</button>
+                </div>
+            </div>
+            <!-- 步骤 3: 基础资料 + 世界书 -->
+            <div class="wizard-step" data-step="3">
+                <h3>📋 基础资料</h3>
+                <p class="wizard-subtitle">完善人设和关联世界书</p>
+                <div class="form-group">
+                    <label for="wizard-char-persona">人设描述</label>
+                    <textarea id="wizard-char-persona" rows="3" placeholder="描述角色的性格、背景、说话风格等" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">📖 关联世界书（可选）</label>
+                    <div class="wizard-wb-list" id="wizard-wb-list"></div>
+                </div>
+                <div class="wizard-nav">
+                    <button type="button" class="btn btn-neutral" id="wizard-step3-back">← 上一步</button>
+                    <button type="button" class="btn btn-primary" id="wizard-step3-finish">✅ 完成创建</button>
+                </div>
+            </div>
+        </div>
+    </div>

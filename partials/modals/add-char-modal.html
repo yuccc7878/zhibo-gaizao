@@ -1,0 +1,28 @@
+    <div id="add-char-modal" class="modal-overlay">
+        <div class="modal-window" id="add-char-modal-window">
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-tab="manual">✏️ 手动创建</button>
+                <button class="modal-tab" data-tab="import">📦 导入 V1/V2/V3 标准角色卡</button>
+            </div>
+
+            <!-- 手动创建 -->
+            <form id="add-char-form">
+                <div class="form-group"><label for="char-real-name">角色姓名</label><input type="text" id="char-real-name" placeholder="角色的真实姓名" required></div>
+                <div class="form-group"><label for="char-remark-name">角色备注 (昵称)</label><input type="text" id="char-remark-name" placeholder="你对Ta的称呼" required></div>
+                <div class="form-group"><label for="my-name-for-char">我的姓名</label><input type="text" id="my-name-for-char" placeholder="你希望Ta如何称呼你" required></div>
+                <button type="submit" class="btn btn-primary">创建</button>
+            </form>
+
+            <!-- 导入角色卡 -->
+            <div id="import-tab-panel" style="display:none;">
+                <div class="import-dropzone" id="import-dropzone">
+                    <div class="import-dropzone-icon">📂</div>
+                    <div class="import-dropzone-text">点击选择或拖拽 .png / .json 角色卡</div>
+                    <input type="file" id="import-card-file" accept=".png,.json" style="display:none;">
+                    <button type="button" class="btn btn-primary" id="import-select-btn" style="width:auto;padding:10px 20px;margin-top:8px;">选择文件</button>
+                </div>
+                <div id="import-preview" style="display:none;"></div>
+                <div id="import-error" style="display:none;"></div>
+            </div>
+        </div>
+    </div>

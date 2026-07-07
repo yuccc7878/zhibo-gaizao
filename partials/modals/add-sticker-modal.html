@@ -1,0 +1,15 @@
+    <div id="add-sticker-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3 id="add-sticker-modal-title">添加新表情</h3>
+            <form id="add-sticker-form">
+                <input type="hidden" id="sticker-edit-id">
+                <div id="sticker-preview"><span>预览</span></div>
+                <div class="form-group"><label for="sticker-name">表情名称</label><input type="text" id="sticker-name" placeholder="如：开心" required></div>
+                <div class="form-group"><label for="sticker-url-input">表情URL</label><input type="url" id="sticker-url-input" placeholder="粘贴图片URL"></div>
+                <p style="text-align:center;color:#888;margin:-10px 0 15px;">或</p>
+                <input type="file" id="sticker-file-upload" accept="image/*" style="display:none;">
+                <label for="sticker-file-upload" class="btn btn-secondary" style="width:100%;margin-bottom:20px;">从本地上传</label>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </form>
+        </div>
+    </div>

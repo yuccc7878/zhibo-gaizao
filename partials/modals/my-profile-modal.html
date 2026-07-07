@@ -1,0 +1,25 @@
+<div id="my-profile-modal" class="modal-overlay">
+  <div class="modal-window" style="max-width:380px;">
+    <div class="modal-title" style="font-size:18px;font-weight:bold;margin-bottom:16px;">我的资料</div>
+    <div class="form-group">
+      <label>我的头像</label>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <img id="myprofile-avatar-preview" src="assets/icons/default-avatar.png" class="avatar-preview" style="width:60px;height:60px;border-radius:50%;object-fit:cover;">
+        <input type="file" id="myprofile-avatar-upload" accept="image/*" style="display:none;">
+        <label for="myprofile-avatar-upload" class="btn btn-primary" style="flex:1;text-align:center;padding:10px;">📁 上传头像</label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="myprofile-name">我的昵称</label>
+      <input type="text" id="myprofile-name" placeholder="你希望角色怎么称呼你？" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+    </div>
+    <div class="form-group">
+      <label for="myprofile-persona">我的设定</label>
+      <textarea id="myprofile-persona" rows="4" placeholder="关于你自己的描述，例如性格、身份、说话风格...这些内容会注入所有对话的 AI 提示词中" style="width:100%;min-height:80px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;resize:vertical;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button type="button" class="btn btn-neutral" id="myprofile-cancel-btn">取消</button>
+      <button type="button" class="btn btn-primary" id="myprofile-save-btn">保存</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,11 @@
+    <div id="send-transfer-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>转账</h3>
+            <div style="text-align:center;font-size:13px;color:#888;margin:-8px 0 12px;">🪙 当前余额: <span id="transfer-balance">0</span> 金币</div>
+            <form id="send-transfer-form">
+                <div class="form-group"><label for="transfer-amount-input">金额 (元)</label><input type="number" id="transfer-amount-input" placeholder="0.00" required step="0.01" min="0.01"></div>
+                <div class="form-group"><label for="transfer-remark-input">备注</label><input type="text" id="transfer-remark-input" placeholder="（选填）"></div>
+                <button type="submit" class="btn btn-primary">发送</button>
+            </form>
+        </div>
+    </div>

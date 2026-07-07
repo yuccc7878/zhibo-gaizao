@@ -1,0 +1,17 @@
+    <div id="edit-group-member-modal" class="modal-overlay">
+        <div class="modal-window">
+            <h3 id="edit-group-member-title">编辑群成员</h3>
+            <form id="edit-group-member-form">
+                <input type="hidden" id="editing-member-id">
+                <div class="avatar-setting" style="justify-content:center;"><img src="" alt="成员头像" id="edit-member-avatar-preview" class="avatar-preview" style="cursor:pointer;"><input type="file" id="edit-member-avatar-upload" accept="image/*" style="display:none;"></div>
+                <div class="form-group"><label for="edit-member-group-nickname">群昵称</label><input type="text" id="edit-member-group-nickname" required></div>
+                <div class="form-group"><label for="edit-member-real-name">真名</label><input type="text" id="edit-member-real-name" required></div>
+                <div class="form-group"><label for="edit-member-persona">人设</label><textarea id="edit-member-persona" placeholder="详细描述角色的性格、背景等。"></textarea></div>
+                <div class="form-group"><label for="edit-member-system-prompt">系统指令（可选）</label><textarea id="edit-member-system-prompt" rows="2" placeholder="该成员的系统级指令"></textarea></div>
+                <div style="font-size:12px;color:#999;margin-bottom:8px;">📖 专属世界书：该成员的专属设定（仅该成员生效）</div>
+                <div id="edit-member-wb-list" style="margin-bottom:8px;"></div>
+                <button type="button" class="btn btn-secondary" id="edit-member-add-wb" style="width:100%;padding:6px;font-size:12px;margin-bottom:12px;">+ 添加专属条目</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
