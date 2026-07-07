@@ -538,10 +538,11 @@ function renderBuiltinWorldBooks(c) {
 
   // 启用/停用开关
   container.querySelectorAll('.wb-toggle-switch input').forEach(cb => {
-    cb.addEventListener('change', function () {
+    cb.addEventListener('change', async function () {
       const c2 = getDb().characters.find(ch => ch.id === state.currentChatId);
       if (c2 && c2.builtinWorldBooks && c2.builtinWorldBooks[parseInt(this.dataset.idx)]) {
         c2.builtinWorldBooks[parseInt(this.dataset.idx)].enabled = this.checked;
+        await saveData();
       }
     });
   });

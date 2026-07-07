@@ -517,12 +517,13 @@ function renderGroupBuiltinWorldBooks(g) {
     </div>
   `).join('');
 
-  container.querySelectorAll('.wb-toggle-switch input').forEach(cb => cb.addEventListener('change', function () {
-    const g2 = (getDb().groups || []).find(gr => gr.id === state.currentChatId);
-    if (g2 && g2.builtinWorldBooks && g2.builtinWorldBooks[parseInt(this.dataset.idx)]) {
-      g2.builtinWorldBooks[parseInt(this.dataset.idx)].enabled = this.checked;
-    }
-  }));
+  container.querySelectorAll('.wb-toggle-switch input').forEach(cb => cb.addEventListener('change', async function () {
+const g2 = (getDb().groups || []).find(gr => gr.id === state.currentChatId);
+if (g2 && g2.builtinWorldBooks && g2.builtinWorldBooks[parseInt(this.dataset.idx)]) {
+g2.builtinWorldBooks[parseInt(this.dataset.idx)].enabled = this.checked;
+await saveData();
+}
+}));
 
   container.querySelectorAll('[data-action="edit-group-wb"]').forEach(btn => btn.addEventListener('click', function () {
     const idx = parseInt(this.dataset.idx);
