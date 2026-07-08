@@ -28,7 +28,6 @@ export const DEFAULT_PROMPTS = {
 
   private_part2:
 `# Part 2: 当前情景
-- 当前时间: {currentTime}（除非明确相关，否则不主动提及）
 {scenario}- 纯线上聊天，无线下关系，严禁提议线下见面
 `,
 
