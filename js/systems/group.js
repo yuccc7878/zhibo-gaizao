@@ -31,15 +31,15 @@ function bindEvents() {
     if (selectedIds.length < 1) return showToast(dom['toast-notification'], '请至少选择一个群成员。');
     if (!groupName) return showToast(dom['toast-notification'], '请输入群聊名称。');
     const db = getDb();
-    const firstChar = db.characters[0];
+    const profile = db.myProfile || {};
     const newGroup = {
       id: `group_${Date.now()}`,
       name: groupName,
       avatar: 'https://i.postimg.cc/fTLCngk1/image.jpg',
       me: {
-        nickname: firstChar?.myName || '我',
-        persona: firstChar?.myPersona || '',
-        avatar: firstChar?.myAvatar || 'assets/icons/default-avatar.png',
+        nickname: profile.name || '我',
+        persona: profile.persona || '',
+        avatar: profile.avatar || 'assets/icons/default-avatar.png',
       },
       members: selectedIds.map(charId => {
         const c = (db.characters || []).find(ch => ch.id === charId);
@@ -631,15 +631,15 @@ export async function createGroupChat(name, memberCharIds) {
     showToast(dom['toast-notification'], '至少需要选择一个成员');
     return null;
   }
-  const firstChar = db.characters[0];
+  const profile = db.myProfile || {};
   const newGroup = {
     id: `group_${Date.now()}`,
     name: name || '新群聊',
     avatar: 'https://i.postimg.cc/fTLCngk1/image.jpg',
     me: {
-      nickname: firstChar?.myName || '我',
-      persona: firstChar?.myPersona || '',
-      avatar: firstChar?.myAvatar || 'assets/icons/default-avatar.png',
+      nickname: profile.name || '我',
+      persona: profile.persona || '',
+      avatar: profile.avatar || 'assets/icons/default-avatar.png',
     },
     members: memberCharIds.map(charId => {
       const c = (db.characters || []).find(ch => ch.id === charId);

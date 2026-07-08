@@ -132,6 +132,11 @@ export function openChatRoom(chatId, type) {
   state.editingMessageId = null;
   exitMultiSelectMode();
 
+  // ★ 如果是私聊类型，确保私聊会话已创建
+  if (type === 'private') {
+    dataService.openPrivateChat(chatId);
+  }
+
   const chat = type === 'private'
     ? dataService.getCharacter(chatId)
     : dataService.getGroup(chatId);
@@ -160,6 +165,9 @@ export function openChatRoom(chatId, type) {
   utils.updateCustomBubbleStyle(chatId, hasCustomCss ? chat.customBubbleCss : '', !!hasCustomCss);
 
   renderMessages();
+
+  // ★ 刷新聊天列表（让新创建的私聊会话即时出现在私聊 Tab 中）
+  if (_renderChatList) _renderChatList();
 
   // 如果AI正在后台生成，保持typing indicator显示
   if (state.isGenerating) {

@@ -3,7 +3,7 @@
    ======================================== */
 
 import { state } from '../core/state.js';
-import { getDb, saveData } from '../core/dataService.js';
+import { getDb, saveData, getPrivateChat, hasPrivateChat, openPrivateChat, removePrivateChat, togglePrivateChatPin, removeGroup } from '../core/dataService.js';
 import { showToast, createContextMenu, compressImage, switchScreen } from '../core/utils.js';
 import { createGroupChat } from '../systems/group.js';
 
@@ -76,11 +76,17 @@ function renderContactsList() {
   }
   if (empty) empty.style.display = 'none';
   chars.forEach(char => {
+    // 联系人Tab：点击直接进入私聊（自动建会话），显示角色名和真实姓名
     const card = createSwipeCard(
       char.id, 'contact', char.avatar,
       char.remarkName || char.realName || '未知',
       char.realName ? escHtml(char.realName) : '',
-      char.isPinned, null
+      char.isPinned,
+      async (id) => {
+        // 点击联系人自动创建/打开私聊会话
+        await openPrivateChat(id);
+        if (_openChatRoom) _openChatRoom(id, 'private');
+      }
     );
     container.appendChild(card);
   });
@@ -92,20 +98,25 @@ function renderPrivateList() {
   const empty = dom['private-empty'];
   if (!container) return;
   container.innerHTML = '';
-  const chars = db.characters || [];
-  if (chars.length === 0) {
+  const privateChats = db.privateChats || [];
+  if (privateChats.length === 0) {
     if (empty) empty.style.display = 'block';
     return;
   }
   if (empty) empty.style.display = 'none';
-  const sorted = [...chars].sort((a, b) => {
+  // 按置顶+最后消息时间排序
+  const sorted = [...privateChats].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
-    const aLast = a.history && a.history.length ? a.history[a.history.length - 1].timestamp : 0;
-    const bLast = b.history && b.history.length ? b.history[b.history.length - 1].timestamp : 0;
+    const charA = (db.characters || []).find(c => c.id === a.charId);
+    const charB = (db.characters || []).find(c => c.id === b.charId);
+    const aLast = charA?.history?.length ? charA.history[charA.history.length - 1].timestamp : a.createdAt || 0;
+    const bLast = charB?.history?.length ? charB.history[charB.history.length - 1].timestamp : b.createdAt || 0;
     return bLast - aLast;
   });
-  sorted.forEach(char => {
+  sorted.forEach(pc => {
+    const char = (db.characters || []).find(c => c.id === pc.charId);
+    if (!char) return; // 联系人已被删除，跳过
     const history = char.history || [];
     const lastMsg = history.length > 0 ? history[history.length - 1] : null;
     let lastText = '';
@@ -119,9 +130,9 @@ function renderPrivateList() {
       }
     }
     const card = createSwipeCard(
-      char.id, 'private', char.avatar,
+      pc.charId, 'private', char.avatar,
       char.remarkName || char.realName || '未知',
-      lastText, char.isPinned,
+      lastText, pc.isPinned,
       (id) => { if (_openChatRoom) _openChatRoom(id, 'private'); }
     );
     container.appendChild(card);
@@ -312,35 +323,38 @@ function createSwipeCard(id, type, avatar, name, subtitle, isPinned, onClick) {
         const char = (db.characters || []).find(c => c.id === id);
         if (!char) return;
         if (action === 'delete') {
-          // ★ 使用弹窗确认 (需求1) + 仅清空历史、不删角色卡片 (需求4)
-          _pendingDelete = { id, type, name: char.remarkName || char.realName || '未知' };
-          dom['delete-confirm-text'].textContent = '确定要删除与「' + _pendingDelete.name + '」的聊天记录吗？';
+          // ★ 私聊/联系人删除：使用弹窗确认
+          const name = char.remarkName || char.realName || '未知';
+          if (type === 'private') {
+            _pendingDelete = { id, type: 'private', name, charId: id };
+            dom['delete-confirm-text'].textContent = '确定要删除与「' + name + '」的私聊会话吗？';
+          } else {
+            _pendingDelete = { id, type: 'contact', name, charId: id };
+            dom['delete-confirm-text'].textContent = '确定要删除联系人「' + name + '」吗？';
+          }
           dom['delete-confirm-modal'].classList.add('visible');
           closeSwipeCard();
           return;
         } else if (action === 'edit') {
-          // ★ 联系人编辑改为向导弹窗 (需求2)
-          if (type === 'contact') {
-            openContactWizardForEdit(id);
-            closeSwipeCard();
-            return;
-          }
-          // 私聊编辑暂不处理，或也可改为向导弹窗
           openContactWizardForEdit(id);
           closeSwipeCard();
           return;
         } else if (action === 'pin') {
-          char.isPinned = !char.isPinned;
-          await saveData();
+          if (type === 'private') {
+            await togglePrivateChatPin(id);
+          } else {
+            char.isPinned = !char.isPinned;
+            await saveData();
+          }
           renderAllLists();
         }
       } else if (type === 'group') {
         const g = (db.groups || []).find(gr => gr.id === id);
         if (!g) return;
         if (action === 'delete') {
-          // ★ 使用弹窗确认 (需求1) + 仅清空历史 (需求4)
+          // ★ 群聊删除：彻底移除群聊对象（与私聊/联系人删除统一使用弹窗确认）
           _pendingDelete = { id, type: 'group', name: g.name || '未命名群聊' };
-          dom['delete-confirm-text'].textContent = '确定要删除与「' + _pendingDelete.name + '」的聊天记录吗？';
+          dom['delete-confirm-text'].textContent = '确定要删除群聊「' + _pendingDelete.name + '」吗？删除后聊天记录和成员配置将一并清除。';
           dom['delete-confirm-modal'].classList.add('visible');
           closeSwipeCard();
           return;
@@ -573,6 +587,9 @@ function openContactPicker(mode) {
   return new Promise((resolve) => { _pickerResolve = resolve; });
 }
 
+
+// 挂载到全局，供约会模块调用
+window.openContactPicker = openContactPicker;
 function updatePickerCount() {
   if (_pickerMode !== 'multi') return;
   const checked = dom['picker-list']?.querySelectorAll('input:checked')?.length || 0;
@@ -585,7 +602,7 @@ function bindPickerEvents() {
     dom['contact-picker-modal']?.classList.remove('visible');
     if (_pickerResolve) _pickerResolve([]);
   });
-  dom['picker-confirm-btn']?.addEventListener('click', () => {
+  dom['picker-confirm-btn']?.addEventListener('click', async () => {
     const checked = dom['picker-list']?.querySelectorAll('input:checked, input[type="radio"]:checked') || [];
     const ids = Array.from(checked).map(i => i.value);
     if (_pickerMode === 'single') {
@@ -594,6 +611,8 @@ function bindPickerEvents() {
         return;
       }
       dom['contact-picker-modal']?.classList.remove('visible');
+      // ★ 新建私聊：自动创建私聊会话（如果尚未创建）
+      await openPrivateChat(ids[0]);
       if (_openChatRoom) _openChatRoom(ids[0], 'private');
       if (_pickerResolve) _pickerResolve(ids);
     } else {
@@ -661,22 +680,32 @@ function bindGroupCreateEvents() {
   dom['delete-confirm-btn']?.addEventListener('click', async () => {
     if (!_pendingDelete) return;
     const db = getDb();
-    const { id, type, name } = _pendingDelete;
+    const { id, type, name, charId } = _pendingDelete;
     if (type === 'group') {
-      const g = (db.groups || []).find(gr => gr.id === id);
-      if (g) {
-        g.history = [];
-        await saveData();
-        renderAllLists();
-        showToast(dom['toast-notification'], '聊天记录已清空');
-      }
-    } else {
+      // ★ 群聊删除：彻底移除群聊对象
+      await removeGroup(id);
+      renderAllLists();
+      showToast(dom['toast-notification'], '群聊"' + name + '"已删除');
+    } else if (type === 'private') {
+      // ★ 私聊删除：仅移除私聊会话 + 清空聊天记录，不删除联系人卡片
+      await removePrivateChat(charId);
+      renderAllLists();
+      showToast(dom['toast-notification'], '私聊会话已删除');
+    } else if (type === 'contact') {
+      // ★ 联系人删除：移除角色卡片 + 清空关联私聊会话 + 清空记录
       const char = (db.characters || []).find(c => c.id === id);
       if (char) {
+        // 清空聊天记录
         char.history = [];
+        // 移除私聊会话（如果有）
+        if (db.privateChats) {
+          db.privateChats = db.privateChats.filter(pc => pc.charId !== id);
+        }
+        // 从角色列表中移除
+        db.characters = (db.characters || []).filter(c => c.id !== id);
         await saveData();
         renderAllLists();
-        showToast(dom['toast-notification'], '聊天记录已清空');
+        showToast(dom['toast-notification'], '联系人"' + name + '"已删除');
       }
     }
     dom['delete-confirm-modal'].classList.remove('visible');

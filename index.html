@@ -19,8 +19,7 @@
     }
     </script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/lottev1991/html2canvas@1.6.5-custom/dist/html2canvas.min.js"></script>
+    <!-- html2canvas & FileSaver 已移除：无代码使用 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
@@ -35,6 +34,7 @@
     <link rel="stylesheet" href="modules/gacha/gacha.css">
     <link rel="stylesheet" href="modules/wardrobe/wardrobe.css">
     <link rel="stylesheet" href="modules/date/date.css">
+<link rel="stylesheet" href="modules/date/date-chat.css">
     <link rel="stylesheet" href="css/video-call.css">
     <link rel="stylesheet" href="css/chat-room-dark.css">
     <link rel="stylesheet" href="css/module-theme.css">
@@ -816,6 +816,8 @@
 
 </div>
 
+<!-- ===== 约会聊天（3D 场景背景） ===== -->
+
 <input type="file" id="import-data-input" accept=".ee" style="display:none;">
 
 <!-- 引擎层 JS -->
@@ -871,8 +873,6 @@
     (function() {
         var missing = [];
         if (typeof Dexie === 'undefined') missing.push('Dexie');
-        if (typeof saveAs === 'undefined' && typeof FileSaver === 'undefined') missing.push('FileSaver');
-        if (typeof html2canvas === 'undefined') missing.push('html2canvas');
         if (typeof pako === 'undefined') missing.push('pako');
         if (missing.length > 0) {
             console.error('[CDN] 以下依赖加载失败:', missing.join(', '));

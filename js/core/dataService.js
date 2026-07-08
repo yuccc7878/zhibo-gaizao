@@ -147,6 +147,22 @@ function _ensureDefaults(db) {
     if (!db.ttsConfig) db.ttsConfig = { engine: 'local', sogouSpeaker: 1, sogouSpeed: 3 };
     if (!db.customPrompts) db.customPrompts = {};
 
+    // ★ 私聊会话列表（与联系人卡片分离，仅记录"已开启过私聊"的会话）
+    if (!db.privateChats) db.privateChats = [];
+
+    // ★ 数据迁移：兼容旧数据，将已有聊天历史的角色自动加入 privateChats
+    if (db.characters && db.privateChats.length === 0) {
+      db.characters.forEach(char => {
+        if (char.history && char.history.length > 0) {
+          db.privateChats.push({
+            charId: char.id,
+            isPinned: char.isPinned || false,
+            createdAt: char.history[0]?.timestamp || Date.now(),
+          });
+        }
+      });
+    }
+
     // ★ 全局个人资料（"我的资料"）
     if (!db.myProfile) db.myProfile = {};
     if (!db.myProfile.name) db.myProfile.name = '我';
@@ -154,7 +170,7 @@ function _ensureDefaults(db) {
     if (!db.myProfile.avatar) db.myProfile.avatar = 'assets/icons/default-avatar.png';
 
     (db.characters || []).forEach(c => {
-        if (c.isPinned === undefined) c.isPinned = false;
+        // ★ 联系人字段默认值（isPinned 已由 privateChats 接管，不再在此初始化）
         if (c.status === undefined) c.status = '在线';
         if (!c.worldBookIds) c.worldBookIds = [];
         if (c.customBubbleCss === undefined) c.customBubbleCss = '';
@@ -276,6 +292,82 @@ export async function updateCharacter(id, changes) {
         Object.assign(char, changes);
         await saveData();
     }
+}
+
+/**
+ * 获取私聊会话对象（不含 history，history 仍存储在 characters 里）
+ * @param {string} charId - 角色ID
+ * @returns {Object|undefined} 私聊会话记录
+ */
+export function getPrivateChat(charId) {
+  return (_db.privateChats || []).find(pc => pc.charId === charId);
+}
+
+/**
+ * 判断一个角色是否已开启私聊会话
+ * @param {string} charId - 角色ID
+ * @returns {boolean}
+ */
+export function hasPrivateChat(charId) {
+  return (_db.privateChats || []).some(pc => pc.charId === charId);
+}
+
+/**
+ * 开启一个私聊会话（如果尚未开启）
+ * @param {string} charId - 角色ID
+ */
+export async function openPrivateChat(charId) {
+  if (!hasPrivateChat(charId)) {
+    if (!_db.privateChats) _db.privateChats = [];
+    _db.privateChats.push({
+      charId: charId,
+      isPinned: false,
+      createdAt: Date.now(),
+    });
+    await saveData();
+  }
+}
+
+/**
+ * 移除私聊会话（仅删除会话记录，不删除联系人卡片）
+ * 同时可选择性清空该角色的聊天记录
+ * @param {string} charId - 角色ID
+ * @param {boolean} clearHistory - 是否同时清空聊天记录
+ */
+export async function removePrivateChat(charId, clearHistory = true) {
+  if (_db.privateChats) {
+    _db.privateChats = _db.privateChats.filter(pc => pc.charId !== charId);
+  }
+  if (clearHistory) {
+    const char = getCharacter(charId);
+    if (char) {
+      char.history = [];
+    }
+  }
+  await saveData();
+}
+
+/**
+ * 切换私聊会话的置顶状态
+ * @param {string} charId - 角色ID
+ */
+export async function togglePrivateChatPin(charId) {
+  const pc = getPrivateChat(charId);
+  if (pc) {
+    pc.isPinned = !pc.isPinned;
+    await saveData();
+  }
+}
+
+/**
+ * 移除群聊（彻底删除群聊对象）
+ * @param {string} groupId - 群聊ID
+ */
+export async function removeGroup(groupId) {
+  if (_db.groups) {
+    _db.groups = _db.groups.filter(g => g.id !== groupId);
+    await saveData();
+  }
 }
 
 export function getActiveApi() {
