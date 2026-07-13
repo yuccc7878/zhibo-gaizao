@@ -211,8 +211,16 @@ export function generatePrivateSystemPrompt(character) {
   }
   // ⑧ currentTime（动态内容放末尾）
   p += "\n【当前时间】\n" + currentTime + "\n\n";
-  // ⑨ 时间感知块
+  // ⑧.5 上次消息时间
   const history = (character.history || []);
+  if (history.length > 1) {
+    const lastMsg = history[history.length - 1];
+    if (lastMsg && lastMsg.timestamp) {
+      const lastTime = new Date(lastMsg.timestamp).toLocaleString('zh-CN', { hour12: false });
+      p += "【上次消息时间】\n" + lastTime + "\n\n";
+    }
+  }
+  // ⑨ 时间感知块
   const timeContext = calcTimeGapContext(history);
   if (timeContext) { p += timeContext + "\n"; }
   return p;
@@ -267,8 +275,19 @@ export function generateGroupSystemPrompt(group) {
   // ⑦ part2~part3
   p += fillTemplate(tpl("group_part2"), vars);
   p += fillTemplate(tpl("group_part3"), vars);
-  // ⑧ 时间感知块
+  // ⑦.5 当前时间 + 上次消息时间
+  const now = new Date();
+  const currentTime = now.getFullYear() + "年" + pad(now.getMonth()+1) + "月" + pad(now.getDate()) + "日 " + pad(now.getHours()) + ":" + pad(now.getMinutes());
+  p += "\n【当前时间】\n" + currentTime + "\n\n";
   const history = (group.history || []);
+  if (history.length > 1) {
+    const lastMsg = history[history.length - 1];
+    if (lastMsg && lastMsg.timestamp) {
+      const lastTime = new Date(lastMsg.timestamp).toLocaleString('zh-CN', { hour12: false });
+      p += "【上次消息时间】\n" + lastTime + "\n\n";
+    }
+  }
+  // ⑧ 时间感知块
   const timeContext = calcTimeGapContext(history);
   if (timeContext) { p += timeContext + "\n"; }
   return p;

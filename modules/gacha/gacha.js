@@ -7,7 +7,7 @@ Engine.register({
     name: '摇人',
     icon: '🎲',
     screen: 'gacha-screen',
-    order: 6,
+    order: 7,
 
     results: [],
     generating: false,

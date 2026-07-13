@@ -187,7 +187,7 @@ async function initApp() {
 
   // 8. 视频通话已作为 ES Module 初始化（见上方 videoCall.init）
 
-  // 9. 暴露关键函数给全局（Engine 模块 + activeWorld 需要）
+  // 9. 暴露关键函数给全局（Engine 模块 + live/activeWorld 需要）
   // 注意：window.saveData 由 engine/db.js 设置，不能覆盖，否则 dataService.saveData 调用 window.saveData 会无限递归
   window.renderChatList = chatList.renderChatList;
   window.renderMessages = chatRoom.renderMessages;
@@ -195,6 +195,8 @@ async function initApp() {
   window.showToast = showToast;
   window.maybeSendAiImage = chatRoom.maybeSendAiImage;
   window.PromptDefaults = PromptDefaults;
+  // ★ 直播模块桥接：直播弹窗"私聊"按钮需要 openChatRoom
+  window.openChatRoom = chatRoom.openChatRoom;
 
   // 10. 刷新后恢复上次屏幕状态
   try {

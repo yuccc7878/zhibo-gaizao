@@ -106,7 +106,8 @@ const Engine = {
          */
         async aiChat(opts) {
             this.syncAiConfig();
-            return AiService.chat(opts);
+            if (!window.AiService) throw new Error('AiService 未就绪（TDZ 保护）');
+            return window.AiService.chat(opts);
         },
 
         /**
@@ -117,7 +118,8 @@ const Engine = {
          */
         async aiGenerateImage(prompt, options) {
             this.syncAiConfig();
-            return AiService.generateImage(prompt, options);
+            if (!window.AiService) throw new Error('AiService 未就绪（TDZ 保护）');
+            return window.AiService.generateImage(prompt, options);
         },
 
         /**

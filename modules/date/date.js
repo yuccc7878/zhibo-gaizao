@@ -28,11 +28,33 @@ Engine.register({
             window.db._currentChatType = '';
             window.saveData();
         }
-        // 懒加载 Three.js 场景
+        // 懒加载 Three.js 场景（带 CDN 加载失败保护）
         if (!this._loaded) {
             this._loaded = true;
             setTimeout(async () => {
                 try {
+                    // 先检查 three 模块是否可用（防止 CDN 加载失败导致模块解析错误）
+                    let threeOk = false;
+                    try {
+                        const m = await import('three');
+                        threeOk = !!(m && (m.default || m.SphereGeometry || m.Scene));
+                    } catch(_e) {
+                        threeOk = false;
+                    }
+                    if (!threeOk) {
+                        // 尝试兜底加载
+                        if (typeof window.__threeFallback === 'function') {
+                            try {
+                                const THREE = await window.__threeFallback();
+                                window.THREE = THREE;
+                                threeOk = true;
+                            } catch(_e2) {}
+                        }
+                    }
+                    if (!threeOk) {
+                        console.warn('[Date] three.js 不可用，跳过 3D 场景加载');
+                        return;
+                    }
                     const core = await import('./date-core.js');
                     this._core = core;
                     await core.init();

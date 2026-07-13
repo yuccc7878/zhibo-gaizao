@@ -29,6 +29,7 @@
   let imageConfig = null;  // { url, key, model }
 
   function setChatConfig(config) {
+    // 修复：保留用户已有的自定义字段（如 apiPath），不要用 Provider 默认值覆盖
     chatConfig = config ? { ...config } : null;
   }
 
@@ -342,7 +343,10 @@
         const ct = resp.headers.get('content-type') || '';
         if (!ct.includes('image/')) throw new AiServiceError('API_ERROR', '接口未返回图片 (content-type: ' + ct + ')');
       } catch (err) {
+        // 修复：原代码在 catch 中静默吞掉了非 AiServiceError 类型的异常（如网络超时）
+        // 现在改为：如果是 AiServiceError 则直接抛出，否则包装后抛出
         if (err instanceof AiServiceError) throw err;
+        throw new AiServiceError('API_ERROR', '生图请求异常: ' + (err.message || err));
       }
       return imageUrl;
     }

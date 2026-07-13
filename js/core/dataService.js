@@ -169,9 +169,13 @@ function _ensureDefaults(db) {
     if (!db.myProfile.persona) db.myProfile.persona = '';
     if (!db.myProfile.avatar) db.myProfile.avatar = 'assets/icons/default-avatar.png';
 
+    // ★ 数据版本号（用于未来数据迁移）
+    if (db._dataVersion === undefined) db._dataVersion = 1;
+
     (db.characters || []).forEach(c => {
         // ★ 联系人字段默认值（isPinned 已由 privateChats 接管，不再在此初始化）
         if (c.status === undefined) c.status = '在线';
+        if (c.maxMemory === undefined) c.maxMemory = 100;
         if (!c.worldBookIds) c.worldBookIds = [];
         if (c.customBubbleCss === undefined) c.customBubbleCss = '';
         if (c.useCustomBubbleCss === undefined) c.useCustomBubbleCss = false;

@@ -13,10 +13,22 @@
     <script type="importmap">
     {
       "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
       }
     }
+    </script>
+    <script>
+    // 如果 three.js ES Module 加载失败，兜底用传统 script
+    window.__threeFallback = function() {
+      return new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        s.onload = function() { resolve(window.THREE); };
+        s.onerror = function() { reject(new Error('three.js CDN 完全加载失败')); };
+        document.head.appendChild(s);
+      });
+    };
     </script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <!-- html2canvas & FileSaver 已移除：无代码使用 -->

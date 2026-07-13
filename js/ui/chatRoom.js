@@ -689,7 +689,7 @@ export async function sendMyTransfer(amount, remark) {
   let content;
   if (state.currentChatType === 'private') {
     content = `[${myName}的转账：${amount}元；备注：${remark}]`;
-  } else {
+  } else if (state.currentChatType === 'group') {
     const g = chat;
     const recipientIds = state.currentGroupAction.recipients || [];
     const recipientNames = recipientIds.map(id => {
@@ -725,7 +725,7 @@ export async function sendMyGift(item) {
   let content;
   if (state.currentChatType === 'private') {
     content = `[${myName}送来的礼物：${item.label || '礼物'}]`;
-  } else {
+  } else if (state.currentChatType === 'group') {
     const g = chat;
     const recipientIds = state.currentGroupAction.recipients || [];
     const recipientNames = recipientIds.map(id => {
